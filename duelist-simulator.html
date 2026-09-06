@@ -1,0 +1,5127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>牌佬模拟器 - 童实野市篇</title>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+<style>
+:root {
+  --bg-deep: #0a0a14;
+  --bg-panel: #14142a;
+  --bg-card: #1e1e3a;
+  --bg-hover: #282848;
+  --text-primary: #e8e8f0;
+  --text-secondary: #a0a0c0;
+  --text-muted: #606080;
+  --accent-gold: #d4af37;
+  --accent-gold-light: #f0d060;
+  --accent-purple: #8b5cf6;
+  --accent-purple-light: #a78bfa;
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --accent-red: #ef4444;
+  --accent-red-light: #f87171;
+  --accent-green: #22c55e;
+  --accent-green-light: #4ade80;
+  --border-subtle: #2a2a4a;
+  --border-accent: #4a4a7a;
+  --rarity-n: #9ca3af;
+  --rarity-r: #3b82f6;
+  --rarity-sr: #8b5cf6;
+  --rarity-ur: #f59e0b;
+  --font-serif: 'Noto Serif SC', 'Songti SC', serif;
+  --font-sans: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow-x: hidden; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+body::before {
+  content: '';
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0a14 0%, #0f0f20 50%, #0a0a14 100%);
+  pointer-events: none; z-index: 0;
+}
+
+#app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ===== 顶部状态栏 ===== */
+.top-bar {
+  background: linear-gradient(180deg, rgba(20,20,42,0.95), rgba(20,20,42,0.85));
+  border-bottom: 1px solid var(--border-accent);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.top-bar-left { display: flex; align-items: center; gap: 12px; }
+.game-logo {
+  font-family: var(--font-serif);
+  font-size: 16px; font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-purple-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 2px;
+}
+.dev-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: var(--accent-red);
+  color: white;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  animation: devPulse 1.5s ease-in-out infinite;
+}
+@keyframes devPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.dev-exit-btn {
+  font-size: 10px;
+  padding: 3px 8px;
+  background: rgba(239,68,68,0.2);
+  border: 1px solid rgba(239,68,68,0.4);
+  color: var(--accent-red-light);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.dev-exit-btn:hover { background: rgba(239,68,68,0.3); }
+
+.top-bar-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+.top-stat {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.top-stat-value { font-weight: 700; color: var(--text-primary); font-size: 13px; }
+.top-stat.search .top-stat-value { color: var(--accent-blue-light); }
+.top-stat.expand .top-stat-value { color: var(--accent-green-light); }
+.top-stat.disrupt .top-stat-value { color: var(--accent-red-light); }
+.top-stat.resist .top-stat-value { color: var(--accent-purple-light); }
+.top-stat.suppress .top-stat-value { color: var(--accent-gold-light); }
+
+.time-display {
+  font-size: 12px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.time-display strong { color: var(--accent-gold); font-size: 14px; }
+
+/* ===== 主导航 ===== */
+.main-nav {
+  display: flex; gap: 4px; padding: 8px 12px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  min-height: 36px;
+}
+.nav-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.nav-btn.active {
+  color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* ===== 内容区 ===== */
+.content-area { flex: 1; padding: 16px; max-width: 900px; margin: 0 auto; width: 100%; }
+.view { display: none; animation: fadeIn 0.3s ease; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== 通用卡片 ===== */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.panel-title {
+  font-family: var(--font-serif);
+  font-size: 15px; font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before {
+  content: ''; width: 3px; height: 16px;
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent-purple));
+  border-radius: 2px;
+}
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 18px;
+  font-family: var(--font-sans);
+  font-size: 13px; font-weight: 500;
+  border: none; border-radius: 6px;
+  cursor: pointer; transition: all 0.2s;
+  min-height: 40px; text-align: center;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-purple), #6d28d9);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+.btn-primary:hover { box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); transform: translateY(-1px); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--accent-gold), #b8860b);
+  color: #1a1a2e; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+.btn-gold:hover { box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4); transform: translateY(-1px); }
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.btn-secondary:hover { border-color: var(--accent-purple); color: var(--text-primary); }
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red-light);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-group .btn { flex: 1; min-width: 100px; }
+
+/* ===== 开始页 ===== */
+.start-view {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 30px 20px;
+}
+.start-title {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-purple-light), var(--accent-blue-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: 6px; text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 0 60px rgba(139, 92, 246, 0.3);
+}
+.start-subtitle {
+  font-size: 14px; color: var(--text-muted);
+  letter-spacing: 4px; margin-bottom: 30px; text-align: center;
+}
+.talent-section { width: 100%; max-width: 600px; }
+.talent-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px; margin-bottom: 16px;
+}
+.talent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px;
+  cursor: pointer; transition: all 0.2s;
+  position: relative;
+}
+.talent-card:hover { border-color: var(--accent-purple); background: var(--bg-hover); }
+.talent-card.selected {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+}
+.talent-card.disabled { opacity: 0.35; cursor: not-allowed; }
+.talent-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.talent-card.positive .talent-name { color: var(--accent-green-light); }
+.talent-card.negative .talent-name { color: var(--accent-red-light); }
+.talent-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.selected-talents-display {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+  min-height: 28px;
+}
+.selected-talent-chip {
+  font-size: 12px; padding: 4px 10px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px; color: var(--accent-gold-light);
+}
+
+/* ===== 属性总览 ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px;
+  text-align: center;
+}
+.stat-box-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 1px; }
+.stat-box-value { font-family: var(--font-serif); font-size: 22px; font-weight: 700; }
+.stat-box.search .stat-box-value { color: var(--accent-blue-light); }
+.stat-box.expand .stat-box-value { color: var(--accent-green-light); }
+.stat-box.disrupt .stat-box-value { color: var(--accent-red-light); }
+.stat-box.resist .stat-box-value { color: var(--accent-purple-light); }
+.stat-box.suppress .stat-box-value { color: var(--accent-gold-light); }
+.stat-box.power .stat-box-value { color: #f97316; }
+.stat-box.soul .stat-box-value { color: #ec4899; }
+.stat-box.luck .stat-box-value { color: #14b8a6; }
+.stat-box.proficiency .stat-box-value { color: #06b6d4; }
+.stat-box.intelligence .stat-box-value { color: #a855f7; }
+
+/* ===== 地点选择 ===== */
+.locations-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.location-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 14px;
+  cursor: pointer; transition: all 0.2s;
+}
+.location-card:hover {
+  border-color: var(--accent-purple);
+  background: var(--bg-hover);
+  transform: translateY(-2px);
+}
+.location-name {
+  font-family: var(--font-serif);
+  font-size: 14px; font-weight: 700;
+  color: var(--accent-gold); margin-bottom: 4px;
+}
+.location-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+.location-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.location-tag {
+  font-size: 10px; padding: 2px 6px;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 3px; color: var(--accent-purple-light);
+}
+
+/* ===== 卡片展示 ===== */
+.card-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px; padding: 8px 10px;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.card-item:hover { border-color: var(--accent-purple); background: var(--bg-hover); }
+.card-rarity-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.card-rarity-dot.N { background: var(--rarity-n); }
+.card-rarity-dot.R { background: var(--rarity-r); }
+.card-rarity-dot.SR { background: var(--rarity-sr); }
+.card-rarity-dot.UR { background: var(--rarity-ur); }
+.card-name { font-size: 12px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-type-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 3px;
+  background: var(--bg-hover); color: var(--text-muted); flex-shrink: 0;
+}
+.card-count { font-size: 11px; color: var(--accent-gold); font-weight: 700; flex-shrink: 0; }
+
+.cards-list { display: flex; flex-direction: column; gap: 4px; max-height: 400px; overflow-y: auto; }
+.cards-list::-webkit-scrollbar { width: 4px; }
+.cards-list::-webkit-scrollbar-track { background: var(--bg-panel); }
+.cards-list::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+/* ===== 卡组管理 ===== */
+.deck-summary {
+  display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.deck-summary-item {
+  text-align: center;
+}
+.deck-summary-label { font-size: 11px; color: var(--text-muted); }
+.deck-summary-value { font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: var(--accent-gold); }
+.deck-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.deck-tab {
+  padding: 6px 14px; font-size: 12px;
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 5px; color: var(--text-secondary); cursor: pointer;
+  transition: all 0.15s;
+}
+.deck-tab.active { background: rgba(139, 92, 246, 0.15); border-color: var(--accent-purple); color: var(--accent-purple-light); }
+
+/* ===== 决斗界面 ===== */
+.duel-arena {
+  background: linear-gradient(135deg, rgba(20,20,42,0.9), rgba(30,30,58,0.9));
+  border: 1px solid var(--border-accent);
+  border-radius: 12px; padding: 20px;
+  text-align: center; margin-bottom: 14px;
+}
+.duel-vs {
+  font-family: var(--font-serif);
+  font-size: 32px; font-weight: 900;
+  color: var(--accent-gold);
+  margin: 10px 0;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+.duel-player {
+  display: inline-block; padding: 10px 20px;
+  background: var(--bg-card); border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  min-width: 120px;
+}
+.duel-player-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.duel-player-power { font-size: 11px; color: var(--text-muted); }
+.duel-log {
+  background: var(--bg-panel); border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px; margin-bottom: 14px;
+  max-height: 250px; overflow-y: auto;
+  text-align: left;
+}
+.duel-log::-webkit-scrollbar { width: 4px; }
+.duel-log::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+.duel-log-entry {
+  font-size: 12px; color: var(--text-secondary);
+  padding: 4px 0; border-bottom: 1px solid rgba(42,42,74,0.5);
+  line-height: 1.6;
+}
+.duel-log-entry:last-child { border-bottom: none; }
+.duel-log-entry.turn { color: var(--accent-gold); font-weight: 600; }
+.duel-log-entry.win { color: var(--accent-green-light); }
+.duel-log-entry.lose { color: var(--accent-red-light); }
+.duel-log-entry.event { color: #ff9f43; font-weight: 600; background: rgba(255,159,67,0.1); padding: 4px 6px; border-radius: 4px; margin: 2px 0; }
+.duel-result {
+  text-align: center; padding: 20px;
+  border-radius: 10px; margin-bottom: 14px;
+}
+.duel-result.win { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); }
+.duel-result.lose { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+.duel-result-title {
+  font-family: var(--font-serif); font-size: 24px; font-weight: 900;
+  margin-bottom: 8px;
+}
+.duel-result.win .duel-result-title { color: var(--accent-green-light); }
+.duel-result.lose .duel-result-title { color: var(--accent-red-light); }
+
+/* ===== 角色列表 ===== */
+.character-list { display: flex; flex-direction: column; gap: 8px; }
+.character-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px;
+  display: flex; align-items: center; gap: 12px;
+}
+.character-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif); font-size: 18px; font-weight: 700;
+  color: white; flex-shrink: 0;
+}
+.character-info { flex: 1; min-width: 0; }
+.character-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.character-desc { font-size: 11px; color: var(--text-muted); }
+.character-affinity {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  flex-shrink: 0;
+}
+.affinity-bar {
+  width: 80px; height: 6px; background: var(--bg-panel);
+  border-radius: 3px; overflow: hidden;
+}
+.affinity-fill {
+  height: 100%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink, #ec4899));
+  border-radius: 3px; transition: width 0.3s;
+}
+.affinity-text { font-size: 10px; color: var(--text-muted); }
+
+/* ===== 比赛 ===== */
+.tournament-list { display: flex; flex-direction: column; gap: 10px; }
+.tournament-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 14px;
+}
+.tournament-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 8px;
+}
+.tournament-name { font-family: var(--font-serif); font-size: 14px; font-weight: 700; color: var(--accent-gold); }
+.tournament-tier {
+  font-size: 10px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(139, 92, 246, 0.15); color: var(--accent-purple-light);
+}
+.tournament-desc { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+.tournament-rewards { font-size: 11px; color: var(--accent-green-light); margin-bottom: 10px; }
+
+/* ===== 成就 ===== */
+.achievement-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.achievement-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px;
+  position: relative;
+}
+.achievement-item.unlocked {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.05);
+}
+.achievement-item.locked { opacity: 0.5; }
+.achievement-icon {
+  font-size: 24px; margin-bottom: 6px;
+}
+.achievement-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.achievement-item.unlocked .achievement-name { color: var(--accent-gold); }
+.achievement-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 6px; }
+.achievement-bonus { font-size: 10px; color: var(--accent-green-light); }
+
+/* ===== 排行榜 ===== */
+.rank-list { display: flex; flex-direction: column; gap: 6px; }
+.rank-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px; padding: 10px 12px;
+}
+.rank-item.player { border-color: var(--accent-gold); background: rgba(212, 175, 55, 0.05); }
+.rank-number {
+  font-family: var(--font-serif); font-size: 16px; font-weight: 900;
+  width: 28px; text-align: center; flex-shrink: 0;
+}
+.rank-item:nth-child(1) .rank-number { color: var(--accent-gold); }
+.rank-item:nth-child(2) .rank-number { color: #c0c0c0; }
+.rank-item:nth-child(3) .rank-number { color: #cd7f32; }
+.rank-name { flex: 1; font-size: 13px; font-weight: 500; }
+.rank-score { font-size: 12px; color: var(--accent-gold); font-weight: 700; }
+
+/* ===== 事件弹窗 ===== */
+.event-modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.75); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s;
+}
+.event-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px; padding: 20px;
+  max-width: 450px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-height: 80vh; overflow-y: auto;
+}
+.event-modal-title {
+  font-family: var(--font-serif); font-size: 18px; font-weight: 700;
+  color: var(--accent-gold); margin-bottom: 10px; text-align: center;
+}
+.event-modal-text {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.8;
+  margin-bottom: 16px; text-align: center;
+}
+.event-modal-rewards {
+  background: var(--bg-card); border-radius: 6px; padding: 10px;
+  margin-bottom: 14px; font-size: 12px;
+}
+.event-modal-options { display: flex; flex-direction: column; gap: 8px; }
+
+/* ===== 提示消息 ===== */
+.toast {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-panel); border: 1px solid var(--accent-gold);
+  border-radius: 8px; padding: 10px 20px;
+  font-size: 13px; color: var(--accent-gold-light);
+  z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: toastIn 0.3s, toastOut 0.3s 2.2s forwards;
+  pointer-events: none;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+
+/* ===== 响应式 - 全平台适配 ===== */
+
+/* 超小屏手机 (<=360px) */
+@media (max-width: 360px) {
+  .top-bar { padding: 6px 8px; gap: 6px; }
+  .game-logo { font-size: 13px; letter-spacing: 1px; }
+  .top-bar-stats { gap: 6px; }
+  .top-stat { font-size: 10px; gap: 2px; }
+  .top-stat-value { font-size: 11px; }
+  .time-display { font-size: 10px; gap: 4px; }
+  .time-display strong { font-size: 12px; }
+  .main-nav { padding: 6px 8px; gap: 3px; }
+  .nav-btn { padding: 6px 10px; font-size: 11px; min-height: 32px; }
+  .content-area { padding: 10px 8px; }
+  .panel { padding: 10px; border-radius: 8px; }
+  .panel-title { font-size: 13px; margin-bottom: 8px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .stat-box { padding: 8px 4px; }
+  .stat-box-label { font-size: 9px; }
+  .stat-box-value { font-size: 15px; }
+  .locations-grid { grid-template-columns: 1fr; gap: 8px; }
+  .location-card { padding: 10px; }
+  .location-name { font-size: 13px; }
+  .location-desc { font-size: 10px; }
+  .talent-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .talent-card { padding: 8px; }
+  .talent-name { font-size: 11px; }
+  .talent-desc { font-size: 9px; }
+  .btn { padding: 8px 12px; font-size: 12px; min-height: 38px; }
+  .duel-arena { padding: 12px; }
+  .duel-player { min-width: 70px; padding: 6px 8px; }
+  .duel-player-name { font-size: 11px; }
+  .duel-player-power { font-size: 9px; }
+  .duel-vs { font-size: 20px; margin: 6px 0; }
+  .duel-log { max-height: 180px; padding: 8px; }
+  .duel-log-entry { font-size: 10px; padding: 3px 0; }
+  .card-item { padding: 6px 8px; gap: 6px; }
+  .card-name { font-size: 10px; }
+  .card-type-badge { font-size: 8px; padding: 1px 4px; }
+  .character-item { padding: 8px; gap: 8px; }
+  .character-avatar { width: 36px; height: 36px; font-size: 14px; }
+  .character-name { font-size: 12px; }
+  .character-desc { font-size: 10px; }
+  .affinity-bar { width: 60px; }
+  .affinity-text { font-size: 9px; }
+  .tournament-item { padding: 10px; }
+  .tournament-name { font-size: 13px; }
+  .tournament-desc { font-size: 10px; }
+  .achievement-grid { grid-template-columns: 1fr; gap: 8px; }
+  .achievement-item { padding: 10px; }
+  .rank-item { padding: 8px; gap: 6px; }
+  .rank-number { font-size: 13px; width: 22px; }
+  .rank-name { font-size: 11px; }
+  .rank-score { font-size: 11px; }
+  .event-modal { padding: 14px; max-height: 85vh; }
+  .event-modal-title { font-size: 15px; }
+  .event-modal-text { font-size: 12px; }
+  .start-title { font-size: 24px; letter-spacing: 4px; }
+  .start-subtitle { font-size: 11px; letter-spacing: 2px; }
+  .deck-summary { gap: 10px; }
+  .deck-summary-value { font-size: 16px; }
+  .deck-summary-label { font-size: 10px; }
+  .deck-tab { padding: 5px 10px; font-size: 11px; }
+  .cards-list { max-height: 300px; }
+}
+
+/* 普通手机 (361px - 480px) */
+@media (min-width: 361px) and (max-width: 480px) {
+  .top-bar { padding: 8px 10px; }
+  .game-logo { font-size: 14px; }
+  .top-bar-stats { gap: 8px; }
+  .top-stat { font-size: 11px; }
+  .top-stat-value { font-size: 12px; }
+  .main-nav { padding: 7px 10px; }
+  .nav-btn { padding: 7px 12px; font-size: 12px; min-height: 34px; }
+  .content-area { padding: 12px 10px; }
+  .panel { padding: 12px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat-box-value { font-size: 17px; }
+  .locations-grid { grid-template-columns: 1fr; }
+  .talent-grid { grid-template-columns: 1fr 1fr; }
+  .duel-player { min-width: 85px; padding: 7px 10px; }
+  .duel-vs { font-size: 22px; }
+  .achievement-grid { grid-template-columns: 1fr 1fr; }
+  .btn { min-height: 42px; }
+}
+
+/* 大屏手机 / 小平板 (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .top-bar { padding: 10px 14px; }
+  .content-area { padding: 14px 12px; max-width: 640px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .locations-grid { grid-template-columns: repeat(2, 1fr); }
+  .talent-grid { grid-template-columns: repeat(3, 1fr); }
+  .achievement-grid { grid-template-columns: repeat(2, 1fr); }
+  .duel-arena { padding: 18px; }
+}
+
+/* 平板 (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .content-area { max-width: 720px; padding: 18px 16px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .locations-grid { grid-template-columns: repeat(2, 1fr); }
+  .talent-grid { grid-template-columns: repeat(3, 1fr); }
+  .achievement-grid { grid-template-columns: repeat(3, 1fr); }
+  .panel { padding: 18px; }
+}
+
+/* 桌面 (>1024px) */
+@media (min-width: 1025px) {
+  .content-area { max-width: 900px; padding: 20px 16px; }
+  .stats-grid { grid-template-columns: repeat(8, 1fr); }
+  .locations-grid { grid-template-columns: repeat(2, 1fr); }
+  .talent-grid { grid-template-columns: repeat(3, 1fr); }
+  .achievement-grid { grid-template-columns: repeat(3, 1fr); }
+  .panel { padding: 20px; }
+  .top-bar { padding: 12px 24px; }
+  .main-nav { padding: 10px 20px; justify-content: center; }
+  .nav-btn { padding: 10px 18px; font-size: 14px; }
+}
+
+/* 横屏手机适配 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .top-bar { padding: 5px 10px; }
+  .game-logo { font-size: 13px; }
+  .top-stat { font-size: 10px; }
+  .main-nav { padding: 5px 10px; }
+  .nav-btn { padding: 5px 10px; font-size: 11px; min-height: 28px; }
+  .content-area { padding: 8px 10px; }
+  .panel { padding: 10px; margin-bottom: 8px; }
+  .panel-title { font-size: 13px; margin-bottom: 6px; }
+  .stats-grid { grid-template-columns: repeat(8, 1fr); gap: 4px; }
+  .stat-box { padding: 4px; }
+  .stat-box-label { font-size: 8px; }
+  .stat-box-value { font-size: 13px; }
+  .start-view { padding: 15px 20px; }
+  .start-title { font-size: 22px; margin-bottom: 4px; }
+  .start-subtitle { font-size: 10px; margin-bottom: 15px; }
+  .duel-arena { padding: 10px; }
+  .duel-log { max-height: 120px; }
+}
+
+/* 安全区域适配 (iPhone刘海屏) */
+@supports (padding: max(0px)) {
+  .top-bar {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .content-area {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .main-nav {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .panel { border-width: 1px; }
+  .btn { font-weight: 500; }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* 暗色模式优化 (系统级) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-deep: #08080f;
+    --bg-panel: #10101f;
+    --bg-card: #181830;
+  }
+}
+
+/* 触控设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .btn { min-height: 44px; }
+  .nav-btn { min-height: 40px; }
+  .card-item { min-height: 40px; }
+  .location-card { min-height: 60px; }
+  .talent-card { min-height: 60px; }
+  .character-item { min-height: 56px; }
+  .option-btn { min-height: 44px; }
+  .nav-btn:active, .btn:active, .card-item:active, .location-card:active, .talent-card:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+}
+
+/* 打印样式 (意外触发时) */
+@media print {
+  body { background: white; color: black; }
+  .top-bar, .main-nav, .btn-group { display: none; }
+}
+
+/* ===== 卡片详情弹窗 ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.75); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn 0.2s;
+}
+.card-detail-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.card-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.card-detail-rarity {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.card-detail-rarity\.UR, .card-detail-rarity[data-rarity="UR"] { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.card-detail-rarity\.SR, .card-detail-rarity[data-rarity="SR"] { background: rgba(139,92,246,0.2); color: #a78bfa; }
+.card-detail-rarity\.R, .card-detail-rarity[data-rarity="R"] { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.card-detail-rarity\.N, .card-detail-rarity[data-rarity="N"] { background: rgba(156,163,175,0.2); color: #9ca3af; }
+.card-detail-name {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+.card-detail-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+.card-detail-close:hover { color: var(--text-primary); }
+.card-detail-type {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.card-detail-archetype {
+  font-size: 12px;
+  color: var(--accent-purple-light);
+  margin-bottom: 12px;
+}
+.card-detail-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+.card-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.cd-stat {
+  background: var(--bg-card);
+  border-radius: 6px;
+  padding: 8px 4px;
+  text-align: center;
+}
+.cd-stat-label {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.cd-stat-value {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 700;
+}
+.cd-stat-value.search { color: var(--accent-blue-light); }
+.cd-stat-value.expand { color: var(--accent-green-light); }
+.cd-stat-value.disrupt { color: var(--accent-red-light); }
+.cd-stat-value.resist { color: var(--accent-purple-light); }
+.cd-stat-value.suppress { color: var(--accent-gold-light); }
+.cd-stat-value.power { color: #f97316; }
+.cd-stat-value.soul { color: #ec4899; }
+.card-detail-owned {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 12px;
+}
+.card-detail-actions .btn { width: 100%; }
+
+/* ===== 卡片管理页面 ===== */
+.cardadmin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+.cardadmin-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.cardadmin-select, .cardadmin-search {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  min-height: 36px;
+}
+.cardadmin-search { flex: 1; min-width: 120px; }
+.cardadmin-select:focus, .cardadmin-search:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+.cardadmin-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cardadmin-actions .btn {
+  padding: 6px 12px;
+  font-size: 11px;
+  min-height: 34px;
+}
+.cardadmin-list .card-item {
+  cursor: pointer;
+}
+.cardadmin-list .card-item:hover {
+  border-color: var(--accent-gold);
+}
+
+/* ===== 卡片编辑器弹窗 ===== */
+.card-editor-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.card-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-editor-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+.card-editor-form { margin-bottom: 16px; }
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.form-group label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  min-height: 36px;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+.form-group textarea { resize: vertical; min-height: 50px; }
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-purple-light);
+  margin: 12px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.card-editor-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.card-editor-footer .btn { min-width: 80px; }
+
+@media (max-width: 480px) {
+  .card-detail-stats { grid-template-columns: repeat(3, 1fr); }
+  .form-row { flex-direction: column; gap: 8px; }
+  .cardadmin-toolbar { flex-direction: column; align-items: stretch; }
+  .cardadmin-filters { width: 100%; }
+  .cardadmin-actions { width: 100%; }
+  .cardadmin-actions .btn { flex: 1; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- 开始视图 -->
+  <div id="view-start" class="view active">
+    <div class="start-view">
+      <div class="start-title">牌佬模拟器</div>
+      <div class="start-subtitle">童 实 野 市 篇</div>
+      <div class="talent-section">
+        <div class="panel">
+          <div class="panel-title">从以下6个随机天赋中选择2个</div>
+          <div class="talent-grid" id="talent-grid"></div>
+          <div class="selected-talents-display" id="selected-talents-display"></div>
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="random-talent-btn">🎲 随机天赋</button>
+            <button class="btn btn-gold" id="start-game-btn" disabled>开启牌佬之路</button>
+          </div>
+          <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:8px;" id="talent-hint">点击"随机天赋"抽取6个天赋，选择其中2个后即可开始游戏</div>
+        </div>
+        <div style="text-align:center; font-size:11px; color:var(--text-muted); line-height:1.8;">
+          初始年龄 18 岁 · 每回合7天 · 在童实野市收集卡片、组建卡组、挑战决斗者<br>
+          主卡组20张可快速决斗 · 40张可大师决斗（主卡组最多60张/额外最多15张）<br>
+          <span id="hidden-talent-info" style="color:#ffd700;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主游戏视图 -->
+  <div id="view-game" class="view">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="game-logo" id="game-logo" style="cursor:pointer;">牌佬模拟器</div>
+        <div class="dev-badge" id="dev-badge" style="display:none;">DEV</div>
+      </div>
+      <div class="top-bar-stats">
+        <div class="top-stat search"><span>检索</span><span class="top-stat-value" id="top-search">0</span></div>
+        <div class="top-stat expand"><span>展开</span><span class="top-stat-value" id="top-expand">0</span></div>
+        <div class="top-stat disrupt"><span>干扰</span><span class="top-stat-value" id="top-disrupt">0</span></div>
+        <div class="top-stat resist"><span>抗性</span><span class="top-stat-value" id="top-resist">0</span></div>
+        <div class="top-stat suppress"><span>压制</span><span class="top-stat-value" id="top-suppress">0</span></div>
+      </div>
+      <div class="time-display">
+        <span>第 <strong id="week-display">1</strong> 天</span>
+        <span>|<span> <strong id="age-display">18</strong> 岁</span>
+      </div>
+    </div>
+
+    <div class="main-nav" id="main-nav">
+      <button class="nav-btn active" data-view="home">主页</button>
+      <button class="nav-btn" data-view="deck">卡组</button>
+      <button class="nav-btn" data-view="duel">决斗</button>
+      <button class="nav-btn" data-view="characters">角色</button>
+      <button class="nav-btn" data-view="tournament">比赛</button>
+      <button class="nav-btn" data-view="achievement">成就</button>
+      <button class="nav-btn" data-view="ranking">排行</button>
+    </div>
+
+    <div class="content-area">
+      <!-- 主页 -->
+      <div id="subview-home" class="view active">
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title">牌力评估</div>
+          <div style="text-align:center; padding:20px 0;">
+            <div style="font-size:48px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
+            <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">实时计算 · 基于当前属性和卡组</div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box power"><div class="stat-box-label">强度</div><div class="stat-box-value" id="stat-power">0</div></div>
+          <div class="stat-box soul"><div class="stat-box-label">魂度</div><div class="stat-box-value" id="stat-soul">0</div></div>
+          <div class="stat-box luck"><div class="stat-box-label">掏度</div><div class="stat-box-value" id="stat-luck">0</div></div>
+          <div class="stat-box proficiency"><div class="stat-box-label">熟练度</div><div class="stat-box-value" id="stat-proficiency">0</div></div>
+          <div class="stat-box intelligence"><div class="stat-box-label">情报力</div><div class="stat-box-value" id="stat-intelligence">0</div></div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); margin:8px 0 16px; text-align:center;">
+          熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">本次行动 - 选择地点</div>
+          <div class="locations-grid" id="locations-grid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">卡组概况</div>
+          <div class="deck-summary">
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">主卡组</div>
+              <div class="deck-summary-value"><span id="main-deck-count">0</span>/50</div>
+            </div>
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">额外卡组</div>
+              <div class="deck-summary-value"><span id="extra-deck-count">0</span>/15</div>
+            </div>
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">牌库卡片</div>
+              <div class="deck-summary-value" id="collection-count">0</div>
+            </div>
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">决斗战绩</div>
+              <div class="deck-summary-value"><span id="win-count">0</span>胜<span id="lose-count">0</span>负</div>
+            </div>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); line-height:1.8;">
+            主卡组≥20张可进行快速决斗 · 主卡组≥40张可进行大师决斗<br>
+            主卡组最多60张 · 额外卡组最多15张 · 同名卡最多3张
+            决斗获胜可通过赌卡规则获取对手卡片
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">最近事件</div>
+          <div id="recent-events" style="font-size:12px; color:var(--text-secondary); line-height:1.8; max-height:150px; overflow-y:auto;">
+            你的牌佬之路才刚刚开始...
+          </div>
+        </div>
+
+        <div style="text-align:center; margin-top:16px;">
+          <button class="btn btn-danger" id="end-sim-btn" style="width:100%; max-width:300px;">结束模拟 / 重置存档</button>
+        </div>
+      </div>
+
+      <!-- 卡组 -->
+      <div id="subview-deck" class="view">
+        <div class="panel">
+          <div class="panel-title">卡组属性 <span id="archetype-tag" style="display:none; background:linear-gradient(90deg,#ffd700,#ff6b6b); color:#1a1a2e; padding:2px 10px; border-radius:10px; font-size:12px; margin-left:8px;"></span></div>
+          <div class="stats-grid" style="margin-bottom:16px;">
+            <div class="stat-box search"><div class="stat-box-label">检索</div><div class="stat-box-value" id="deck-stat-search">0</div></div>
+            <div class="stat-box expand"><div class="stat-box-label">展开</div><div class="stat-box-value" id="deck-stat-expand">0</div></div>
+            <div class="stat-box disrupt"><div class="stat-box-label">干扰</div><div class="stat-box-value" id="deck-stat-disrupt">0</div></div>
+            <div class="stat-box resist"><div class="stat-box-label">抗性</div><div class="stat-box-value" id="deck-stat-resist">0</div></div>
+            <div class="stat-box suppress"><div class="stat-box-label">压制</div><div class="stat-box-value" id="deck-stat-suppress">0</div></div>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+            主属性 = 天赋 + 成就 + 卡组 · 卡组变化时实时更新
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">卡组管理</div>
+          <div class="deck-summary">
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">主卡组</div>
+              <div class="deck-summary-value"><span id="deck-main-count">0</span>/50</div>
+            </div>
+            <div class="deck-summary-item">
+              <div class="deck-summary-label">额外卡组</div>
+              <div class="deck-summary-value"><span id="deck-extra-count">0</span>/15</div>
+            </div>
+          </div>
+          <div class="deck-tabs">
+            <button class="deck-tab active" data-deck-tab="main">主卡组</button>
+            <button class="deck-tab" data-deck-tab="extra">额外卡组</button>
+            <button class="deck-tab" data-deck-tab="collection">牌库</button>
+          </div>
+          <div class="cards-list" id="deck-cards-list"></div>
+          <div style="margin-top:10px; font-size:11px; color:var(--text-muted);">
+            点击卡片可在卡组/牌库之间移动 · 主卡组最少20张最多50张 · 额外最多15张 · 同一系列15张以上触发系列卡组加成
+          </div>
+        </div>
+      </div>
+
+      <!-- 决斗 -->
+      <div id="subview-duel" class="view">
+        <div id="duel-lobby">
+          <div class="panel">
+            <div class="panel-title">选择决斗模式</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="tournament-item">
+                <div class="tournament-header">
+                  <div class="tournament-name">快速决斗</div>
+                  <div class="tournament-tier">入门</div>
+                </div>
+                <div class="tournament-desc">主卡组20-30张即可参加，规则简化，适合新手练习。赌卡 stakes 较低。</div>
+                <div class="tournament-rewards">奖励：随机N~R卡 ×1</div>
+                <button class="btn btn-primary" style="width:100%;" onclick="startDuel('quick')">开始快速决斗</button>
+              </div>
+              <div class="tournament-item">
+                <div class="tournament-header">
+                  <div class="tournament-name">大师决斗</div>
+                  <div class="tournament-tier">正式</div>
+                </div>
+                <div class="tournament-desc">需要主卡组40-60张，额外卡组最多15张。完整规则，高风险高回报。</div>
+                <div class="tournament-rewards">奖励：随机R~UR卡 ×1 · 对手指定卡赌卡</div>
+                <button class="btn btn-gold" style="width:100%;" onclick="startDuel('master')">开始大师决斗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="duel-arena" style="display:none;">
+          <div class="duel-arena">
+            <div class="duel-player">
+              <div class="duel-player-name" id="duel-player-name">你</div>
+              <div class="duel-player-power" id="duel-player-power">牌力 0</div>
+            </div>
+            <div class="duel-vs">VS</div>
+            <div class="duel-player">
+              <div class="duel-player-name" id="duel-opponent-name">???</div>
+              <div class="duel-player-power" id="duel-opponent-power">牌力 ???</div>
+            </div>
+          </div>
+          <div class="duel-log" id="duel-log"></div>
+          <div id="duel-result-area" style="display:none;"></div>
+          <div class="btn-group" id="duel-actions">
+            <button class="btn btn-secondary" onclick="exitDuel()">返回</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 角色 -->
+      <div id="subview-characters" class="view">
+        <div class="panel">
+          <div class="panel-title">童实野市的决斗者们</div>
+          <div class="character-list" id="character-list"></div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.8;">
+            提升好感度可解锁角色专属卡片赠礼 · 高好感度角色可能邀请你组队或传授技巧
+          </div>
+        </div>
+      </div>
+
+      <!-- 比赛 -->
+      <div id="subview-tournament" class="view">
+        <div class="panel">
+          <div class="panel-title">可参加的比赛</div>
+          <div class="tournament-list" id="tournament-list"></div>
+        </div>
+      </div>
+
+      <!-- 成就 -->
+      <div id="subview-achievement" class="view">
+        <div class="panel">
+          <div class="panel-title">成就系统 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（解锁后提供永久属性加成）</span></div>
+          <div class="achievement-grid" id="achievement-grid"></div>
+        </div>
+      </div>
+
+      <!-- 排行 -->
+      <div id="subview-ranking" class="view">
+        <div class="panel">
+          <div class="panel-title">童实野市决斗者排行榜</div>
+          <div class="rank-list" id="rank-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 事件弹窗容器 -->
+<div id="modal-container"></div>
+
+<!-- 卡片详情弹窗 -->
+<div id="card-detail-modal" class="modal-overlay" style="display:none;">
+  <div class="card-detail-box">
+    <div class="card-detail-header">
+      <div class="card-detail-rarity" id="cd-rarity">UR</div>
+      <div class="card-detail-name" id="cd-name">青眼白龙</div>
+      <button class="card-detail-close" onclick="closeCardDetail()">×</button>
+    </div>
+    <div class="card-detail-type" id="cd-type">怪兽卡</div>
+    <div class="card-detail-archetype" id="cd-archetype">青眼系列</div>
+    <div class="card-detail-stats">
+      <div class="cd-stat"><span class="cd-stat-label">检索</span><span class="cd-stat-value search" id="cd-search">+2</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">展开</span><span class="cd-stat-value expand" id="cd-expand">+8</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">干扰</span><span class="cd-stat-value disrupt" id="cd-disrupt">+1</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">抗性</span><span class="cd-stat-value resist" id="cd-resist">+5</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">压制</span><span class="cd-stat-value suppress" id="cd-suppress">+7</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">强度</span><span class="cd-stat-value power" id="cd-power">9</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">魂度</span><span class="cd-stat-value soul" id="cd-soul">8</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">掏度</span><span class="cd-stat-value luck" id="cd-luck">0</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">熟练度</span><span class="cd-stat-value" id="cd-proficiency" style="color:#06b6d4;">0</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">情报力</span><span class="cd-stat-value" id="cd-intelligence" style="color:#a855f7;">0</span></div>
+    </div>
+    <div class="card-detail-owned" id="cd-owned">拥有：3张</div>
+    <div class="card-detail-actions" id="cd-actions">
+      <div style="display:flex; gap:8px; width:100%;">
+        <button class="btn btn-secondary" id="cd-minus-btn" style="flex:1;">-1</button>
+        <button class="btn btn-primary" id="cd-plus-btn" style="flex:1;">+1</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 数据已内嵌到下方 script 中，dev-tool.html 可直接编辑本文件 -->
+<script>
+/* ============================================================
+   牌佬模拟器 - 童实野市篇
+   单文件原生JS实现
+   ============================================================ */
+
+/* === GAME_DATA_START === 以下数据可由 dev-tool.html 直接编辑 === */
+
+// ===== 卡片数据库 =====
+let CARD_DB = {
+
+  // 怪兽卡
+  m001: { id:'m001', name:'青眼白龙', type:'monster', rarity:'UR', archetype:'青眼', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:9}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  m002: { id:'m002', name:'黑魔术师', type:'monster', rarity:'UR', archetype:'黑魔导', stats:{search:0,expand:2,disrupt:0,resist:4,suppress:7}, sub:{power:8,soul:10,proficiency:0,intelligence:0} },
+  m003: { id:'m003', name:'真红眼黑龙', type:'monster', rarity:'SR', archetype:'真红眼', stats:{search:0,expand:2,disrupt:0,resist:5,suppress:6}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
+  m004: { id:'m004', name:'恶魔召唤', type:'monster', rarity:'SR', archetype:'恶魔', stats:{search:0,expand:0,disrupt:2,resist:6,suppress:6}, sub:{power:6,soul:3,proficiency:0,intelligence:0} },
+  m005: { id:'m005', name:'暗黑骑士盖亚', type:'monster', rarity:'N', archetype:'盖亚', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:6}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
+  m006: { id:'m006', name:'诅咒之龙', type:'monster', rarity:'N', archetype:'龙', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:4}, sub:{power:4,soul:3,proficiency:0,intelligence:0} },
+  m007: { id:'m007', name:'岩石的巨兵', type:'monster', rarity:'N', archetype:'岩石', stats:{search:0,expand:0,disrupt:0,resist:3,suppress:0}, sub:{power:4,soul:1,proficiency:0,intelligence:0} },
+  m008: { id:'m008', name:'甜蜜天使', type:'monster', rarity:'N', archetype:'天使', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:2}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
+  m009: { id:'m009', name:'炎之剑士', type:'monster', rarity:'R', archetype:'战士', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:2,soul:3,proficiency:0,intelligence:0} },
+  m010: { id:'m010', name:'时间魔术师', type:'monster', rarity:'R', archetype:'赌博', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:4}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m011: { id:'m011', name:'三眼怪', type:'monster', rarity:'R', archetype:'检索', stats:{search:6,expand:0,disrupt:0,resist:0,suppress:2}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  m012: { id:'m012', name:'黑森林的魔女', type:'monster', rarity:'R', archetype:'检索', stats:{search:6,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  m013: { id:'m013', name:'魔导战士 破坏者', type:'monster', rarity:'R', archetype:'魔导', stats:{search:0,expand:0,disrupt:2,resist:0,suppress:4}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  m014: { id:'m014', name:'混沌帝龙', type:'monster', rarity:'UR', archetype:'混沌', stats:{search:0,expand:3,disrupt:4,resist:4,suppress:9}, sub:{power:10,soul:6,proficiency:0,intelligence:0} },
+  m015: { id:'m015', name:'混沌黑魔术师', type:'monster', rarity:'UR', archetype:'黑魔导', stats:{search:6,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:9,soul:10,proficiency:0,intelligence:0} },
+  m016: { id:'m016', name:'电子龙', type:'monster', rarity:'SR', archetype:'电子龙', stats:{search:0,expand:6,disrupt:0,resist:4,suppress:6}, sub:{power:5,soul:8,proficiency:0,intelligence:0} },
+  m017: { id:'m017', name:'元素英雄 新宇侠', type:'monster', rarity:'R', archetype:'英雄', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:6}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
+  m018: { id:'m018', name:'熔岩魔神', type:'monster', rarity:'R', archetype:'熔岩', stats:{search:0,expand:0,disrupt:8,resist:0,suppress:6}, sub:{power:8,soul:2,proficiency:0,intelligence:0} },
+  m019: { id:'m019', name:'火山女王', type:'monster', rarity:'R', archetype:'火山', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
+  m020: { id:'m020', name:'孤火花', type:'monster', rarity:'R', archetype:'植物', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:2}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
+  m021: { id:'m021', name:'蒲公英狮', type:'monster', rarity:'SR', archetype:'植物', stats:{search:0,expand:7,disrupt:0,resist:2,suppress:2}, sub:{power:5,soul:4,proficiency:0,intelligence:0} },
+  m022: { id:'m022', name:'召唤僧', type:'monster', rarity:'SR', archetype:'魔法师', stats:{search:2,expand:5,disrupt:0,resist:0,suppress:3}, sub:{power:5,soul:3,proficiency:0,intelligence:0} },
+  m023: { id:'m023', name:'僵尸带菌者', type:'monster', rarity:'SR', archetype:'不死', stats:{search:0,expand:4,disrupt:0,resist:2,suppress:2}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  m024: { id:'m024', name:'奈菲斯之凤凰神', type:'monster', rarity:'SR', archetype:'凤凰', stats:{search:0,expand:0,disrupt:5,resist:5,suppress:5}, sub:{power:7,soul:6,proficiency:0,intelligence:0} },
+  m025: { id:'m025', name:'命运英雄 血魔-D', type:'monster', rarity:'UR', archetype:'英雄', stats:{search:0,expand:0,disrupt:7,resist:7,suppress:7}, sub:{power:8,soul:5,proficiency:0,intelligence:0} },
+  m026: { id:'m026', name:'电动刃虫', type:'monster', rarity:'R', archetype:'昆虫', stats:{search:2,expand:0,disrupt:0,resist:0,suppress:5}, sub:{power:4,soul:1,proficiency:0,intelligence:0} },
+  m027: { id:'m027', name:'混沌战士', type:'monster', rarity:'UR', archetype:'混沌', stats:{search:0,expand:7,disrupt:7,resist:7,suppress:7}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
+  m028: { id:'m028', name:'冲锋陷阵的队长', type:'monster', rarity:'SR', archetype:'战士', stats:{search:0,expand:4,disrupt:0,resist:6,suppress:2}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
+
+  // 额外卡组
+  e001: { id:'e001', name:'青眼究极龙', type:'extra', rarity:'UR', archetype:'青眼', stats:{search:0,expand:0,disrupt:3,resist:3,suppress:9}, sub:{power:10,soul:10,proficiency:0,intelligence:0} },
+  e002: { id:'e002', name:'圣女 贞德', type:'extra', rarity:'N', archetype:'', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  e003: { id:'e003', name:'暗黑魔龙', type:'extra', rarity:'SR', archetype:'恶魔', stats:{search:0,expand:5,disrupt:0,resist:4,suppress:5}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
+  e004: { id:'e004', name:'龙骑士盖亚', type:'extra', rarity:'SR', archetype:'盖亚', stats:{search:0,expand:0,disrupt:2,resist:6,suppress:6}, sub:{power:6,soul:7,proficiency:0,intelligence:0} },
+  e005: { id:'e005', name:'有翼幻兽 奇美拉', type:'extra', rarity:'R', archetype:'幻兽', stats:{search:6,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  e006: { id:'e006', name:'冰结界之龙 光枪龙', type:'extra', rarity:'SR', archetype:'冰结界', stats:{search:0,expand:0,disrupt:8,resist:5,suppress:5}, sub:{power:6,soul:5,proficiency:0,intelligence:0} },
+  e007: { id:'e007', name:'黑蔷薇龙', type:'extra', rarity:'SR', archetype:'蔷薇', stats:{search:0,expand:4,disrupt:6,resist:0,suppress:6}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
+  e008: { id:'e008', name:'星尘龙', type:'extra', rarity:'UR', archetype:'龙', stats:{search:0,expand:6,disrupt:8,resist:8,suppress:6}, sub:{power:8,soul:10,proficiency:0,intelligence:0} },
+  e009: { id:'e009', name:'真红魔龙', type:'extra', rarity:'UR', archetype:'龙', stats:{search:3,expand:4,disrupt:0,resist:7,suppress:8}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
+  e010: { id:'e010', name:'迷宫的魔战车', type:'extra', rarity:'N', archetype:'迷宫', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  e011: { id:'e011', name:'双头雷龙', type:'extra', rarity:'N', archetype:'雷龙', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+
+  // 魔法卡
+  s001: { id:'s001', name:'死者苏生', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:4}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
+  s002: { id:'s002', name:'黑洞', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:2,suppress:5}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
+  s003: { id:'s003', name:'闪电旋涡', type:'spell', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:5}, sub:{power:4,soul:1,proficiency:0,intelligence:0} },
+  s004: { id:'s004', name:'大岚', type:'spell', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:4,suppress:0}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
+  s005: { id:'s005', name:'旋风', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:0}, sub:{power:2,soul:1,proficiency:0,intelligence:0} },
+  s006: { id:'s006', name:'强欲之壶', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:10,expand:3,disrupt:0,resist:0,suppress:3}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  s007: { id:'s007', name:'天使的施舍', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:8,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:7,soul:3,proficiency:0,intelligence:0} },
+  s008: { id:'s008', name:'增援', type:'spell', rarity:'R', archetype:'泛用', stats:{search:4,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:2,proficiency:0,intelligence:0} },
+  s009: { id:'s009', name:'月之书', type:'spell', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:2}, sub:{power:3,soul:2,proficiency:0,intelligence:0} },
+  s010: { id:'s010', name:'敌人控制器', type:'spell', rarity:'R', archetype:'泛用', stats:{search:0,expand:2,disrupt:6,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  s011: { id:'s011', name:'灵魂交换', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:2,proficiency:0,intelligence:0} },
+  s012: { id:'s012', name:'融合', type:'spell', rarity:'SR', archetype:'融合', stats:{search:2,expand:6,disrupt:0,resist:0,suppress:2}, sub:{power:4,soul:4,proficiency:0,intelligence:0} },
+  s013: { id:'s013', name:'地割', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:0}, sub:{power:3,soul:1,proficiency:0,intelligence:0} },
+  s014: { id:'s014', name:'地碎', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:0}, sub:{power:1,soul:3,proficiency:0,intelligence:0} },
+  s015: { id:'s015', name:'收缩', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:0}, sub:{power:1,soul:2,proficiency:0,intelligence:0} },
+  s016: { id:'s016', name:'魔法石的采掘', type:'spell', rarity:'R', archetype:'泛用', stats:{search:5,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  s017: { id:'s017', name:'名推理', type:'spell', rarity:'R', archetype:'泛用', stats:{search:5,expand:5,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:5,proficiency:0,intelligence:0} },
+  s018: { id:'s018', name:'怪兽之门', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:5,disrupt:0,resist:0,suppress:2}, sub:{power:3,soul:2,proficiency:0,intelligence:0} },
+  s019: { id:'s019', name:'替罪羊', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:0,expand:6,disrupt:0,resist:4,suppress:2}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
+  s020: { id:'s020', name:'洗脑', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:0,expand:2,disrupt:6,resist:0,suppress:2}, sub:{power:5,soul:1,proficiency:0,intelligence:0} },
+  s021: { id:'s021', name:'过早的埋葬', type:'spell', rarity:'R', archetype:'泛用', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:0}, sub:{power:5,soul:3,proficiency:0,intelligence:0} },
+
+  // 陷阱卡
+  t001: { id:'t001', name:'激流葬', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
+  t002: { id:'t002', name:'神圣防护罩 -反射镜力-', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:3,suppress:7}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
+  t003: { id:'t003', name:'奈落的落穴', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:3}, sub:{power:5,soul:3,proficiency:0,intelligence:0} },
+  t004: { id:'t004', name:'次元幽闭', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:0}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
+  t005: { id:'t005', name:'魔法筒', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:2}, sub:{power:4,soul:3,proficiency:0,intelligence:0} },
+  t006: { id:'t006', name:'废铁稻草人', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:4,suppress:0}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
+  t007: { id:'t007', name:'血之代偿', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:6,disrupt:2,resist:0,suppress:3}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
+  t008: { id:'t008', name:'王宫的通告', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:4}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
+  t009: { id:'t009', name:'活死人的呼声', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:6,disrupt:2,resist:0,suppress:2}, sub:{power:6,soul:3,proficiency:0,intelligence:0} },
+  t010: { id:'t010', name:'神之宣告', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:7,suppress:7}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
+  t011: { id:'t011', name:'神之警告', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:1,expand:1,disrupt:6,resist:6,suppress:6}, sub:{power:7,soul:4,proficiency:0,intelligence:0} },
+  t012: { id:'t012', name:'突破技能', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:3}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
+  t013: { id:'t013', name:'无限泡影', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:0,disrupt:7,resist:4,suppress:4}, sub:{power:7,soul:3,proficiency:0,intelligence:0} },
+
+};
+
+// ===== 天赋定义 =====
+const TALENTS = [
+  {
+    "id": "genius",
+    "name": "天才决斗者",
+    "type": "positive",
+    "desc": "全主属性+3，初始拥有更强的决斗直觉",
+    "effects": {
+      "search": 3,
+      "expand": 3,
+      "disrupt": 3,
+      "resist": 3,
+      "suppress": 3
+    },
+    "winRateBonus": 5,
+    "maxMainDeck": 0
+  },
+  {
+    "id": "merchant",
+    "name": "卡之商人",
+    "type": "positive",
+    "desc": "捡卡时稀有度提升一档，更容易获得稀有卡",
+    "effects": {
+      "luck": 5,
+      "soul": 0
+    },
+    "pickupRarityBonus": 1
+  },
+  {
+    "id": "social",
+    "name": "社交达人",
+    "type": "positive",
+    "desc": "角色好感度提升速度+50%",
+    "effects": {},
+    "affinityMultiplier": 1.5
+  },
+  {
+    "id": "lucky",
+    "name": "命运宠儿",
+    "type": "positive",
+    "desc": "掏度+10，决斗中更容易触发关键抽卡",
+    "effects": {
+      "luck": 10
+    }
+  },
+  {
+    "id": "builder",
+    "name": "卡组大师",
+    "type": "positive",
+    "desc": "卡组构筑理解强大（强度+5），所有卡片属性加成提升20%",
+    "effects": {
+      "power": 5,
+      "disrupt": 0
+    },
+    "cardAttributeMultiplier": 1.2
+  },
+  {
+    "id": "rookie",
+    "name": "新手小白",
+    "type": "negative",
+    "desc": "全主属性-2，刚开始接触决斗怪兽，但是有着相当的热情（魂度+5）",
+    "effects": {
+      "search": -2,
+      "expand": -2,
+      "disrupt": -2,
+      "resist": -2,
+      "suppress": -2,
+      "soul": 5
+    }
+  },
+  {
+    "id": "unlucky",
+    "name": "非酋体质",
+    "type": "negative",
+    "desc": "掏度-8，抽卡总是差一点",
+    "effects": {
+      "luck": -8
+    },
+    "exclusive": [
+      "lucky"
+    ]
+  },
+  {
+    "id": "introvert",
+    "name": "社交恐惧",
+    "type": "negative",
+    "desc": "角色好感度提升速度-50%，但是更容易得到卡片的认可",
+    "effects": {
+      "luck": 3,
+      "soul": 3
+    },
+    "affinityMultiplier": 0.5,
+    "exclusive": [
+      "social"
+    ]
+  },
+  {
+    "id": "clumsy",
+    "name": "手残党",
+    "type": "negative",
+    "desc": "展开-4，操作总是慢半拍",
+    "effects": {
+      "expand": -4
+    }
+  },
+  {
+    "id": "Zero",
+    "name": "一无所有",
+    "type": "negative",
+    "desc": "什么也没有，就和过去一样",
+    "effects": {},
+    "bonus": {}
+  },
+  {
+    "id": "MagicMaster",
+    "name": "魔法大师",
+    "type": "positive",
+    "desc": "所有卡片属性翻三倍，所有卡的属性获得加强并且使用魔法卡更加得心应手，但是只允许使用魔法卡",
+    "effects": {},
+    "cardAttributeMultiplier": 3
+  },
+  {
+    "id": "001",
+    "name": "黑魔导师",
+    "type": "positive",
+    "desc": "拥有精通各种魔法的顶级魔导天赋",
+    "effects": {
+      "search": 5,
+      "expand": 5,
+      "soul": 0,
+      "proficiency": 5
+    },
+    "bonus": {},
+    "startCards": [
+      "m002"
+    ],
+    "winRateBonus": 5,
+    "maxMainDeck": 0,
+    "cardAttributeMultiplier": 1.2
+  },
+  {
+    "id": "002",
+    "name": "御龙者",
+    "type": "positive",
+    "desc": "能够熟练驾驭各种龙族怪兽",
+    "effects": {
+      "proficiency": 5,
+      "power": 5,
+      "resist": 5,
+      "suppress": 5
+    },
+    "bonus": {},
+    "cardAttributeMultiplier": 1.2
+  },
+  {
+    "id": "legend_soul",
+    "name": "传说之魂",
+    "type": "positive",
+    "desc": "【隐藏天赋】与传说之龙建立深厚羁绊，龙族卡片属性+50%，魂度+10",
+    "effects": {
+      "soul": 10
+    },
+    "bonus": {},
+    "cardAttributeMultiplier": 1.5,
+    "hidden": true,
+    "unlockAchievement": "blue_eyes"
+  },
+  {
+    "id": "dark_art",
+    "name": "黑魔术奥义",
+    "type": "positive",
+    "desc": "【隐藏天赋】掌握黑魔术的终极奥义，魔法卡属性+50%，检索+8，熟练度+5",
+    "effects": {
+      "search": 8,
+      "proficiency": 5
+    },
+    "bonus": {},
+    "cardAttributeMultiplier": 1.5,
+    "hidden": true,
+    "unlockAchievement": "dark_magician"
+  },
+  {
+    "id": "duel_king",
+    "name": "决斗王者",
+    "type": "positive",
+    "desc": "【隐藏天赋】身经百战的决斗王者，全主属性+5，强度+10，胜率+10%",
+    "effects": {
+      "search": 5,
+      "expand": 5,
+      "disrupt": 5,
+      "resist": 5,
+      "suppress": 5,
+      "power": 10,
+      "intelligence": 0
+    },
+    "bonus": {},
+    "winRateBonus": 10,
+    "hidden": true,
+    "unlockAchievement": "duel_king"
+  },
+  {
+    "id": "collector_master",
+    "name": "收藏大师",
+    "type": "positive",
+    "desc": "【隐藏天赋】真正的卡牌收藏家，捡卡时稀有度提升两档，掏度+15",
+    "effects": {
+      "luck": 15
+    },
+    "hidden": true,
+    "unlockAchievement": "rich",
+    "pickupRarityBonus": 2
+  },
+  {
+    "id": "social_elite",
+    "name": "社交名流",
+    "type": "positive",
+    "desc": "【隐藏天赋】童实野市的社交名流，角色好感度提升速度+100%，情报力+10",
+    "effects": {
+      "intelligence": 10,
+      "proficiency": 0,
+      "suppress": 0
+    },
+    "hidden": true,
+    "unlockAchievement": "social",
+    "affinityMultiplier": 2
+  },
+  {
+    "id": "year_training",
+    "name": "一年修行",
+    "type": "positive",
+    "desc": "【隐藏天赋】经过一年的刻苦修行，熟练度+15，情报力+15，全主属性+3",
+    "effects": {
+      "search": 3,
+      "expand": 3,
+      "disrupt": 3,
+      "resist": 3,
+      "suppress": 3,
+      "proficiency": 15,
+      "intelligence": 15
+    },
+    "bonus": {},
+    "hidden": true,
+    "unlockAchievement": "year_one"
+  }
+];
+
+// ===== 对手/NPC数据库（可由开发工具编辑）=====
+const OPPONENTS = [
+  {
+    "id": "op001",
+    "name": "新手决斗者",
+    "basePower": 800,
+    "variance": 80,
+    "difficulty": 1,
+    "desc": "刚接触决斗的新手，牌力较弱"
+  },
+  {
+    "id": "op002",
+    "name": "校园决斗者",
+    "basePower": 1200,
+    "variance": 300,
+    "difficulty": 2,
+    "desc": "学校里的决斗爱好者，有一定基础"
+  },
+  {
+    "id": "op003",
+    "name": "卡店常客",
+    "basePower": 1400,
+    "variance": 400,
+    "difficulty": 3,
+    "desc": "经常在卡店决斗的老手，经验丰富"
+  },
+  {
+    "id": "op004",
+    "name": "街头高手",
+    "basePower": 1500,
+    "variance": 300,
+    "difficulty": 4,
+    "desc": "在街头决斗中成名的高手"
+  },
+  {
+    "id": "op005",
+    "name": "地下赌徒",
+    "basePower": 1800,
+    "variance": 180,
+    "difficulty": 4,
+    "desc": "地下决斗场的常客，擅长赌卡决斗"
+  },
+  {
+    "id": "op006",
+    "name": "职业决斗者",
+    "basePower": 2100,
+    "variance": 800,
+    "difficulty": 5,
+    "desc": "参加过职业比赛的决斗者"
+  },
+  {
+    "id": "op007",
+    "name": "顶级决斗者",
+    "basePower": 4000,
+    "variance": 1000,
+    "difficulty": 6,
+    "desc": "决斗界的顶级强者，牌力深厚"
+  },
+  {
+    "id": "op008",
+    "name": "传说决斗者",
+    "basePower": 8000,
+    "variance": 2000,
+    "difficulty": 7,
+    "desc": "传说中的决斗者，几乎无人能敌"
+  }
+];
+
+// ===== 决斗配置（可由开发工具编辑）=====
+const DUEL_CONFIG = {
+  "maxTurns": 8,
+  "playerBasePower": 100,
+  "quickModeBonus": 1.2,
+  "masterModeBonus": 1.4,
+  "npcGrowthStartDay": 196,
+  "npcGrowthInterval": 28,
+  "npcGrowthRate": 0.125,
+  "winDuelPointsQuick": 200,
+  "winDuelPointsMaster": 800,
+  "battleEventBaseRate": 0.3,
+  "archetypeEventBonus": 0.15
+};
+
+// ===== 地点定义 =====
+const LOCATIONS = [
+  {
+    "id": "kame",
+    "name": "龟游戏屋",
+    "desc": "武藤家经营的卡牌店，双六爷爷偶尔会送你一些旧卡。",
+    "tags": [
+      "捡卡",
+      "角色"
+    ]
+  },
+  {
+    "id": "cardshop",
+    "name": "童实野卡牌店",
+    "desc": "市中心的大型卡牌店，有卡包售卖和自由决斗区。",
+    "tags": [
+      "捡卡",
+      "决斗"
+    ]
+  },
+  {
+    "id": "beach",
+    "name": "海边码头",
+    "desc": "海风徐徐的港口，偶尔能捡到被海浪冲上来的卡，也会遇到奇怪的决斗者。",
+    "tags": [
+      "捡卡",
+      "事件"
+    ]
+  },
+  {
+    "id": "school",
+    "name": "童实野高中",
+    "desc": "你的学校，放学后可以和同学交流卡组，也可能遇到校园决斗。",
+    "tags": [
+      "角色",
+      "事件"
+    ]
+  },
+  {
+    "id": "plaza",
+    "name": "童实野广场",
+    "desc": "城市中心广场，经常有街头决斗和各种活动。",
+    "tags": [
+      "决斗",
+      "事件"
+    ]
+  },
+  {
+    "id": "kaiba",
+    "name": "海马乐园",
+    "desc": "海马公司旗下的主题乐园，有高端决斗设施，但入场费不便宜。",
+    "tags": [
+      "决斗",
+      "稀有卡"
+    ]
+  },
+  {
+    "id": "underground",
+    "name": "地下决斗场",
+    "desc": "隐藏在城市深处的非法决斗场，高风险高回报，赌卡 stakes 很高。",
+    "tags": [
+      "决斗",
+      "赌卡"
+    ]
+  },
+  {
+    "id": "park",
+    "name": "中央公园",
+    "desc": "安静的城市公园，适合整理卡组、思考战术，偶尔有奇遇。",
+    "tags": [
+      "事件",
+      "休息"
+    ]
+  }
+];
+
+// ===== 角色定义 =====
+const CHARACTERS = [
+  {
+    "id": "yugi",
+    "name": "武藤游戏",
+    "desc": "龟游戏屋的少年，拥有千年积木，暗游戏人格是传说中的决斗王。",
+    "avatar": "游",
+    "giftCard": "m002",
+    "canChallenge": true,
+    "power": 28000,
+    "challengeReward": "m002",
+    "challengeDesc": "与暗游戏的宿命对决，获胜可获得他的王牌卡。"
+  },
+  {
+    "id": "jonouchi",
+    "name": "城之内克也",
+    "desc": "游戏的挚友，从菜鸟成长为一流决斗者，王牌是真红眼黑龙。",
+    "avatar": "城",
+    "giftCard": "e003",
+    "canChallenge": true,
+    "power": 20000,
+    "challengeReward": "e003",
+    "challengeDesc": "与城之内的友情决斗，获胜可获得真红眼黑龙。"
+  },
+  {
+    "id": "kaiba",
+    "name": "海马濑人",
+    "desc": "海马公司社长，青眼白龙的拥有者，冷酷而强大的决斗者。",
+    "avatar": "海",
+    "giftCard": "m001",
+    "canChallenge": true,
+    "power": 24000,
+    "challengeReward": "m001",
+    "challengeDesc": "与海马的巅峰对决，获胜可获得青眼白龙。"
+  },
+  {
+    "id": "anzu",
+    "name": "真崎杏子",
+    "desc": "游戏的青梅竹马，梦想成为舞者，一直在默默支持游戏。",
+    "avatar": "杏",
+    "giftCard": "m008",
+    "canChallenge": false,
+    "power": 6000,
+    "challengeReward": null,
+    "challengeDesc": ""
+  },
+  {
+    "id": "honda",
+    "name": "本田广人",
+    "desc": "游戏的朋友，热血直肠子，虽然决斗水平一般但很讲义气。",
+    "avatar": "本",
+    "giftCard": "e004",
+    "canChallenge": true,
+    "power": 1800,
+    "challengeReward": "m028",
+    "challengeDesc": "与本田的轻松决斗，获胜可获得他的收藏卡。"
+  },
+  {
+    "id": "bakura",
+    "name": "獏良了",
+    "desc": "转学生，拥有千年智慧轮，暗人格是盗贼王貘良。",
+    "avatar": "獏",
+    "giftCard": "m004",
+    "canChallenge": true,
+    "power": 18000,
+    "challengeReward": "m004",
+    "challengeDesc": "与暗貘良的黑暗决斗，获胜可获得他的亡灵卡。"
+  },
+  {
+    "id": "otogi",
+    "name": "御伽龙儿",
+    "desc": "DDM游戏的创作者，转学来到童实野高中，擅长骰子怪兽。",
+    "avatar": "御",
+    "giftCard": "m010",
+    "canChallenge": true,
+    "power": 15000,
+    "challengeReward": "m010",
+    "challengeDesc": "与御伽的骰子决斗，获胜可获得他的骰子怪兽卡。"
+  },
+  {
+    "id": "keith",
+    "name": "基斯·霍华德",
+    "desc": "前全美冠军，现在是游走各地的职业赌徒，手段不太光彩。",
+    "avatar": "基",
+    "giftCard": "s006",
+    "canChallenge": true,
+    "power": 12000,
+    "challengeReward": "s006",
+    "challengeDesc": "与基斯的赌卡决斗，获胜可获得他的战术卡。"
+  },
+  {
+    "id": "insector",
+    "name": "昆虫羽蛾",
+    "desc": "全国大赛亚军，昆虫族卡组的使用者，性格有些阴险。",
+    "avatar": "羽",
+    "giftCard": "m027",
+    "canChallenge": true,
+    "power": 16000,
+    "challengeReward": "m027",
+    "challengeDesc": "与羽蛾的昆虫决斗，获胜可获得他的昆虫女王。"
+  },
+  {
+    "id": "dinosaur",
+    "name": "恐龙龙崎",
+    "desc": "全国大赛季军，恐龙族卡组使用者，和羽蛾经常一起行动。",
+    "avatar": "龙",
+    "giftCard": "e003",
+    "canChallenge": true,
+    "power": 14000,
+    "challengeReward": "e003",
+    "challengeDesc": "与龙崎的恐龙决斗，获胜可获得他的真红眼黑龙。"
+  }
+];
+
+// ===== 比赛定义 =====
+const TOURNAMENTS = [
+  {
+    "id": "local",
+    "name": "卡店周赛",
+    "tier": "入门",
+    "desc": "童实野卡牌店每周举办的小型比赛，参与门槛低。",
+    "duelMode": "quick",
+    "requirement": {
+      "mainDeck": 20
+    },
+    "rounds": 2,
+    "opponentNames": [
+      "卡店新手",
+      "卡店老手"
+    ],
+    "opponentBasePower": 1200,
+    "opponentPowerGrowth": 0.3,
+    "rewardRarities": [
+      "N",
+      "R"
+    ],
+    "rewardCardCount": 1,
+    "duelPointsWin": 500,
+    "duelPointsLose": 50,
+    "rewards": "随机N~R卡×1 + 500决斗点",
+    "bonusStats": {
+      "power": 0,
+      "proficiency": 2
+    },
+    "difficulty": 1
+  },
+  {
+    "id": "city",
+    "name": "童实野市大赛",
+    "tier": "中级",
+    "desc": "全市规模的决斗大赛，高手云集。",
+    "duelMode": "master",
+    "requirement": {
+      "mainDeck": 40,
+      "extraDeck": 0,
+      "winCount": 5
+    },
+    "rounds": 4,
+    "opponentNames": [
+      "市大赛首轮对手",
+      "市大赛次轮对手",
+      "市大赛半决赛对手",
+      "市大赛决赛对手"
+    ],
+    "opponentBasePower": 3000,
+    "opponentPowerGrowth": 0.5,
+    "rewardRarities": [
+      "R",
+      "SR"
+    ],
+    "rewardCardCount": 1,
+    "duelPointsWin": 2000,
+    "duelPointsLose": 200,
+    "rewards": "随机R~SR卡×1 + 2000决斗点",
+    "bonusStats": {
+      "power": 0,
+      "soul": 0,
+      "disrupt": 0,
+      "expand": 0,
+      "proficiency": 4,
+      "intelligence": 4,
+      "luck": 2
+    },
+    "difficulty": 3
+  },
+  {
+    "id": "regional",
+    "name": "地区预选赛",
+    "tier": "高级",
+    "desc": "通往全国大赛的预选赛，竞争激烈。",
+    "duelMode": "master",
+    "requirement": {
+      "mainDeck": 40,
+      "extraDeck": 15,
+      "winCount": 15
+    },
+    "rounds": 6,
+    "opponentNames": [
+      "预选赛首轮对手",
+      "预选赛次轮对手",
+      "预选赛十六强对手",
+      "预选赛八强对手",
+      "预选赛半决赛对手",
+      "预选赛决赛对手"
+    ],
+    "opponentBasePower": 5000,
+    "opponentPowerGrowth": 0.2,
+    "rewardRarities": [
+      "SR",
+      "UR"
+    ],
+    "rewardCardCount": 1,
+    "duelPointsWin": 5000,
+    "duelPointsLose": 500,
+    "rewards": "随机SR~UR卡×1 + 5000决斗点",
+    "bonusStats": {
+      "power": 0,
+      "soul": 5,
+      "search": 0,
+      "resist": 0,
+      "suppress": 0,
+      "proficiency": 5,
+      "intelligence": 5,
+      "luck": 5
+    },
+    "difficulty": 5
+  },
+  {
+    "id": "kc",
+    "name": "海马杯决斗大赛",
+    "tier": "顶级",
+    "desc": "海马公司主办的顶级赛事，冠军将获得与海马决斗的资格。",
+    "duelMode": "master",
+    "requirement": {
+      "mainDeck": 40,
+      "extraDeck": 15,
+      "winCount": 10
+    },
+    "rounds": 6,
+    "opponentNames": [
+      "海马杯首轮对手",
+      "海马杯三十二强对手",
+      "海马杯十六强对手",
+      "海马杯八强对手",
+      "海马杯半决赛对手",
+      "海马杯决赛对手"
+    ],
+    "opponentBasePower": 8000,
+    "opponentPowerGrowth": 0.3,
+    "rewardRarities": [
+      "UR"
+    ],
+    "rewardCardCount": 3,
+    "duelPointsWin": 20000,
+    "duelPointsLose": 2000,
+    "rewards": "随机UR卡×3 + 20000决斗点",
+    "bonusStats": {
+      "power": 10,
+      "soul": 10,
+      "search": 17,
+      "expand": 0,
+      "disrupt": 0,
+      "resist": 0,
+      "suppress": 0,
+      "proficiency": 10,
+      "intelligence": 10
+    },
+    "difficulty": 8
+  },
+  {
+    "id": "battlecity",
+    "name": "决斗都市",
+    "tier": "传说",
+    "desc": "童实野市全境的决斗盛宴，稀有卡猎手们的终极舞台。",
+    "duelMode": "master",
+    "requirement": {
+      "mainDeck": 40,
+      "extraDeck": 15,
+      "winCount": 20
+    },
+    "rounds": 6,
+    "opponentNames": [
+      "决斗都市首轮对手",
+      "决斗都市三十二强对手",
+      "决斗都市十六强对手",
+      "决斗都市八强对手",
+      "决斗都市半决赛对手",
+      "决斗都市决赛对手"
+    ],
+    "opponentBasePower": 15000,
+    "opponentPowerGrowth": 1.2,
+    "rewardRarities": [
+      "UR"
+    ],
+    "rewardCardCount": 3,
+    "duelPointsWin": 50000,
+    "duelPointsLose": 5000,
+    "rewards": "随机UR卡×3 + 50000决斗点 + 传说称号",
+    "bonusStats": {
+      "search": 0,
+      "expand": 0,
+      "disrupt": 0,
+      "resist": 0,
+      "suppress": 0,
+      "soul": 12,
+      "power": 12,
+      "luck": 4,
+      "proficiency": 4,
+      "intelligence": 4
+    },
+    "difficulty": 12
+  },
+  {
+    "id": "Country",
+    "name": "全国大赛",
+    "tier": "顶级",
+    "duelMode": "master",
+    "desc": "与全国各地的决斗者们，角逐冠军的荣耀吧！",
+    "requirement": {
+      "mainDeck": 20,
+      "winCount": 20
+    },
+    "rounds": 3,
+    "opponentNames": [
+      "八强对手",
+      "四强对手",
+      "半决赛对手",
+      "决赛对手"
+    ],
+    "opponentBasePower": 6000,
+    "opponentPowerGrowth": 0.45,
+    "rewardRarities": [
+      "UR"
+    ],
+    "rewardCardCount": 2,
+    "duelPointsWin": 15000,
+    "duelPointsLose": 5000,
+    "rewards": "随机UR卡×1 + 成就：全国冠军",
+    "bonusStats": {
+      "proficiency": 8,
+      "intelligence": 8,
+      "luck": 4,
+      "soul": 4
+    },
+    "difficulty": 7
+  }
+];
+
+// ===== 成就定义 =====
+const ACHIEVEMENTS = [
+  {
+    "id": "first_card",
+    "name": "第一张卡",
+    "desc": "获得你的第一张卡片",
+    "condition": {
+      "type": "collection_count",
+      "value": 1
+    },
+    "bonus": {
+      "all": 1
+    },
+    "unlocked": false
+  },
+  {
+    "id": "deck_complete",
+    "name": "卡组完成",
+    "desc": "主卡组达到40张",
+    "condition": {
+      "type": "maindeck_count",
+      "value": 40
+    },
+    "bonus": {
+      "power": 3,
+      "all": 0
+    },
+    "unlocked": false
+  },
+  {
+    "id": "first_win",
+    "name": "首胜",
+    "desc": "赢得第一场决斗",
+    "condition": {
+      "type": "wins",
+      "value": 1
+    },
+    "bonus": {
+      "expand": 2
+    },
+    "unlocked": false
+  },
+  {
+    "id": "win_10",
+    "name": "十连胜者",
+    "desc": "累计赢得10场决斗",
+    "condition": {
+      "type": "wins",
+      "value": 10
+    },
+    "bonus": {
+      "suppress": 3
+    },
+    "unlocked": false
+  },
+  {
+    "id": "win_50",
+    "name": "决斗老手",
+    "desc": "累计赢得50场决斗",
+    "condition": {
+      "type": "wins",
+      "value": 50
+    },
+    "bonus": {
+      "disrupt": 5
+    },
+    "unlocked": false
+  },
+  {
+    "id": "ur_collector",
+    "name": "稀有收藏家",
+    "desc": "牌库拥有5张UR稀有度卡片",
+    "condition": {
+      "type": "ur_count",
+      "value": 5
+    },
+    "bonus": {
+      "search": 3
+    },
+    "unlocked": false
+  },
+  {
+    "id": "rich",
+    "name": "卡之富翁",
+    "desc": "牌库总数达到100张",
+    "condition": {
+      "type": "collection_count",
+      "value": 100
+    },
+    "bonus": {
+      "resist": 3
+    },
+    "unlocked": false
+  },
+  {
+    "id": "social",
+    "name": "交际花",
+    "desc": "与5名角色好感度达到50以上",
+    "condition": {
+      "type": "affinity_count",
+      "value": 5,
+      "threshold": 50
+    },
+    "bonus": {
+      "luck": 5
+    },
+    "unlocked": false
+  },
+  {
+    "id": "tournament_champ",
+    "name": "比赛冠军",
+    "desc": "赢得任意一场正式比赛",
+    "condition": {
+      "type": "tournament_wins",
+      "value": 1
+    },
+    "bonus": {
+      "power": 5
+    },
+    "unlocked": false
+  },
+  {
+    "id": "blue_eyes",
+    "name": "传说之龙",
+    "desc": "获得青眼白龙",
+    "condition": {
+      "type": "has_card",
+      "cardId": "m001"
+    },
+    "bonus": {
+      "soul": 5
+    },
+    "unlocked": false
+  },
+  {
+    "id": "dark_magician",
+    "name": "黑魔术之道",
+    "desc": "获得黑魔术师",
+    "condition": {
+      "type": "has_card",
+      "cardId": "m002"
+    },
+    "bonus": {
+      "search": 5
+    },
+    "unlocked": false
+  },
+  {
+    "id": "year_one",
+    "name": "一年牌佬",
+    "desc": "在童实野市度过满一年（365天）",
+    "condition": {
+      "type": "weeks",
+      "value": 365
+    },
+    "bonus": {
+      "all": 3
+    },
+    "unlocked": false
+  },
+  {
+    "id": "duel_king",
+    "name": "决斗王",
+    "desc": "战胜武藤游戏！",
+    "condition": {
+      "type": "won_tournament",
+      "value": 1,
+      "target": "武藤游戏"
+    },
+    "bonus": {
+      "all": 5,
+      "intelligence": 0,
+      "luck": 10
+    }
+  },
+  {
+    "id": "CountryKing",
+    "name": "全国冠军",
+    "desc": "成为全国冠军！",
+    "condition": {
+      "type": "won_tournament",
+      "value": 1
+    },
+    "bonus": {
+      "proficiency": 10,
+      "intelligence": 10,
+      "luck": 10,
+      "soul": 10
+    }
+  }
+];
+
+// ===== 事件定义 =====
+const EVENTS = {
+  "kame": [
+    {
+      "id": "kame_gift",
+      "name": "双六送卡",
+      "probability": 0.4,
+      "title": "龟游戏屋",
+      "text": "双六爷爷从柜台底下翻出一张旧卡递给你：\"这张送给你了，年轻人。\"",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "pool": [
+            "m006",
+            "m007",
+            "m008",
+            "s005",
+            "t006",
+            "m004",
+            "m009"
+          ],
+          "rarity": "N"
+        },
+        {
+          "type": "randomCardByRarity",
+          "rarity": "R"
+        }
+      ],
+      "log": "在龟游戏屋从双六爷爷处获得了【{cardName}】",
+      "options": [],
+      "cooldown": 2
+    },
+    {
+      "id": "kame_yugi",
+      "name": "遇到游戏",
+      "probability": 0.3,
+      "title": "龟游戏屋",
+      "text": "武藤游戏正在店里整理卡组，你们交流了一下决斗心得，他对你的卡组提出了一些建议。",
+      "effects": [
+        {
+          "type": "affinity",
+          "charId": "yugi",
+          "amount": 5
+        }
+      ],
+      "log": "在龟游戏屋与武藤游戏交流了卡组构筑心得",
+      "cooldown": 1
+    },
+    {
+      "id": "kame_study",
+      "name": "整理卡组",
+      "probability": 0.3,
+      "title": "龟游戏屋",
+      "text": "你在店里安静地整理卡组，回顾了自己的决斗思路，感觉对卡组的理解又深了一层。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "proficiency",
+          "amount": 1,
+          "max": 0,
+          "min": 2
+        }
+      ],
+      "log": "在龟游戏屋整理卡组，决斗理解提升"
+    }
+  ],
+  "cardshop": [
+    {
+      "id": "cardshop_pack",
+      "name": "开卡包",
+      "probability": 0.5,
+      "title": "童实野卡牌店",
+      "text": "你花了一些决斗点买了一包卡，拆开后发现了一张好卡！",
+      "effects": [],
+      "log": "在卡牌店开包获得【{cardName}】",
+      "options": [
+        {
+          "name": "消耗300决斗点买卡",
+          "effects": [
+            {
+              "type": "randomCardByRarity"
+            }
+          ]
+        },
+        {
+          "name": "没钱欸..去别处逛逛吧",
+          "skipTime": true,
+          "effects": [
+            {
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "cost": {
+        "duelPoints": 300
+      },
+      "failText": "需要300决斗点开一次！"
+    },
+    {
+      "id": "cardshop_duel",
+      "name": "自由决斗",
+      "probability": 0.3,
+      "title": "童实野卡牌店",
+      "text": "自由决斗区有人向你发起了挑战！",
+      "options": [
+        {
+          "name": "接受挑战",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "quick",
+              "gamble": false
+            }
+          ]
+        },
+        {
+          "name": "婉拒",
+          "skipTime": true,
+          "effects": [
+            {
+              "type": "text"
+            }
+          ],
+          "log": "婉拒了卡牌店的决斗邀请"
+        }
+      ]
+    },
+    {
+      "id": "cardshop_jonouchi",
+      "name": "遇到城之内",
+      "probability": 0.2,
+      "title": "童实野卡牌店",
+      "text": "城之内克也正在店里和人吹嘘他的真红眼黑龙，看到你后热情地打了个招呼。",
+      "effects": [
+        {
+          "type": "affinity",
+          "charId": "jonouchi",
+          "amount": 5
+        }
+      ],
+      "log": "在卡牌店遇到城之内克也",
+      "cooldown": 1
+    }
+  ],
+  "beach": [
+    {
+      "id": "beach_find",
+      "name": "捡到卡",
+      "probability": 0.3,
+      "title": "海边码头",
+      "text": "你在沙滩上发现了一个被海水冲上来的卡套，里面居然有一张完好的卡！",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "R"
+        }
+      ],
+      "log": "在海边捡到了【{cardName}】",
+      "cooldown": 3
+    },
+    {
+      "id": "beach_mystery",
+      "name": "神秘决斗者",
+      "probability": 0.3,
+      "title": "海边码头",
+      "text": "一个戴着头巾的神秘决斗者向你走来，他说要用一张稀有卡和你赌卡决斗！",
+      "options": [
+        {
+          "name": "接受赌卡决斗",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "master",
+              "gamble": true
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "skipTime": true,
+          "effects": [
+            {
+              "type": "skipWeek"
+            }
+          ],
+          "log": "在海边遇到神秘决斗者但选择离开"
+        }
+      ],
+      "cooldown": 5,
+      "failText": "你连卡组都没凑齐呀小鬼"
+    },
+    {
+      "id": "beach_relax",
+      "name": "海边散步",
+      "probability": 0.4,
+      "title": "海边码头",
+      "text": "你在海边吹着海风，思考着卡组的改良方案。远处的轮船鸣笛声让你心情平静。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "intelligence",
+          "amount": 3
+        }
+      ],
+      "log": "在海边散步放松，整理了思绪"
+    }
+  ],
+  "school": [
+    {
+      "id": "school_duel",
+      "name": "校园决斗",
+      "probability": 0.4,
+      "title": "童实野高中",
+      "text": "放学后，有同学向你发起了校园决斗挑战！",
+      "options": [
+        {
+          "name": "接受挑战",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "quick",
+              "gamble": false
+            }
+          ]
+        },
+        {
+          "name": "拒绝",
+          "effects": [
+            {
+              "type": "text"
+            }
+          ],
+          "log": "拒绝了校园决斗邀请"
+        }
+      ],
+      "cooldown": 2
+    },
+    {
+      "id": "school_friend",
+      "name": "遇到同学",
+      "probability": 0.3,
+      "title": "童实野高中",
+      "text": "你在走廊遇到了同学，你们聊了一会儿关于决斗怪兽的话题。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "charId": "random_school",
+          "amount": 5,
+          "stat": "intelligence"
+        }
+      ],
+      "log": "在学校遇到同学",
+      "cooldown": 2
+    },
+    {
+      "id": "school_ddm",
+      "name": "御伽的DDM",
+      "probability": 0.3,
+      "title": "童实野高中",
+      "text": "御伽龙儿拉着你试玩他新设计的DDM骰子怪兽游戏，虽然规则复杂但很有趣。",
+      "effects": [
+        {
+          "type": "affinity",
+          "charId": "otogi",
+          "amount": 5
+        },
+        {
+          "type": "bonusStat",
+          "stat": "proficiency",
+          "amount": 2
+        }
+      ],
+      "log": "和御伽龙儿一起玩DDM",
+      "cooldown": 4
+    }
+  ],
+  "plaza": [
+    {
+      "id": "plaza_duel",
+      "name": "街头决斗",
+      "probability": 0.5,
+      "title": "童实野广场",
+      "text": "广场上正在进行街头决斗，一位决斗者向你发出了挑战！",
+      "options": [
+        {
+          "name": "上台挑战",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "quick",
+              "gamble": false
+            }
+          ]
+        },
+        {
+          "name": "围观",
+          "effects": [
+            {
+              "type": "text"
+            }
+          ],
+          "log": "在广场围观街头决斗"
+        }
+      ],
+      "cooldown": 1
+    },
+    {
+      "id": "plaza_find",
+      "name": "遗失的卡盒",
+      "probability": 0.15,
+      "title": "童实野广场",
+      "text": "你在广场的长椅上发现了一个被遗忘的卡盒！里面有一张卡！",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "SR"
+        }
+      ],
+      "log": "在广场捡到卡盒，获得【{cardName}】",
+      "cooldown": 6
+    },
+    {
+      "id": "plaza_teach",
+      "name": "教小朋友",
+      "probability": 0.15,
+      "title": "童实野广场",
+      "text": "有个小朋友向你请教决斗规则，你耐心地教了他。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "soul",
+          "amount": 2
+        }
+      ],
+      "log": "在广场教小朋友决斗规则",
+      "cooldown": 2
+    },
+    {
+      "id": "plaza_watch",
+      "name": "经典决斗录像",
+      "probability": 0.1,
+      "title": "童实野广场",
+      "text": "广场大屏幕正在播放经典决斗录像，你驻足观看受益匪浅。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "intelligence",
+          "amount": 2
+        }
+      ],
+      "log": "在广场观看经典决斗录像"
+    },
+    {
+      "id": "plaza_bakura",
+      "name": "遇到獏良",
+      "probability": 0.1,
+      "title": "童实野广场",
+      "text": "你看到獏良了一个人站在广场角落，似乎在和什么人说话。看到你后他露出了意味深长的微笑。",
+      "effects": [
+        {
+          "type": "affinity",
+          "charId": "bakura",
+          "amount": 3
+        }
+      ],
+      "log": "在广场遇到獏良了",
+      "cooldown": 2
+    }
+  ],
+  "kaiba": [
+    {
+      "id": "kaiba_enter",
+      "name": "进入海马乐园",
+      "probability": 1,
+      "title": "海马乐园",
+      "text": "海马乐园的高级决斗区有一位实力不俗的决斗者向你发起挑战！",
+      "cost": {
+        "duelPoints": 1000
+      },
+      "failText": "海马乐园的入场费需要100决斗点，你目前的决斗点不够。",
+      "options": [
+        {
+          "name": "接受挑战",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "master",
+              "gamble": true
+            }
+          ]
+        },
+        {
+          "name": "参观",
+          "effects": [
+            {
+              "type": "bonusStat",
+              "min": 2,
+              "max": 0,
+              "stat": "intelligence",
+              "amount": 5
+            }
+          ],
+          "log": "在海马乐园参观"
+        }
+      ],
+      "log": "进入海马乐园"
+    },
+    {
+      "id": "kaiba_rare",
+      "name": "稀有卡包",
+      "probability": 0,
+      "title": "海马乐园",
+      "text": "你在海马乐园的限定商店买到了一包稀有卡包！",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "SR"
+        }
+      ],
+      "log": "在海马乐园获得稀有卡【{cardName}】",
+      "cooldown": 3,
+      "cost": {
+        "duelPoints": 500
+      }
+    },
+    {
+      "id": "kaiba_kaiba",
+      "name": "遇到海马",
+      "probability": 0,
+      "title": "海马乐园",
+      "text": "你在VIP区偶遇了海马濑人，他用高傲的眼神扫了你一眼：\"哦？你也配在这里决斗？让我看看你的实力吧。\"",
+      "effects": [],
+      "log": "在海马乐园遇到海马濑人",
+      "cooldown": 4,
+      "options": [
+        {
+          "name": "Duel！",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "kaiba",
+              "mode": "master"
+            },
+            {
+              "type": "affinity",
+              "charId": "kaiba"
+            }
+          ]
+        },
+        {
+          "name": "还没做好准备..",
+          "effects": [
+            {
+              "type": "skipWeek"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "underground": [
+    {
+      "id": "underground_gamble",
+      "name": "赌卡决斗",
+      "probability": 0.6,
+      "title": "地下决斗场",
+      "text": "昏暗的地下决斗场里，观众们疯狂地呐喊着。一个脸上有疤的决斗者向你勾了勾手指：\"小子，敢不敢来一场赌卡决斗？输了留下你最好的卡！\"",
+      "options": [
+        {
+          "name": "接受赌卡决斗",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "quick",
+              "gamble": true
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "skipTime": true,
+          "effects": [
+            {
+              "type": "text"
+            }
+          ],
+          "log": "在地下决斗场选择离开"
+        }
+      ]
+    },
+    {
+      "id": "underground_keith",
+      "name": "遇到基斯",
+      "probability": 0.25,
+      "title": "地下决斗场",
+      "text": "你在角落里发现了基斯·霍华德，他正在摆弄着几张卡。看到你后他咧嘴一笑：\"嘿，新人，想不想学两手？不过我可不免费教。\"",
+      "effects": [
+        {
+          "type": "affinity",
+          "charId": "keith",
+          "amount": 5
+        }
+      ],
+      "log": "在地下决斗场遇到基斯·霍华德",
+      "cooldown": 2
+    },
+    {
+      "id": "underground_danger",
+      "name": "气氛紧张",
+      "probability": 0.15,
+      "title": "地下决斗场",
+      "text": "地下决斗场的气氛越来越紧张，你感觉这里不太安全。",
+      "effects": [],
+      "log": "地下决斗场气氛紧张",
+      "options": [
+        {
+          "name": "隔壁擂台电流有点大",
+          "effects": [
+            {
+              "type": "addCard",
+              "cardId": "m016"
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "skipTime": true,
+          "effects": [
+            {
+              "type": "bonusStat",
+              "stat": "intelligence",
+              "amount": 10
+            }
+          ]
+        }
+      ],
+      "oneTime": true
+    }
+  ],
+  "park": [
+    {
+      "id": "park_study",
+      "name": "整理卡组",
+      "probability": 0.4,
+      "title": "中央公园",
+      "text": "你在公园的长椅上安静地整理卡组，仔细思考每张卡的作用和配合。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "amount": 2,
+          "stat": "proficiency"
+        },
+        {
+          "type": "bonusStat",
+          "stat": "soul",
+          "amount": 2
+        }
+      ],
+      "log": "在公园整理卡组，对卡组理解加深"
+    },
+    {
+      "id": "park_adventure",
+      "name": "奇遇",
+      "probability": 0.3,
+      "title": "中央公园",
+      "text": "你在公园的树下发现了一个旧盒子，里面有一张保存完好的卡！似乎是某个决斗者遗失的。",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "UR"
+        }
+      ],
+      "log": "在公园奇遇获得【{cardName}】",
+      "cooldown": 8
+    },
+    {
+      "id": "park_rest",
+      "name": "休息",
+      "probability": 0.3,
+      "title": "中央公园",
+      "text": "你在公园里悠闲地散步，享受着难得的宁静时光。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "luck",
+          "amount": 3
+        }
+      ],
+      "log": "在公园休息放松"
+    }
+  ]
+};
+
+/* === GAME_DATA_END === 以上数据可由 dev-tool.html 直接编辑 === */
+// ===== 游戏状态 =====
+let gameState = null;
+
+let selectedTalents = [];
+
+let currentTalentPool = []; // 当前显示的随机天赋池（6个）
+let currentDeckTab = 'main';
+let currentDuel = null;
+
+// ===== 工具函数 =====
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function choice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function saveGame() {
+  try { localStorage.setItem('duelist_sim_save', JSON.stringify(gameState)); return true; } catch(e) { return false; }
+}
+function loadGame() {
+  try {
+    const d = localStorage.getItem('duelist_sim_save');
+    if (d) {
+      gameState = JSON.parse(d);
+      // 兼容性检查：确保所有必要字段存在（旧存档兼容）
+      if (!gameState.week) gameState.week = 1;
+      if (!gameState.age) gameState.age = 18;
+      if (!gameState.talents) gameState.talents = [];
+      if (!gameState.mainDeck) gameState.mainDeck = [];
+      if (!gameState.extraDeck) gameState.extraDeck = [];
+      if (!gameState.collection) gameState.collection = [];
+      if (!gameState.collectionCount) gameState.collectionCount = {};
+      // 如果collection有卡但collectionCount为空，根据collection初始化
+      if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
+        gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
+      }
+      if (!gameState.affinity) gameState.affinity = {};
+      if (!gameState.wins) gameState.wins = 0;
+      if (!gameState.losses) gameState.losses = 0;
+      if (!gameState.duelCount) gameState.duelCount = 0;
+      if (!gameState.gambleCount) gameState.gambleCount = 0;
+      if (!gameState.tournamentWins) gameState.tournamentWins = [];
+      if (!gameState.achievements) gameState.achievements = [];
+      if (!gameState.recentEvents) gameState.recentEvents = [];
+      if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+      if (!gameState.eventCooldowns) gameState.eventCooldowns = {};
+      if (!gameState.bonusStats) gameState.bonusStats = {};
+      if (!gameState.duelPoints) gameState.duelPoints = 0;
+      if (!gameState.locationVisits) gameState.locationVisits = {};
+      if (!gameState.receivedGifts) gameState.receivedGifts = [];
+      if (!gameState.unlockedEvents) gameState.unlockedEvents = [];
+      if (!gameState.unlockedHiddenTalents) gameState.unlockedHiddenTalents = [];
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function clearSave() { try { localStorage.removeItem('duelist_sim_save'); } catch(e) {} }
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+// ===== 属性计算 =====
+function getBaseStats() {
+  const s = { search:0, expand:0, disrupt:0, resist:0, suppress:0, power:0, soul:0, luck:0, proficiency:0, intelligence:0 };
+  const MAIN_STATS = ['search','expand','disrupt','resist','suppress'];
+  const SUB_STATS = ['power','soul','luck','proficiency','intelligence'];
+  // 天赋加成（主属性+次属性都受影响）
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t.effects) Object.keys(t.effects).forEach(k => { s[k] = (s[k]||0) + t.effects[k]; });
+  });
+  // 成就加成（主属性+次属性都受影响），天赋可定义成就奖励倍率
+  const achMult = getTalentMultiplier('achievementBonusMultiplier', 1);
+  gameState.achievements.forEach(aid => {
+    const a = ACHIEVEMENTS.find(x => x.id === aid);
+    if (a && a.bonus) {
+      Object.keys(a.bonus).forEach(k => {
+        if (k === 'all') { MAIN_STATS.forEach(sk => s[sk] += Math.round(a.bonus.all * achMult)); }
+        else s[k] = (s[k]||0) + Math.round(a.bonus[k] * achMult);
+      });
+    }
+  });
+  // 事件/地点永久加成（只影响次属性：强度/魂度/掏度）
+  if (gameState.bonusStats) {
+    Object.keys(gameState.bonusStats).forEach(k => {
+      if (!MAIN_STATS.includes(k)) s[k] = (s[k]||0) + gameState.bonusStats[k];
+    });
+  }
+  // 比赛胜利加成（只影响次属性）
+  gameState.tournamentWins.forEach(tid => {
+    const t = TOURNAMENTS.find(x => x.id === tid);
+    if (t && t.bonusStats) {
+      Object.keys(t.bonusStats).forEach(k => {
+        if (!MAIN_STATS.includes(k)) s[k] = (s[k]||0) + t.bonusStats[k];
+      });
+    }
+  });
+  return s;
+}
+
+function getDeckStats() {
+  const s = { search:0, expand:0, disrupt:0, resist:0, suppress:0, power:0, soul:0, luck:0, proficiency:0, intelligence:0 };
+  // 天赋可定义的卡片属性倍率
+  let builderBonus = getTalentMultiplier('cardAttributeMultiplier', 1);
+  gameState.mainDeck.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (c && c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * builderBonus; });
+    if (c && c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * builderBonus; });
+  });
+  gameState.extraDeck.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (c && c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * builderBonus * 0.5; });
+    if (c && c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * builderBonus * 0.5; });
+  });
+  return s;
+}
+
+function getTotalStats() {
+  const base = getBaseStats();
+  const deck = getDeckStats();
+  const total = {};
+  Object.keys(base).forEach(k => { total[k] = Math.round((base[k]||0) + (deck[k]||0)); });
+  // 系列卡组加成
+  const archBonus = getArchetypeBonus();
+  if (archBonus) {
+    total.power = (total.power || 0) + archBonus.power;
+    total.soul = (total.soul || 0) + archBonus.soul;
+    total.luck = (total.luck || 0) + archBonus.luck;
+  }
+  return total;
+}
+
+// ===== 系列卡组系统 =====
+function getDeckArchetypeCount() {
+  const counts = {};
+  const allCards = [...gameState.mainDeck, ...gameState.extraDeck];
+  allCards.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (c && c.archetype) {
+      counts[c.archetype] = (counts[c.archetype] || 0) + 1;
+    }
+  });
+  return counts;
+}
+
+function getActiveArchetype() {
+  const counts = getDeckArchetypeCount();
+  let maxArchetype = null;
+  let maxCount = 0;
+  Object.keys(counts).forEach(arch => {
+    if (counts[arch] >= 15 && counts[arch] > maxCount) {
+      maxArchetype = arch;
+      maxCount = counts[arch];
+    }
+  });
+  return maxArchetype;
+}
+
+function getArchetypeBonus() {
+  const arch = getActiveArchetype();
+  if (!arch) return null;
+  // 系列卡组加成：魂度+5、强度+5、掏度+5，天赋可定义系列加成倍率
+  const archMult = getTalentMultiplier('archetypeBonusMultiplier', 1);
+  return { power: Math.round(5 * archMult), soul: Math.round(5 * archMult), luck: Math.round(5 * archMult) };
+}
+
+function updateArchetypeTag() {
+  const tagEl = document.getElementById('archetype-tag');
+  if (!tagEl) return;
+  const arch = getActiveArchetype();
+  if (arch) {
+    tagEl.textContent = arch + '系列';
+    tagEl.style.display = 'inline-block';
+  } else {
+    tagEl.style.display = 'none';
+  }
+}
+
+function getArchetypeLuckBonus() {
+  const arch = getActiveArchetype();
+  // 系列卡组提升幸运事件概率：从30%提升到45%
+  return arch ? 0.45 : 0.3;
+}
+
+function getDuelPower() {
+  const s = getTotalStats();
+  // 熟练度影响展开和干扰，情报力影响抗性和压制
+  const effExpand = (s.expand || 0) + (s.proficiency || 0) * 0.5;
+  const effDisrupt = (s.disrupt || 0) + (s.proficiency || 0) * 0.5;
+  const effResist = (s.resist || 0) + (s.intelligence || 0) * 0.5;
+  const effSuppress = (s.suppress || 0) + (s.intelligence || 0) * 0.5;
+  // 主属性权重 + 副属性权重
+  // 强度直接代表卡牌质量，掏度影响抽卡运气和关键触发，魂度影响羁绊和关键卡上手
+  // 熟练度高更容易打出精彩连锁和展开，情报力高提高应对能力和先手压制
+  return Math.round(
+    (s.search || 0) * 1.0 +
+    effExpand * 1.2 +
+    effDisrupt * 1.0 +
+    effResist * 0.8 +
+    effSuppress * 1.1 +
+    (s.power || 0) * 2.0 +
+    (s.soul || 0) * 0.5 +
+    (s.luck || 0) * 1.5
+  );
+}
+
+// ===== 卡组计数 =====
+function getMainDeckCount() { return gameState.mainDeck.length; }
+function getExtraDeckCount() { return gameState.extraDeck.length; }
+
+// ===== 天赋渲染 =====
+function renderTalents() {
+  const grid = document.getElementById('talent-grid');
+  grid.innerHTML = '';
+
+  // 如果天赋池为空，显示提示
+  if (currentTalentPool.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">点击下方"随机天赋"按钮抽取6个天赋</div>';
+    updateStartButton();
+    return;
+  }
+
+  currentTalentPool.forEach(t => {
+    let disabled = false;
+    if (t.exclusive) t.exclusive.forEach(eid => { if (selectedTalents.includes(eid)) disabled = true; });
+    selectedTalents.forEach(sid => {
+      const st = TALENTS.find(x => x.id === sid);
+      if (st && st.exclusive && st.exclusive.includes(t.id)) disabled = true;
+    });
+    // 已选满2个时，未选中的天赋禁用
+    if (selectedTalents.length >= 2 && !selectedTalents.includes(t.id)) disabled = true;
+
+    const div = document.createElement('div');
+    div.className = `talent-card ${t.type}${disabled ? ' disabled' : ''}${selectedTalents.includes(t.id) ? ' selected' : ''}`;
+    div.innerHTML = `<div class="talent-name">${t.name}</div><div class="talent-desc">${t.desc}</div>`;
+    div.onclick = () => { if (disabled) return; toggleTalent(t.id); };
+    grid.appendChild(div);
+  });
+
+  const disp = document.getElementById('selected-talents-display');
+  disp.innerHTML = selectedTalents.map(id => {
+    const t = TALENTS.find(x => x.id === id);
+    return `<span class="selected-talent-chip">${t.name}</span>`;
+  }).join('');
+
+  updateStartButton();
+}
+
+function updateStartButton() {
+  const btn = document.getElementById('start-game-btn');
+  const hint = document.getElementById('talent-hint');
+  if (!btn) return;
+
+  if (selectedTalents.length === 2) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    if (hint) hint.textContent = '已选择2个天赋，可以开始游戏了！';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+    if (hint) {
+      if (currentTalentPool.length === 0) {
+        hint.textContent = '点击"随机天赋"抽取6个天赋，选择其中2个后即可开始游戏';
+      } else {
+        hint.textContent = `已选择 ${selectedTalents.length}/2 个天赋，还需选择 ${2 - selectedTalents.length} 个`;
+      }
+    }
+  }
+}
+
+function toggleTalent(id) {
+  const idx = selectedTalents.indexOf(id);
+  if (idx > -1) {
+    selectedTalents.splice(idx, 1);
+  } else {
+    if (selectedTalents.length >= 2) return; // 最多选2个
+    selectedTalents.push(id);
+  }
+  renderTalents();
+}
+
+function getUnlockedHiddenTalents() {
+  try {
+    const saved = localStorage.getItem('duelist_unlocked_hidden_talents');
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveUnlockedHiddenTalents(talents) {
+  try {
+    localStorage.setItem('duelist_unlocked_hidden_talents', JSON.stringify(talents));
+  } catch (e) {}
+}
+
+function checkUnlockHiddenTalents() {
+  const unlocked = getUnlockedHiddenTalents();
+  const newlyUnlocked = [];
+  TALENTS.forEach(t => {
+    if (t.hidden && t.unlockAchievement && !unlocked.includes(t.id)) {
+      if (gameState.achievements.includes(t.unlockAchievement)) {
+        unlocked.push(t.id);
+        newlyUnlocked.push(t);
+      }
+    }
+  });
+  if (newlyUnlocked.length > 0) {
+    saveUnlockedHiddenTalents(unlocked);
+    newlyUnlocked.forEach(t => {
+      showToast(`🎉 解锁隐藏天赋：${t.name}！下次开局可选择`);
+      addEventLog(`解锁隐藏天赋：${t.name}`);
+    });
+  }
+  return newlyUnlocked;
+}
+
+function randomTalents() {
+  selectedTalents = [];
+  currentTalentPool = [];
+
+  // 从普通天赋+已解锁的隐藏天赋中随机抽取6个不重复的
+  const unlockedHidden = getUnlockedHiddenTalents();
+  const availableTalents = TALENTS.filter(t => !t.hidden || unlockedHidden.includes(t.id));
+  const allTalents = [...availableTalents];
+  while (currentTalentPool.length < 6 && allTalents.length > 0) {
+    const idx = Math.floor(Math.random() * allTalents.length);
+    currentTalentPool.push(allTalents.splice(idx, 1)[0]);
+  }
+
+  renderTalents();
+}
+
+// ===== 游戏开始 =====
+function startGame() {
+  // 检查是否选择了2个天赋
+  if (selectedTalents.length !== 2) {
+    showToast('请先选择2个天赋');
+    return;
+  }
+
+  gameState = {
+    week: 1,
+    age: 18,
+    talents: [...selectedTalents],
+    mainDeck: [],
+    extraDeck: [],
+    collection: [],
+    collectionCount: {},
+    affinity: {},
+    wins: 0,
+    losses: 0,
+    duelCount: 0,
+    gambleCount: 0,
+    tournamentWins: [],
+    achievements: [],
+    recentEvents: [],
+    duelPoints: 0,
+    bonusStats: {},
+    triggeredEvents: [],
+    eventCooldowns: {},
+    locationVisits: {},
+    receivedGifts: [],
+    unlockedEvents: [],
+    unlockedHiddenTalents: [],
+  };
+  CHARACTERS.forEach(c => { gameState.affinity[c.id] = 0; });
+
+  // 应用天赋开局效果
+  selectedTalents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (!t) return;
+    // 开局获得卡片
+    if (t.startCards && t.startCards.length) {
+      t.startCards.forEach(cid => addCardToCollection(cid));
+      addEventLog(`天赋【${t.name}】：获得初始卡片`);
+    }
+    // 开局随机获得N张卡
+    if (t.startCardCount && t.startCardCount > 0) {
+      for (let i = 0; i < t.startCardCount; i++) {
+        const card = getRandomCard('random');
+        addCardToCollection(card.id);
+      }
+      addEventLog(`天赋【${t.name}】：随机获得 ${t.startCardCount} 张卡片`);
+    }
+    // 开局决斗点
+    if (t.startDuelPoints) {
+      gameState.duelPoints += t.startDuelPoints;
+      addEventLog(`天赋【${t.name}】：获得 ${t.startDuelPoints} 决斗点`);
+    }
+    // 初始年龄
+    if (t.startAge) {
+      gameState.age = t.startAge;
+    }
+  });
+
+  // 初始给几张卡
+  const starterCards = ['m006','m007','m008','s005','t006','m004'];
+  starterCards.forEach(id => addCardToCollection(id));
+  addEventLog('你来到了童实野市，开始了你的牌佬之路。');
+  clearSave();
+  saveGame();
+  switchView('game');
+  updateAllDisplays();
+  renderLocations();
+  showToast('欢迎来到童实野市！');
+}
+
+// 获取天赋倍率辅助函数
+function getTalentMultiplier(field, defaultVal = 1) {
+  let mult = defaultVal;
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t[field]) mult *= t[field];
+  });
+  return mult;
+}
+
+// 获取天赋加成辅助函数
+function getTalentBonus(field, defaultVal = 0) {
+  let bonus = defaultVal;
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t[field]) bonus += t[field];
+  });
+  return bonus;
+}
+
+function addCardToCollection(cardId) {
+  if (!CARD_DB[cardId]) return;
+  if (!gameState.collection.includes(cardId)) {
+    gameState.collection.push(cardId);
+    gameState.collectionCount[cardId] = 1;
+  } else {
+    gameState.collectionCount[cardId] = (gameState.collectionCount[cardId] || 1) + 1;
+  }
+}
+
+function removeCardFromCollection(cardId) {
+  if (!gameState.collectionCount[cardId]) return;
+  gameState.collectionCount[cardId]--;
+  if (gameState.collectionCount[cardId] <= 0) {
+    delete gameState.collectionCount[cardId];
+    gameState.collection = gameState.collection.filter(id => id !== cardId);
+    // 从卡组中移除
+    gameState.mainDeck = gameState.mainDeck.filter(id => id !== cardId);
+    gameState.extraDeck = gameState.extraDeck.filter(id => id !== cardId);
+  }
+}
+
+function addEventLog(msg) {
+  gameState.recentEvents.unshift(`第${gameState.week}天: ${msg}`);
+  if (gameState.recentEvents.length > 30) gameState.recentEvents.pop();
+}
+
+// ===== 视图切换 =====
+function switchView(name) {
+  document.querySelectorAll('#view-start, #view-game').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
+
+function switchSubView(name) {
+  document.querySelectorAll('.content-area .view').forEach(v => v.classList.remove('active'));
+  document.getElementById('subview-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  if (name === 'deck') renderDeckView();
+  if (name === 'characters') renderCharacters();
+  if (name === 'tournament') renderTournaments();
+  if (name === 'achievement') renderAchievements();
+  if (name === 'ranking') renderRanking();
+}
+
+// ===== 显示更新 =====
+function updateAllDisplays() {
+  const s = getTotalStats();
+  ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
+    const el = document.getElementById('stat-' + k);
+    if (el) el.textContent = s[k] || 0;
+    const topEl = document.getElementById('top-' + k);
+    if (topEl) topEl.textContent = s[k] || 0;
+    const deckEl = document.getElementById('deck-stat-' + k);
+    if (deckEl) deckEl.textContent = s[k] || 0;
+  });
+  // 牌力实时计算
+  const powerEl = document.getElementById('duel-power-display');
+  if (powerEl) powerEl.textContent = getDuelPower();
+  // 系列卡组标签
+  updateArchetypeTag();
+  document.getElementById('week-display').textContent = gameState.week;
+  document.getElementById('age-display').textContent = gameState.age;
+  document.getElementById('main-deck-count').textContent = getMainDeckCount();
+  document.getElementById('extra-deck-count').textContent = getExtraDeckCount();
+  document.getElementById('collection-count').textContent = gameState.collection.length;
+  document.getElementById('win-count').textContent = gameState.wins;
+  document.getElementById('lose-count').textContent = gameState.losses;
+  // 最近事件
+  const re = document.getElementById('recent-events');
+  if (re) re.innerHTML = gameState.recentEvents.map(e => `<div>${e}</div>`).join('') || '你的牌佬之路才刚刚开始...';
+}
+
+// ===== 地点渲染与行动 =====
+function renderLocations() {
+  const grid = document.getElementById('locations-grid');
+  grid.innerHTML = '';
+  LOCATIONS.forEach(loc => {
+    const div = document.createElement('div');
+    div.className = 'location-card';
+    div.innerHTML = `
+      <div class="location-name">${loc.name}</div>
+      <div class="location-desc">${loc.desc}</div>
+      <div class="location-tags">${loc.tags.map(t => `<span class="location-tag">${t}</span>`).join('')}</div>
+    `;
+    div.onclick = () => visitLocation(loc);
+    grid.appendChild(div);
+  });
+}
+
+function visitLocation(loc) {
+  // 数据驱动的事件系统（数据来自 EVENTS）
+  runDataDrivenEvent(loc);
+}
+
+// ===== 数据驱动事件系统 =====
+// 检查决斗条件是否满足
+function canStartDuel(mode) {
+  const mainCount = getMainDeckCount();
+  const extraCount = getExtraDeckCount();
+  const maxMain = 60 + getTalentBonus('maxMainDeck', 0);
+  const maxExtra = 15 + getTalentBonus('maxExtraDeck', 0);
+  
+  if (mode === 'quick') {
+    if (mainCount < 20) return false;
+    if (mainCount > maxMain) return false;
+  }
+  if (mode === 'master') {
+    if (mainCount < 40) return false;
+    if (mainCount > maxMain) return false;
+  }
+  if (extraCount > maxExtra) return false;
+  return true;
+}
+
+// 检查事件效果中是否包含决斗，以及决斗条件是否满足
+function eventDuelConditionMet(e) {
+  // 检查事件级别的效果
+  const effects = e.effects || [];
+  for (const ef of effects) {
+    if (ef.type === 'duel' || ef.type === 'characterDuel') {
+      if (!canStartDuel(ef.mode || 'quick')) return false;
+    }
+  }
+  // 检查选项级别的效果（只要有一个选项的决斗条件满足，事件就可以触发）
+  const options = e.options || [];
+  let hasDuelOption = false;
+  let hasValidDuelOption = false;
+  for (const op of options) {
+    const opEffects = op.effects || [];
+    for (const ef of opEffects) {
+      if (ef.type === 'duel' || ef.type === 'characterDuel') {
+        hasDuelOption = true;
+        if (canStartDuel(ef.mode || 'quick')) {
+          hasValidDuelOption = true;
+        }
+      }
+    }
+  }
+  // 如果有决斗选项但都不满足条件，事件不触发
+  if (hasDuelOption && !hasValidDuelOption) return false;
+  return true;
+}
+
+function runDataDrivenEvent(loc) {
+  // 消耗7天（365天=1岁）
+  gameState.week += 7;
+  gameState.age = 18 + Math.floor(gameState.week / 365);
+
+  // 检查年龄是否达到25岁（游戏结束）
+  if (gameState.age >= 25) {
+    showGameOver();
+    return;
+  }
+
+  const events = EVENTS[loc.id] || [];
+  if (!events.length) {
+    // 没有事件发生，不消耗时间
+    gameState.week -= 7;
+    if (gameState.week < 1) gameState.week = 1;
+    gameState.age = 18 + Math.floor(gameState.week / 365);
+    showEventModal(loc.name, '这里似乎没什么特别的事情发生。', []);
+    checkAchievements();
+    updateAllDisplays();
+    saveGame();
+    return;
+  }
+
+  // 过滤符合触发条件的事件
+  const validEvents = events.filter(e => {
+    // 一次性事件检查
+    if (e.oneTime && gameState.triggeredEvents && gameState.triggeredEvents.includes(e.id)) return false;
+    // 冷却时间检查
+    if (e.cooldown && gameState.eventCooldowns && gameState.eventCooldowns[e.id]) {
+      if (gameState.week < gameState.eventCooldowns[e.id]) return false;
+    }
+    // 最早/最晚天数检查（数值为周数，乘以7转换为天）
+    if (e.minWeek && gameState.week < e.minWeek * 7) return false;
+    if (e.maxWeek && gameState.week > e.maxWeek * 7) return false;
+    // 最早年龄检查
+    if (e.minAge && gameState.age < e.minAge) return false;
+    // 需要拥有指定卡
+    if (e.requiredCard && !gameState.collection.includes(e.requiredCard)) return false;
+    // 需要指定天赋
+    if (e.requiredTalent && !gameState.talents.includes(e.requiredTalent)) return false;
+    // 需要决斗点
+    if (e.requiredDuelPoints && gameState.duelPoints < e.requiredDuelPoints) return false;
+    // 角色专属事件（需要与该角色有一定好感度）
+    if (e.characterOnly) {
+      const aff = gameState.affinity[e.characterOnly] || 0;
+      if (aff < 20) return false;
+    }
+    // 决斗条件检查：如果事件触发决斗但卡组条件不满足，跳过此事件
+    if (!eventDuelConditionMet(e)) return false;
+    return true;
+  });
+
+  const eventPool = validEvents.length ? validEvents : events;
+
+  // 按概率选择事件
+  const totalProb = eventPool.reduce((sum, e) => sum + (e.probability || 0), 0);
+  let roll = Math.random() * totalProb;
+  let selectedEvent = eventPool[0];
+  for (const e of eventPool) {
+    roll -= (e.probability || 0);
+    if (roll <= 0) { selectedEvent = e; break; }
+  }
+
+  // 记录一次性事件和冷却
+  if (selectedEvent.oneTime) {
+    if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+    if (!gameState.triggeredEvents.includes(selectedEvent.id)) gameState.triggeredEvents.push(selectedEvent.id);
+  }
+  if (selectedEvent.cooldown) {
+    if (!gameState.eventCooldowns) gameState.eventCooldowns = {};
+    // 天赋可定义的事件冷却缩减(%)
+    const cdReduction = getTalentBonus('eventCooldownReduction', 0);
+    const cdDays = Math.max(1, Math.round(selectedEvent.cooldown * 7 * (1 - cdReduction / 100)));
+    gameState.eventCooldowns[selectedEvent.id] = gameState.week + cdDays;
+  }
+
+  // 检查是否有skipTime标记（仅对无选项事件生效；有选项事件在选项级别单独处理）
+  const hasNoOptions = !selectedEvent.options || !selectedEvent.options.length;
+  const hasSkipTime = hasNoOptions && (selectedEvent.skipTime ||
+    (selectedEvent.effects || []).some(ef => ef.type === 'skipWeek'));
+  if (hasSkipTime) {
+    gameState.week -= 7;
+    if (gameState.week < 1) gameState.week = 1;
+    gameState.age = 18 + Math.floor(gameState.week / 365);
+  }
+
+  // 检查消耗
+  if (selectedEvent.cost && selectedEvent.cost.duelPoints) {
+    if (gameState.duelPoints < selectedEvent.cost.duelPoints) {
+      // 决斗点不足，无法参与，不消耗时间
+      gameState.week -= 7;
+      if (gameState.week < 1) gameState.week = 1;
+      gameState.age = 18 + Math.floor(gameState.week / 365);
+      showEventModal(selectedEvent.title || loc.name, selectedEvent.failText || '你的决斗点不足。', []);
+      addEventLog(`在${loc.name}因决斗点不足无法参与`);
+      checkAchievements();
+      updateAllDisplays();
+      saveGame();
+      return;
+    }
+    gameState.duelPoints -= selectedEvent.cost.duelPoints;
+  }
+
+  // 有选项的事件
+  if (selectedEvent.options && selectedEvent.options.length) {
+    const options = selectedEvent.options.map(op => {
+      // 检查选项是否包含决斗效果，以及决斗条件是否满足
+      const opEffects = op.effects || [];
+      let hasDuel = false;
+      let duelAvailable = true;
+      for (const ef of opEffects) {
+        if (ef.type === 'duel' || ef.type === 'characterDuel') {
+          hasDuel = true;
+          if (!canStartDuel(ef.mode || 'quick')) {
+            duelAvailable = false;
+          }
+        }
+      }
+      
+      const displayName = hasDuel && !duelAvailable ? `${op.name}（卡组条件不足）` : op.name;
+      
+      return {
+        name: displayName,
+        disabled: hasDuel && !duelAvailable,
+        action: () => {
+          if (hasDuel && !duelAvailable) {
+            showToast('卡组条件不足，无法进行决斗！');
+            return;
+          }
+          executeEffects(op.effects || [], selectedEvent, loc);
+          // 选项级别的skipTime：该选项不占用回合时间
+          if (op.skipTime) {
+            gameState.week -= 7;
+            if (gameState.week < 1) gameState.week = 1;
+            gameState.age = 18 + Math.floor(gameState.week / 365);
+          }
+          if (op.log) addEventLog(op.log);
+          checkAchievements();
+          updateAllDisplays();
+          saveGame();
+        }
+      };
+    });
+    showEventModal(selectedEvent.title || loc.name, selectedEvent.text || '', null, options);
+    return;
+  }
+
+  // 无选项的事件，直接执行效果
+  const rewards = executeEffects(selectedEvent.effects || [], selectedEvent, loc);
+  if (selectedEvent.log) {
+    let logText = selectedEvent.log;
+    if (rewards.cardName) logText = logText.replace('{cardName}', rewards.cardName);
+    addEventLog(logText);
+  }
+  showEventModal(selectedEvent.title || loc.name, selectedEvent.text || '', rewards.displayItems);
+  checkAchievements();
+  updateAllDisplays();
+  saveGame();
+}
+
+function executeEffects(effects, event, loc) {
+  const result = { displayItems: [], cardName: '' };
+  effects.forEach(ef => {
+    switch(ef.type) {
+      case 'randomCard': {
+        const pool = ef.pool || [];
+        const cardId = pool[Math.floor(Math.random() * pool.length)];
+        if (cardId && CARD_DB[cardId]) {
+          addCardToCollection(cardId);
+          result.cardName = CARD_DB[cardId].name;
+          result.displayItems.push({ name: `获得 ${CARD_DB[cardId].name}`, rarity: CARD_DB[cardId].rarity });
+        }
+        break;
+      }
+      case 'randomCardByRarity': {
+        const rarity = ef.rarity === 'random' ? choice(['N','R','SR','UR']) : ef.rarity;
+        const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+        if (pool.length) {
+          const card = choice(pool);
+          addCardToCollection(card.id);
+          result.cardName = card.name;
+          result.displayItems.push({ name: `获得 ${card.name}`, rarity: card.rarity });
+        }
+        break;
+      }
+      case 'addCard': {
+        if (ef.cardId && CARD_DB[ef.cardId]) {
+          addCardToCollection(ef.cardId);
+          result.cardName = CARD_DB[ef.cardId].name;
+          result.displayItems.push({ name: `获得 ${CARD_DB[ef.cardId].name}`, rarity: CARD_DB[ef.cardId].rarity });
+        }
+        break;
+      }
+      case 'affinity': {
+        let charId = ef.charId;
+        if (charId === 'random_school') charId = choice(['anzu','honda']);
+        if (charId === 'random') charId = choice(CHARACTERS.map(c => c.id));
+        if (charId) {
+          gainAffinity(charId, ef.amount || 5);
+          const char = CHARACTERS.find(c => c.id === charId);
+          if (char) result.displayItems.push({ name: `${char.name} 好感度+${ef.amount || 5}` });
+        }
+        break;
+      }
+      case 'bonusStat': {
+        if (!gameState.bonusStats) gameState.bonusStats = {};
+        gameState.bonusStats[ef.stat] = (gameState.bonusStats[ef.stat] || 0) + (ef.amount || 1);
+        const statName = STAT_NAMES[ef.stat] || ef.stat;
+        result.displayItems.push({ name: `${statName}+${ef.amount || 1}（永久）` });
+        break;
+      }
+      case 'bonusAll': {
+        if (!gameState.bonusStats) gameState.bonusStats = {};
+        ['search','expand','disrupt','resist','suppress'].forEach(k => {
+          gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + (ef.amount || 1);
+        });
+        result.displayItems.push({ name: `全主属性+${ef.amount || 1}（永久）` });
+        break;
+      }
+      case 'duel': {
+        // 支持从对手数据库中调用角色：ef.opponentId 指定对手，ef.difficulty 指定难度，否则随机
+        let customOpponent = null;
+        if (ef.opponentId) {
+          const op = OPPONENTS.find(o => o.id === ef.opponentId);
+          if (op) {
+            const opPower = Math.round(op.basePower + rand(0, op.variance));
+            customOpponent = { name: op.name, power: opPower, difficulty: op.difficulty };
+          }
+        } else if (ef.difficulty) {
+          const op = OPPONENTS.find(o => o.difficulty === ef.difficulty) || OPPONENTS[Math.min(ef.difficulty - 1, OPPONENTS.length - 1)];
+          if (op) {
+            const opPower = Math.round(op.basePower + rand(0, op.variance));
+            customOpponent = { name: op.name, power: opPower, difficulty: op.difficulty };
+          }
+        }
+        result.displayItems.push({ name: customOpponent ? `与 ${customOpponent.name} 决斗` : '开始决斗' });
+        startDuel(ef.mode || 'quick', ef.gamble || false, customOpponent, null, false, true);
+        break;
+      }
+      case 'characterDuel': {
+        const char = CHARACTERS.find(c => c.id === ef.charId);
+        if (char) {
+          // 使用角色牌力（将旧版power转换为新版牌力：除以15）
+          const charPower = char.duelPower || Math.round((char.power || 1000) / 15);
+          const customOpponent = { name: char.name, power: charPower, difficulty: 5 };
+          result.displayItems.push({ name: `与 ${char.name} 决斗` });
+          startDuel(ef.mode || 'quick', false, customOpponent);
+        } else {
+          startDuel(ef.mode || 'quick', false);
+        }
+        break;
+      }
+      case 'addMultipleCards': {
+        const cardIds = ef.cardIds || [];
+        cardIds.forEach(cid => {
+          if (CARD_DB[cid]) {
+            addCardToCollection(cid);
+            result.displayItems.push({ name: `获得 ${CARD_DB[cid].name}`, rarity: CARD_DB[cid].rarity });
+          }
+        });
+        break;
+      }
+      case 'addDuelPoints': {
+        gameState.duelPoints = (gameState.duelPoints || 0) + (ef.amount || 100);
+        result.displayItems.push({ name: `获得 ${ef.amount || 100} 决斗点` });
+        break;
+      }
+      case 'loseDuelPoints': {
+        gameState.duelPoints = Math.max(0, (gameState.duelPoints || 0) - (ef.amount || 100));
+        result.displayItems.push({ name: `失去 ${ef.amount || 100} 决斗点` });
+        break;
+      }
+      case 'randomStat': {
+        const stats = ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'];
+        const stat = choice(stats);
+        const amount = rand(ef.min || 1, ef.max || 3);
+        if (!gameState.bonusStats) gameState.bonusStats = {};
+        gameState.bonusStats[stat] = (gameState.bonusStats[stat] || 0) + amount;
+        result.displayItems.push({ name: `${STAT_NAMES[stat]}+${amount}（永久）` });
+        break;
+      }
+      case 'unlockCard': {
+        if (ef.cardId && CARD_DB[ef.cardId]) {
+          addCardToCollection(ef.cardId);
+          result.cardName = CARD_DB[ef.cardId].name;
+          result.displayItems.push({ name: `解锁 ${CARD_DB[ef.cardId].name}`, rarity: CARD_DB[ef.cardId].rarity });
+        }
+        break;
+      }
+      case 'changeAge': {
+        gameState.age += (ef.amount || 1);
+        result.displayItems.push({ name: `年龄${ef.amount > 0 ? '+' : ''}${ef.amount || 1}` });
+        break;
+      }
+      case 'skipWeek': {
+        // 已在 runDataDrivenEvent 中处理
+        break;
+      }
+      case 'text':
+      default:
+        break;
+    }
+  });
+  if (!result.displayItems.length) result.displayItems.push({ name: '继续' });
+  return result;
+}
+
+const STAT_NAMES = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+
+// ===== 随机卡片获取 =====
+function getRandomCard(source) {
+  const allCards = Object.values(CARD_DB);
+  let pool, weights;
+  // 天赋可定义的捡卡稀有度加成（每档提升稀有度概率）
+  const rarityBonus = getTalentBonus('pickupRarityBonus', 0);
+
+  if (source === 'pack' || source === 'random') {
+    weights = { N: 60, R: 25, SR: 12, UR: 3 };
+  } else if (source === 'rare') {
+    weights = { N: 10, R: 30, SR: 40, UR: 20 };
+  } else if (source === 'beach' || source === 'park') {
+    weights = { N: 50, R: 30, SR: 15, UR: 5 };
+  } else {
+    weights = { N: 50, R: 30, SR: 15, UR: 5 };
+  }
+
+  if (rarityBonus > 0) {
+    // 每档提升稀有度：N减少，SR/UR增加
+    const shift = rarityBonus * 15;
+    weights = { N: Math.max(0, weights.N - shift), R: weights.R, SR: weights.SR + shift * 0.5, UR: weights.UR + shift * 0.5 };
+  }
+
+  const rarity = weightedChoice(weights);
+  pool = allCards.filter(c => c.rarity === rarity);
+  if (pool.length === 0) pool = allCards;
+  return choice(pool);
+}
+
+function weightedChoice(weights) {
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (const [key, w] of Object.entries(weights)) {
+    r -= w;
+    if (r <= 0) return key;
+  }
+  return Object.keys(weights)[0];
+}
+
+// ===== 好感度 =====
+function gainAffinity(charId, amount) {
+  // 天赋可定义的好感度倍率 + 赠礼互动倍率
+  let mult = getTalentMultiplier('affinityMultiplier', 1);
+  mult *= getTalentMultiplier('giftEffectMultiplier', 1);
+  gameState.affinity[charId] = clamp((gameState.affinity[charId] || 0) + Math.round(amount * mult), 0, 100);
+}
+
+// ===== 事件弹窗 =====
+function showEventModal(title, text, rewards, options) {
+  const container = document.getElementById('modal-container');
+  const rewardsHtml = rewards && rewards.length ? `
+    <div class="event-modal-rewards">
+      ${rewards.map(r => `<div style="color:var(--accent-green-light);">${r.name}${r.rarity ? ` [${r.rarity}]` : ''}</div>`).join('')}
+    </div>
+  ` : '';
+
+  var optionsHtml = '';
+  if (options && options.length) {
+    optionsHtml = '<div class="event-modal-options">';
+    for (var i = 0; i < options.length; i++) {
+      var o = options[i];
+      var isDisabled = o.disabled ? true : false;
+      var cls = isDisabled ? 'btn btn-secondary' : (i === 0 ? 'btn btn-primary' : 'btn btn-secondary');
+      var stl = isDisabled ? 'opacity:0.5;cursor:not-allowed;' : '';
+      var dis = isDisabled ? 'disabled' : '';
+      optionsHtml += '<button class="' + cls + '" data-option="' + i + '" ' + dis + ' style="' + stl + '">' + o.name + '</button>';
+    }
+    optionsHtml += '</div>';
+  } else {
+    optionsHtml = '<button class="btn btn-primary" style="width:100%;" data-option="close">确定</button>';
+  }
+
+  container.innerHTML = `
+    <div class="event-modal-overlay">
+      <div class="event-modal">
+        <div class="event-modal-title">${title}</div>
+        <div class="event-modal-text">${text}</div>
+        ${rewardsHtml}
+        ${optionsHtml}
+      </div>
+    </div>
+  `;
+
+  container.querySelectorAll('button[data-option]').forEach(btn => {
+    if (btn.disabled) return; // 禁用的按钮不绑定事件
+    btn.onclick = () => {
+      const idx = btn.dataset.option;
+      container.innerHTML = '';
+      if (options && options[idx]) {
+        if (options[idx].action) options[idx].action();
+      }
+      updateAllDisplays();
+      saveGame();
+    };
+  });
+}
+
+// ===== 确认对话框 =====
+function showConfirmModal(title, text, confirmText, cancelText, onConfirm) {
+  const container = document.getElementById('modal-container');
+  container.innerHTML = `
+    <div class="event-modal-overlay">
+      <div class="event-modal">
+        <div class="event-modal-title">${title}</div>
+        <div class="event-modal-text">${text}</div>
+        <div class="event-modal-options">
+          <button class="btn btn-danger" data-confirm="true">${confirmText || '确认'}</button>
+          <button class="btn btn-secondary" data-confirm="false">${cancelText || '取消'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  container.querySelectorAll('button[data-confirm]').forEach(btn => {
+    btn.onclick = () => {
+      const confirmed = btn.dataset.confirm === 'true';
+      container.innerHTML = '';
+      if (confirmed && onConfirm) onConfirm();
+    };
+  });
+}
+
+// ===== 决斗系统 =====
+function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
+  const mainCount = getMainDeckCount();
+  const extraCount = getExtraDeckCount();
+
+  // 计算卡组上限（天赋可调整）
+  const maxMain = 60 + getTalentBonus('maxMainDeck', 0);
+  const maxExtra = 15 + getTalentBonus('maxExtraDeck', 0);
+
+  if (mode === 'quick' && mainCount < 20) {
+    showToast('主卡组至少需要20张才能进行快速决斗！');
+    return;
+  }
+  if (mode === 'quick' && mainCount > maxMain) {
+    showToast(`主卡组最多${maxMain}张！`);
+    return;
+  }
+  if (mode === 'master' && mainCount < 40) {
+    showToast('大师决斗需要主卡组至少40张！');
+    return;
+  }
+  if (mode === 'master' && mainCount > maxMain) {
+    showToast(`主卡组最多${maxMain}张！`);
+    return;
+  }
+  if (extraCount > maxExtra) {
+    showToast(`额外卡组最多${maxExtra}张！`);
+    return;
+  }
+
+  // 检查卡组限制（天赋）
+  const deckRestriction = gameState.talents.map(tid => TALENTS.find(t => t.id === tid)?.deckRestriction).filter(Boolean)[0];
+  const deckArchetype = gameState.talents.map(tid => TALENTS.find(t => t.id === tid)?.deckArchetype).filter(Boolean)[0];
+  if (deckRestriction) {
+    const invalidCards = gameState.mainDeck.filter(id => CARD_DB[id]?.type !== deckRestriction);
+    if (invalidCards.length) {
+      showToast(`天赋限制：卡组只能包含${deckRestriction}类型卡片！`);
+      return;
+    }
+  }
+  if (deckArchetype) {
+    const invalidCards = gameState.mainDeck.filter(id => CARD_DB[id]?.archetype !== deckArchetype);
+    if (invalidCards.length) {
+      showToast(`天赋限制：卡组只能包含${deckArchetype}系列卡片！`);
+      return;
+    }
+  }
+
+  let opponent;
+  if (customOpponent) {
+    // 使用自定义对手（比赛/角色挑战）
+    opponent = { 
+      name: customOpponent.name, 
+      power: customOpponent.power, 
+      difficulty: customOpponent.difficulty || 3 
+    };
+  } else {
+    // 从OPPONENTS数据库生成随机对手
+    const diffIdx = mode === 'master' ? rand(2, OPPONENTS.length - 1) : rand(0, Math.min(3, OPPONENTS.length - 1));
+    const opponentTemplate = OPPONENTS[diffIdx];
+
+    // NPC牌力随时间增长（使用DUEL_CONFIG配置）
+    let weekBonus = 1;
+    if (gameState.week > DUEL_CONFIG.npcGrowthStartDay) {
+      weekBonus = 1 + Math.floor((gameState.week - DUEL_CONFIG.npcGrowthStartDay) / DUEL_CONFIG.npcGrowthInterval) * DUEL_CONFIG.npcGrowthRate;
+    }
+    // 决斗模式对手牌力倍率
+    const modeBonus = mode === 'master' ? DUEL_CONFIG.masterModeBonus : DUEL_CONFIG.quickModeBonus;
+
+    const opponentPower = Math.round((opponentTemplate.basePower + rand(0, opponentTemplate.variance)) * weekBonus * modeBonus);
+    opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty };
+  }
+
+  // 计算玩家战力（天赋胜率加成）
+  const winRateBonus = getTalentBonus('winRateBonus', 0);
+  const basePlayerPower = Math.round(getDuelPower());
+  const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100));
+
+  currentDuel = {
+    mode,
+    gamble: gamble || false,
+    opponent,
+    playerPower: playerPowerWithBonus,
+    opponentPower: opponent.power,
+    turn: 1,
+    log: [],
+    finished: false,
+    onFinish: onFinish || null,
+    noReward: noReward || false,
+  };
+
+  // 自动切换到决斗页面
+  switchSubView('duel');
+
+  document.getElementById('duel-lobby').style.display = 'none';
+  document.getElementById('duel-arena').style.display = 'block';
+  document.getElementById('duel-player-name').textContent = '你';
+  document.getElementById('duel-player-power').textContent = '牌力 ' + currentDuel.playerPower;
+  document.getElementById('duel-opponent-name').textContent = opponent.name;
+  document.getElementById('duel-opponent-power').textContent = '牌力 ' + currentDuel.opponentPower;
+  document.getElementById('duel-log').innerHTML = '';
+  document.getElementById('duel-result-area').style.display = 'none';
+  document.getElementById('duel-actions').innerHTML = '<button class="btn btn-secondary" onclick="exitDuel()">投降</button>';
+
+  addDuelLog(`决斗开始！对手是【${opponent.name}】`, 'turn');
+  runDuelTurn();
+}
+
+function addDuelLog(text, cls) {
+  const log = document.getElementById('duel-log');
+  const div = document.createElement('div');
+  div.className = 'duel-log-entry' + (cls ? ' ' + cls : '');
+  div.textContent = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  currentDuel.log.push(text);
+}
+
+function runDuelTurn() {
+  if (currentDuel.finished) return;
+
+  const stats = getTotalStats();
+  const luck = stats.luck || 0;
+  const soul = stats.soul || 0;
+  const search = stats.search || 0;
+  const expand = stats.expand || 0;
+  const disrupt = stats.disrupt || 0;
+  const resist = stats.resist || 0;
+  const suppress = stats.suppress || 0;
+
+  setTimeout(() => {
+    if (currentDuel.turn === 1) {
+      addDuelLog('你的回合——抽卡！');
+      // 检索+掏度影响起手
+      const startRoll = rand(-20, 20) + luck + search * 0.5;
+      if (startRoll > 15) {
+        addDuelLog('完美起手！核心卡全部上手！');
+        currentDuel.playerPower += 20;
+      } else if (startRoll > 5) {
+        addDuelLog('关键抽卡！你抽到了需要的卡！');
+        currentDuel.playerPower += 12;
+      } else if (startRoll < -10) {
+        addDuelLog('手札事故...起手非常不理想。');
+        currentDuel.playerPower -= 15;
+      } else if (startRoll < 0) {
+        addDuelLog('起手一般，需要后续运营。');
+        currentDuel.playerPower -= 5;
+      }
+    }
+
+    // ===== 战斗事件系统 =====
+    triggerBattleEvent(stats);
+
+    // 模拟回合展开（展开属性影响展开成功率）
+    const expandRoll = rand(0, 100) + expand * 0.8 - disrupt * 0.3;
+    if (expandRoll > 75) {
+      addDuelLog('你完美展开！场上站满了怪兽，场面优势巨大！');
+      currentDuel.playerPower += rand(8, 18);
+    } else if (expandRoll > 40) {
+      addDuelLog('你做了常规展开，场面稳步建立。');
+      currentDuel.playerPower += rand(2, 8);
+    } else if (expandRoll > 20) {
+      addDuelLog('你的展开受到一些干扰，但还是做出了场面。');
+      currentDuel.playerPower += rand(0, 3);
+    } else {
+      addDuelLog('你的展开被对方彻底干扰了，场面非常被动！');
+      currentDuel.playerPower -= rand(3, 10);
+    }
+
+    setTimeout(() => {
+      addDuelLog(`对方回合——${currentDuel.opponent.name}的操作！`, 'turn');
+
+      // 干扰+压制属性影响对方展开
+      const opponentExpandRoll = rand(0, 100) - disrupt * 0.6 - suppress * 0.4 + resist * 0.2;
+      if (opponentExpandRoll > 75) {
+        addDuelLog('对方展开非常迅速，场面压力很大！');
+        currentDuel.opponentPower += rand(8, 18);
+      } else if (opponentExpandRoll > 40) {
+        addDuelLog('对方做了常规展开。');
+        currentDuel.opponentPower += rand(2, 8);
+      } else if (opponentExpandRoll > 20) {
+        addDuelLog('对方的展开受到你的一些干扰。');
+        currentDuel.opponentPower += rand(0, 3);
+      } else {
+        addDuelLog('对方的展开被你的干扰彻底打断了！');
+        currentDuel.opponentPower -= rand(3, 10);
+      }
+
+      currentDuel.turn++;
+      document.getElementById('duel-player-power').textContent = '牌力 ' + Math.round(currentDuel.playerPower);
+      document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
+
+      if (currentDuel.turn > 5 || currentDuel.playerPower <= 0 || currentDuel.opponentPower <= 0) {
+        finishDuel();
+      } else {
+        setTimeout(() => runDuelTurn(), 600);
+      }
+    }, 700);
+  }, 700);
+}
+
+// ===== 战斗事件系统 =====
+function triggerBattleEvent(stats) {
+  // 每回合概率触发战斗事件，系列卡组提升概率，天赋可加成
+  let triggerRate = getArchetypeLuckBonus();
+  // 天赋可定义的战斗事件概率加成(%)
+  const battleBonus = getTalentBonus('battleEventBonus', 0);
+  // 天赋可定义的幸运事件概率加成(%)
+  const luckBonus = getTalentBonus('luckEventBonus', 0);
+  triggerRate = Math.min(0.9, triggerRate + (battleBonus + luckBonus) / 100);
+  if (Math.random() > triggerRate) return;
+
+  const events = [
+    {
+      name: '神抽',
+      condition: () => (stats.luck || 0) > 8 && Math.random() < 0.3,
+      effect: () => {
+        addDuelLog('✨ 神抽！你在关键时刻抽到了那张卡！', 'event');
+        currentDuel.playerPower += rand(10, 20);
+      }
+    },
+    {
+      name: '魂之羁绊',
+      condition: () => (stats.soul || 0) > 8 && Math.random() < 0.3,
+      effect: () => {
+        addDuelLog('🔥 魂之羁绊！卡片回应了你的心意！', 'event');
+        currentDuel.playerPower += rand(8, 15);
+      }
+    },
+    {
+      name: '效果命中',
+      condition: () => (stats.disrupt || 0) > 6 && Math.random() < 0.4,
+      effect: () => {
+        addDuelLog('⚡ 效果命中！你的干扰效果完美发动！', 'event');
+        currentDuel.opponentPower -= rand(8, 15);
+      }
+    },
+    {
+      name: '效果抵抗',
+      condition: () => (stats.resist || 0) > 6 && Math.random() < 0.4,
+      effect: () => {
+        addDuelLog('🛡️ 效果抵抗！你成功抵抗了对方的效果！', 'event');
+        currentDuel.playerPower += rand(5, 12);
+      }
+    },
+    {
+      name: '场面压制',
+      condition: () => (stats.suppress || 0) > 6 && Math.random() < 0.35,
+      effect: () => {
+        addDuelLog('👊 场面压制！你的场面让对方无法动弹！', 'event');
+        currentDuel.opponentPower -= rand(6, 12);
+      }
+    },
+    {
+      name: '精准检索',
+      condition: () => (stats.search || 0) > 6 && Math.random() < 0.35,
+      effect: () => {
+        addDuelLog('🔍 精准检索！你从卡组中找到了需要的卡！', 'event');
+        currentDuel.playerPower += rand(6, 12);
+      }
+    },
+    {
+      name: '连锁展开',
+      condition: () => (stats.expand || 0) > 8 && Math.random() < 0.3,
+      effect: () => {
+        addDuelLog('🔗 连锁展开！你的卡组像齿轮一样完美运转！', 'event');
+        currentDuel.playerPower += rand(10, 18);
+      }
+    },
+    {
+      name: '对方神抽',
+      condition: () => Math.random() < 0.15,
+      effect: () => {
+        addDuelLog('💀 对方神抽！对手也抽到了关键卡！', 'event');
+        currentDuel.opponentPower += rand(8, 15);
+      }
+    },
+    {
+      name: '裁判判定',
+      condition: () => Math.random() < 0.1,
+      effect: () => {
+        if (Math.random() < 0.5) {
+          addDuelLog('📋 裁判判定！你的效果被确认有效！', 'event');
+          currentDuel.playerPower += rand(5, 10);
+        } else {
+          addDuelLog('📋 裁判判定！对方的效果被确认有效！', 'event');
+          currentDuel.opponentPower += rand(5, 10);
+        }
+      }
+    },
+  ];
+
+  // 随机选择一个满足条件的事件
+  const validEvents = events.filter(e => e.condition());
+  if (validEvents.length > 0) {
+    const event = choice(validEvents);
+    event.effect();
+  }
+}
+
+function finishDuel() {
+  currentDuel.finished = true;
+  // 累计决斗次数
+  gameState.duelCount = (gameState.duelCount || 0) + 1;
+  if (currentDuel.gamble) gameState.gambleCount = (gameState.gambleCount || 0) + 1;
+  const won = currentDuel.playerPower >= currentDuel.opponentPower;
+  const resultArea = document.getElementById('duel-result-area');
+
+  document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
+
+  let duelResult = { won, rewardCard: null, lostCard: null };
+
+  if (won) {
+    gameState.wins++;
+    if (!currentDuel.noReward) {
+      const dpMult = getTalentMultiplier('duelPointMultiplier', 1);
+      gameState.duelPoints += Math.round((currentDuel.mode === 'master' ? 50 : 20) * dpMult);
+    }
+    addDuelLog('你赢了！', 'win');
+
+    let rewardText = '';
+    if (!currentDuel.noReward) {
+      if (currentDuel.gamble) {
+        // 赌卡：获得对方一张卡
+        const card = getRandomCard(currentDuel.mode === 'master' ? 'rare' : 'random');
+        addCardToCollection(card.id);
+        duelResult.rewardCard = card;
+        rewardText = `赌卡胜利！从对方处赢得了【${card.name}】[${card.rarity}]！`;
+        addEventLog(`赌卡决斗胜利，赢得【${card.name}】`);
+      } else {
+        const card = getRandomCard(currentDuel.mode === 'master' ? 'pack' : 'random');
+        addCardToCollection(card.id);
+        duelResult.rewardCard = card;
+        rewardText = `获得奖励卡：【${card.name}】[${card.rarity}]`;
+        addEventLog(`决斗胜利，获得【${card.name}】`);
+      }
+    } else {
+      rewardText = '比赛决斗胜利！';
+    }
+
+    resultArea.innerHTML = `
+      <div class="duel-result win">
+        <div class="duel-result-title">胜 利</div>
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">${rewardText}</div>
+        ${!currentDuel.noReward ? `<div style="font-size:12px; color:var(--accent-gold);">决斗点 +${currentDuel.mode === 'master' ? 50 : 20}</div>` : ''}
+      </div>
+    `;
+  } else {
+    gameState.losses++;
+    addDuelLog('你输了...', 'lose');
+
+    let loseText = '不要气馁，再接再厉！';
+    if (currentDuel.gamble) {
+      // 赌卡失败：从卡组中随机失去一张牌
+      const deckCards = [...gameState.mainDeck, ...gameState.extraDeck].filter(id => CARD_DB[id]);
+      // 天赋可定义的赌卡失败保护概率(%)
+      const protection = getTalentBonus('cardLossProtection', 0);
+      const protected_ = protection > 0 && Math.random() * 100 < protection;
+      if (protected_) {
+        loseText = '赌卡失败！但你巧妙地保住了自己的卡片，没有损失。';
+        addEventLog('赌卡决斗失败，天赋效果保护了卡片');
+      } else if (deckCards.length > 0) {
+        const lostCardId = choice(deckCards);
+        const lostCard = CARD_DB[lostCardId];
+        // 从卡组中移除
+        if (gameState.mainDeck.includes(lostCardId)) {
+          const idx = gameState.mainDeck.indexOf(lostCardId);
+          gameState.mainDeck.splice(idx, 1);
+        } else if (gameState.extraDeck.includes(lostCardId)) {
+          const idx = gameState.extraDeck.indexOf(lostCardId);
+          gameState.extraDeck.splice(idx, 1);
+        }
+        duelResult.lostCard = lostCard;
+        loseText = `赌卡失败！对方从你的卡组中拿走了【${lostCard.name}】...`;
+        addEventLog(`赌卡决斗失败，卡组失去【${lostCard.name}】`);
+      } else {
+        loseText = '赌卡失败！幸好你的卡组是空的，没有损失。';
+      }
+    }
+
+    resultArea.innerHTML = `
+      <div class="duel-result lose">
+        <div class="duel-result-title">失 败</div>
+        <div style="font-size:13px; color:var(--text-secondary);">${loseText}</div>
+      </div>
+    `;
+  }
+
+  resultArea.style.display = 'block';
+  
+  // 如果有回调函数，显示"继续"按钮并在点击时调用回调
+  if (currentDuel.onFinish) {
+    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" id="duel-continue-btn">继续</button>';
+    document.getElementById('duel-continue-btn').onclick = () => {
+      const cb = currentDuel.onFinish;
+      exitDuel();
+      if (cb) cb(duelResult);
+    };
+  } else {
+    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" onclick="exitDuel()">返回</button>';
+  }
+  
+  checkAchievements();
+  updateAllDisplays();
+  saveGame();
+}
+
+function exitDuel() {
+  currentDuel = null;
+  document.getElementById('duel-lobby').style.display = 'block';
+  document.getElementById('duel-arena').style.display = 'none';
+}
+
+// ===== 卡组管理 =====
+function renderDeckView() {
+  console.log('renderDeckView called, currentDeckTab:', currentDeckTab);
+  const mainCountEl = document.getElementById('deck-main-count');
+  if (mainCountEl) mainCountEl.textContent = getMainDeckCount();
+  const extraCountEl = document.getElementById('deck-extra-count');
+  if (extraCountEl) extraCountEl.textContent = getExtraDeckCount();
+
+  document.querySelectorAll('.deck-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.deckTab === currentDeckTab);
+  });
+
+  const list = document.getElementById('deck-cards-list');
+  if (!list) { console.error('deck-cards-list not found'); return; }
+  list.innerHTML = '';
+
+  let cards = [];
+  if (currentDeckTab === 'main') {
+    cards = gameState.mainDeck.map(id => ({ card: CARD_DB[id], count: 1, inDeck: true, deckType: 'main' }));
+  } else if (currentDeckTab === 'extra') {
+    cards = gameState.extraDeck.map(id => ({ card: CARD_DB[id], count: 1, inDeck: true, deckType: 'extra' }));
+  } else {
+    // 牌库：显示所有收藏的卡，标注在卡组中的数量
+    gameState.collection.forEach(id => {
+      const c = CARD_DB[id];
+      const mainCount = gameState.mainDeck.filter(cid => cid === id).length;
+      const extraCount = gameState.extraDeck.filter(cid => cid === id).length;
+      cards.push({ card: c, count: gameState.collectionCount[id] || 1, mainCount, extraCount, inDeck: mainCount > 0 || extraCount > 0 });
+    });
+  }
+
+  // 过滤掉不存在的卡片，按稀有度排序
+  cards = cards.filter(item => item.card);
+  const rarityOrder = { UR: 0, SR: 1, R: 2, N: 3 };
+  cards.sort((a, b) => (rarityOrder[a.card.rarity] || 9) - (rarityOrder[b.card.rarity] || 9));
+
+  if (cards.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">暂无卡片</div>';
+    return;
+  }
+
+  cards.forEach(({ card, count, inDeck, mainCount, extraCount }) => {
+    if (!card) return;
+    const div = document.createElement('div');
+    div.className = 'card-item';
+    const typeLabel = card.type === 'monster' ? '怪兽' : card.type === 'spell' ? '魔法' : card.type === 'trap' ? '陷阱' : '额外';
+    let deckBadge = '';
+    if (mainCount > 0) deckBadge += `<div class="card-type-badge" style="background:rgba(34,197,94,0.2); color:var(--accent-green-light);">主×${mainCount}</div>`;
+    if (extraCount > 0) deckBadge += `<div class="card-type-badge" style="background:rgba(59,130,246,0.2); color:var(--accent-blue-light);">额×${extraCount}</div>`;
+    div.innerHTML = `
+      <div class="card-rarity-dot ${card.rarity}"></div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-type-badge">${typeLabel}</div>
+      ${count > 1 ? `<div class="card-count">×${count}</div>` : ''}
+      ${deckBadge}
+    `;
+    div.onclick = () => showCardDetail(card.id);
+    list.appendChild(div);
+  });
+}
+
+function toggleCardInDeck(cardId, cardType) {
+  const isExtra = cardType === 'extra';
+  const targetDeck = isExtra ? 'extraDeck' : 'mainDeck';
+  const maxCount = isExtra ? 15 : 50;
+  const currentCount = isExtra ? getExtraDeckCount() : getMainDeckCount();
+
+  const idx = gameState[targetDeck].indexOf(cardId);
+  if (idx > -1) {
+    // 从卡组移除
+    gameState[targetDeck].splice(idx, 1);
+    showToast(`已从${isExtra ? '额外' : '主'}卡组移除`);
+  } else {
+    // 加入卡组
+    if (currentCount >= maxCount) {
+      showToast(`${isExtra ? '额外' : '主'}卡组已达上限！`);
+      return;
+    }
+    // 检查收藏中是否有足够的卡
+    const owned = gameState.collectionCount[cardId] || 0;
+    const inDeck = gameState.mainDeck.filter(id => id === cardId).length + gameState.extraDeck.filter(id => id === cardId).length;
+    if (inDeck >= owned) {
+      showToast('牌库中没有更多这张卡了！');
+      return;
+    }
+    gameState[targetDeck].push(cardId);
+    showToast(`已加入${isExtra ? '额外' : '主'}卡组`);
+  }
+  renderDeckView();
+  updateAllDisplays();
+  saveGame();
+}
+
+// ===== 角色页面 =====
+function renderCharacters() {
+  const list = document.getElementById('character-list');
+  list.innerHTML = '';
+  CHARACTERS.forEach(c => {
+    const affinity = gameState.affinity[c.id] || 0;
+    const div = document.createElement('div');
+    div.className = 'character-item';
+    div.innerHTML = `
+      <div class="character-avatar">${c.avatar}</div>
+      <div class="character-info">
+        <div class="character-name">${c.name}</div>
+        <div class="character-desc">${c.desc}</div>
+      </div>
+      <div class="character-affinity">
+        <div class="affinity-bar"><div class="affinity-fill" style="width:${affinity}%"></div></div>
+        <div class="affinity-text">好感 ${affinity}/100</div>
+      </div>
+    `;
+    div.onclick = () => interactCharacter(c);
+    list.appendChild(div);
+  });
+}
+
+function interactCharacter(c) {
+  const affinity = gameState.affinity[c.id] || 0;
+  const hasReceivedGift = gameState.receivedGifts && gameState.receivedGifts.includes(c.id);
+  const options = [
+    { name: '聊天交流（好感+3）', action: () => { gainAffinity(c.id, 3); addEventLog(`与${c.name}聊天交流`); showToast(`${c.name} 好感度+3`); } },
+    { name: '讨论卡组（好感+5）', action: () => { gainAffinity(c.id, 5); addEventLog(`与${c.name}讨论卡组`); showToast(`${c.name} 好感度+5`); } },
+  ];
+
+  // 赠礼：只触发一次，不扣除好感度
+  if (affinity >= 30 && !hasReceivedGift) {
+    options.push({
+      name: `索要赠礼（好感30解锁·限一次）`,
+      action: () => {
+        const giftCard = CARD_DB[c.giftCard];
+        if (giftCard) {
+          addCardToCollection(c.giftCard);
+          showEventModal(c.name, `${c.name}从卡盒里拿出一张【${giftCard.name}】递给你："这张卡送给你，好好使用它。"`, null, [{name:'收下', action:()=>{}}]);
+          addEventLog(`从${c.name}处获得赠礼【${giftCard.name}】`);
+          // 记录获得赠礼（只触发一次）
+          if (!gameState.receivedGifts) gameState.receivedGifts = [];
+          if (!gameState.receivedGifts.includes(c.id)) gameState.receivedGifts.push(c.id);
+        } else {
+          showEventModal(c.name, `${c.name}翻了翻卡盒："抱歉，我今天没带什么可以送你的卡。"`, null, [{name:'离开'}]);
+          addEventLog(`${c.name}没有可赠送的卡片`);
+        }
+        checkAchievements();
+        updateAllDisplays();
+        saveGame();
+      }
+    });
+  } else if (hasReceivedGift) {
+    options.push({
+      name: '赠礼已领取',
+      action: () => { showToast('你已经从这个角色处获得过赠礼了'); }
+    });
+  }
+
+  // 角色挑战：使用角色牌力进行决斗
+  if (c.canChallenge) {
+    // 将旧版power转换为新版牌力（除以15），或使用duelPower属性
+    const charPower = c.duelPower || Math.round((c.power || 1000) / 15);
+    options.push({
+      name: `发起挑战（牌力 ${charPower}）`,
+      action: () => {
+        showEventModal(c.name, `${c.challengeDesc || ''}\n\n对手牌力：${charPower}`, null, [
+          { name: '开始决斗', action: () => {
+            const opponent = { name: c.name, power: charPower, difficulty: 5 };
+            startDuel('master', false, opponent, (result) => {
+              if (result.won && c.challengeReward && CARD_DB[c.challengeReward]) {
+                const rewardCard = CARD_DB[c.challengeReward];
+                addCardToCollection(c.challengeReward);
+                showEventModal('挑战胜利！', `你击败了${c.name}！\n\n${c.name}："不愧是你，这张卡就交给你了。"`, null, [
+                  { name: `获得 ${rewardCard.name}`, action: () => {} }
+                ]);
+                addEventLog(`挑战${c.name}胜利，获得【${rewardCard.name}】`);
+              } else if (result.won) {
+                showEventModal('挑战胜利！', `你击败了${c.name}！`, null, [{ name: '继续', action: () => {} }]);
+                addEventLog(`挑战${c.name}胜利`);
+              } else {
+                addEventLog(`挑战${c.name}失败`);
+              }
+              checkAchievements();
+              updateAllDisplays();
+              saveGame();
+            }, true);
+          }}
+        ]);
+      }
+    });
+  }
+
+  showEventModal(c.name, `你找到了${c.name}，想做什么？\n\n好感度：${affinity}/100`, null, options);
+}
+
+// ===== 比赛页面 =====
+function renderTournaments() {
+  const list = document.getElementById('tournament-list');
+  list.innerHTML = '';
+  TOURNAMENTS.forEach(t => {
+    const mainOk = getMainDeckCount() >= (t.requirement.mainDeck || 0);
+    const extraOk = getExtraDeckCount() >= (t.requirement.extraDeck || 0);
+    const winOk = gameState.wins >= (t.requirement.winCount || 0);
+    const canJoin = mainOk && extraOk && winOk;
+    const duelModeText = t.duelMode === 'quick' ? '快速决斗' : '大师决斗';
+    const modeColor = t.duelMode === 'quick' ? 'var(--accent-green-light)' : 'var(--accent-gold)';
+
+    const div = document.createElement('div');
+    div.className = 'tournament-item';
+    div.innerHTML = `
+      <div class="tournament-header">
+        <div class="tournament-name">${t.name}</div>
+        <div class="tournament-tier">${t.tier}</div>
+      </div>
+      <div class="tournament-desc">${t.desc}</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+        <span style="color:${modeColor};">【${duelModeText}】</span>
+        · ${t.rounds || 3}轮制
+        · 对手牌力 ${t.opponentBasePower || (t.difficulty * 40)}起
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+        要求：主卡组${t.requirement.mainDeck || 0}张 ${mainOk ? '✓' : '✗'}
+        ${t.requirement.extraDeck ? `额外${t.requirement.extraDeck}张 ${extraOk ? '✓' : '✗'}` : ''}
+        ${t.requirement.winCount ? `胜场${t.requirement.winCount} ${winOk ? '✓' : '✗'}` : ''}
+      </div>
+      <div class="tournament-rewards">奖励：${t.rewards}</div>
+      <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">
+        奖励稀有度：${(t.rewardRarities || ['N','R']).join('/')} · ${t.rewardCardCount || 1}张
+      </div>
+      <button class="btn ${canJoin ? 'btn-gold' : 'btn-secondary'}" style="width:100%;" ${canJoin ? '' : 'disabled'} onclick="joinTournament('${t.id}')">
+        ${canJoin ? '参加比赛' : '条件不足'}
+      </button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function joinTournament(tournamentId) {
+  const t = TOURNAMENTS.find(x => x.id === tournamentId);
+  if (!t) return;
+
+  // 检查参赛条件
+  const mainCount = getMainDeckCount();
+  const extraCount = getExtraDeckCount();
+  if (t.requirement) {
+    if (t.requirement.mainDeck && mainCount < t.requirement.mainDeck) {
+      showToast(`主卡组至少需要${t.requirement.mainDeck}张！`);
+      return;
+    }
+    if (t.requirement.extraDeck && extraCount < t.requirement.extraDeck) {
+      showToast(`额外卡组至少需要${t.requirement.extraDeck}张！`);
+      return;
+    }
+    if (t.requirement.winCount && gameState.wins < t.requirement.winCount) {
+      showToast(`需要至少${t.requirement.winCount}场胜利才能参加！`);
+      return;
+    }
+  }
+
+  // 比赛状态
+  const tournamentState = {
+    tournament: t,
+    currentRound: 0,
+    totalRounds: t.rounds || 3,
+    opponentNames: t.opponentNames || ['初赛对手', '半决赛对手', '决赛对手'],
+    basePower: t.opponentBasePower || (t.difficulty * 40),
+    powerGrowth: t.opponentPowerGrowth || 0.25,
+  };
+
+  // 开始第一轮
+  runTournamentRound(tournamentState);
+}
+
+function runTournamentRound(state) {
+  state.currentRound++;
+  const roundIdx = state.currentRound - 1;
+  const opponentName = state.opponentNames[roundIdx] || `第${state.currentRound}轮对手`;
+  // 每轮对手牌力递增
+  const opponentPower = Math.round(state.basePower * (1 + state.powerGrowth * roundIdx) + rand(-10, 10));
+  const opponent = { name: opponentName, power: opponentPower, difficulty: state.tournament.difficulty };
+
+  const roundNames = ['初赛', '半决赛', '决赛', '八强赛', '四强赛'];
+  const roundName = roundNames[roundIdx] || `第${state.currentRound}轮`;
+
+  showToast(`${state.tournament.name} - ${roundName}开始！`);
+
+  // 调用真实决斗系统，noReward模式（比赛结束后统一发奖）
+  const duelMode = state.tournament.duelMode || 'master';
+  startDuel(duelMode, false, opponent, (result) => {
+    if (result.won) {
+      if (state.currentRound >= state.totalRounds) {
+        // 赢得所有轮次，获得冠军
+        tournamentWin(state.tournament);
+      } else {
+        // 进入下一轮
+        showToast(`晋级！准备下一轮...`);
+        setTimeout(() => runTournamentRound(state), 500);
+      }
+    } else {
+      // 被淘汰
+      tournamentLose(state.tournament, state.currentRound);
+    }
+  }, true);
+}
+
+function tournamentWin(t) {
+  gameState.tournamentWins.push(t.id);
+  // 天赋可定义的比赛奖励加成(%)
+  const rewardBonus = 1 + getTalentBonus('tournamentRewardBonus', 0) / 100;
+  const duelPoints = Math.round((t.duelPointsWin || t.difficulty * 500) * rewardBonus);
+  gameState.duelPoints += duelPoints;
+
+  // 奖励卡（按比赛定义的稀有度池）
+  const rewardCards = [];
+  const rewardCount = Math.max(1, Math.round((t.rewardCardCount || 1) * rewardBonus));
+  const rewardRarities = t.rewardRarities || ['N', 'R'];
+  
+  for (let i = 0; i < rewardCount; i++) {
+    const rarity = choice(rewardRarities);
+    const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+    if (pool.length > 0) {
+      const card = choice(pool);
+      addCardToCollection(card.id);
+      rewardCards.push(card);
+    }
+  }
+
+  // 永久属性加成
+  if (t.bonusStats) {
+    if (!gameState.bonusStats) gameState.bonusStats = {};
+    Object.entries(t.bonusStats).forEach(([stat, val]) => {
+      gameState.bonusStats[stat] = (gameState.bonusStats[stat] || 0) + val;
+    });
+  }
+
+  const rewardsHtml = rewardCards.map(c => 
+    `<div style="color:var(--accent-green-light);">获得 ${c.name} [${c.rarity}]</div>`
+  ).join('');
+
+  showEventModal(`${t.name} - 冠军！`, 
+    `经过${t.rounds || 3}轮激烈的角逐，你赢得了${t.name}的冠军！观众们为你欢呼！`, 
+    null,
+    [{ name: '收下奖励', action: () => {} }]
+  );
+  
+  // 在弹窗中显示奖励（通过修改modal内容）
+  setTimeout(() => {
+    const rewardsDiv = document.createElement('div');
+    rewardsDiv.style.cssText = 'background:var(--bg-card);border-radius:6px;padding:10px;margin-bottom:14px;font-size:12px;';
+    rewardsDiv.innerHTML = rewardsHtml + 
+      `<div style="color:var(--accent-gold);margin-top:5px;">决斗点 +${duelPoints}</div>` +
+      (t.bonusStats ? `<div style="color:var(--accent-purple-light);margin-top:5px;">永久属性加成已解锁</div>` : '');
+    const modalText = document.querySelector('.event-modal-text');
+    if (modalText && modalText.parentNode) {
+      modalText.parentNode.insertBefore(rewardsDiv, modalText.nextSibling);
+    }
+  }, 50);
+
+  addEventLog(`赢得${t.name}冠军！`);
+  checkAchievements();
+  updateAllDisplays();
+  saveGame();
+}
+
+function tournamentLose(t, round) {
+  const duelPoints = t.duelPointsLose || Math.round(t.difficulty * 50);
+  gameState.duelPoints += duelPoints;
+  const roundNames = ['初赛', '半决赛', '决赛', '八强赛', '四强赛'];
+  const roundName = roundNames[round - 1] || `第${round}轮`;
+
+  showEventModal(`${t.name} - 落败`, 
+    `你在${t.name}的${roundName}中落败，虽然没能夺冠，但也积累了宝贵的经验。`, 
+    null,
+    [{ name: '继续', action: () => {} }]
+  );
+
+  setTimeout(() => {
+    const rewardsDiv = document.createElement('div');
+    rewardsDiv.style.cssText = 'background:var(--bg-card);border-radius:6px;padding:10px;margin-bottom:14px;font-size:12px;';
+    rewardsDiv.innerHTML = `<div style="color:var(--accent-gold);">安慰奖：决斗点 +${duelPoints}</div>`;
+    const modalText = document.querySelector('.event-modal-text');
+    if (modalText && modalText.parentNode) {
+      modalText.parentNode.insertBefore(rewardsDiv, modalText.nextSibling);
+    }
+  }, 50);
+
+  addEventLog(`参加${t.name}，止步${roundName}`);
+  checkAchievements();
+  updateAllDisplays();
+  saveGame();
+}
+
+// ===== 游戏结束 =====
+function showGameOver() {
+  const totalCards = gameState.collection.length;
+  const totalWins = gameState.wins;
+  const achievements = gameState.achievements.length;
+  const tournamentWins = gameState.tournamentWins.length;
+
+  // 计算评价
+  let rank = '新手决斗者';
+  if (totalWins >= 100) rank = '传说决斗者';
+  else if (totalWins >= 50) rank = '大师决斗者';
+  else if (totalWins >= 20) rank = '资深决斗者';
+  else if (totalWins >= 10) rank = '熟练决斗者';
+
+  showEventModal('游戏结束', `你在童实野市度过了${gameState.age - 18}年的决斗生涯，最终成为了【${rank}】！\n\n总胜场：${totalWins}\n牌库卡片：${totalCards}张\n解锁成就：${achievements}个\n比赛冠军：${tournamentWins}次\n\n感谢游玩！`, [
+    { name: '重新开始', action: () => { clearSave(); location.reload(); } },
+    { name: '继续查看', action: () => {} }
+  ]);
+  addEventLog(`游戏结束，最终成为【${rank}】`);
+  saveGame();
+}
+
+// ===== 成就系统 =====
+function checkAchievementCondition(a) {
+  const cond = a.condition;
+  if (!cond) return false;
+  // 兼容函数式 condition
+  if (typeof cond === 'function') return cond();
+  // 对象式 condition
+  switch(cond.type) {
+    case 'collection_count': return gameState.collection.length >= (cond.value || 1);
+    case 'maindeck_count': return getMainDeckCount() >= (cond.value || 1);
+    case 'extra_deck_count': return getExtraDeckCount() >= (cond.value || 1);
+    case 'wins': return gameState.wins >= (cond.value || 1);
+    case 'losses': return gameState.losses >= (cond.value || 1);
+    case 'duel_count': return (gameState.duelCount || 0) >= (cond.value || 1);
+    case 'gamble_count': return (gameState.gambleCount || 0) >= (cond.value || 1);
+    case 'win_rate': {
+      const total = gameState.wins + gameState.losses;
+      if (total < (cond.minGames || 10)) return false;
+      return (gameState.wins / total * 100) >= (cond.value || 50);
+    }
+    case 'ur_count': return gameState.collection.filter(id => CARD_DB[id]?.rarity === 'UR').length >= (cond.value || 1);
+    case 'card_rarity_count': {
+      const rarity = cond.target || 'SR';
+      return gameState.collection.filter(id => CARD_DB[id]?.rarity === rarity).length >= (cond.value || 1);
+    }
+    case 'unique_cards_count': return new Set(gameState.collection).size >= (cond.value || 1);
+    case 'has_card': return cond.cardId && gameState.collection.includes(cond.cardId);
+    case 'has_archetype': {
+      const arch = cond.target || '';
+      return gameState.collection.some(id => CARD_DB[id]?.archetype === arch);
+    }
+    case 'archetype_count': {
+      const arch = cond.target || '';
+      return gameState.collection.filter(id => CARD_DB[id]?.archetype === arch).length >= (cond.value || 1);
+    }
+    case 'maindeck_type_count': {
+      const type = cond.target || 'monster';
+      const count = gameState.mainDeck.filter(id => CARD_DB[id]?.type === type).length;
+      return count >= (cond.value || 1);
+    }
+    case 'affinity_count': {
+      const threshold = cond.threshold || 50;
+      return Object.values(gameState.affinity).filter(v => v >= threshold).length >= (cond.value || 1);
+    }
+    case 'character_affinity': {
+      const charId = cond.target || '';
+      return (gameState.affinity[charId] || 0) >= (cond.value || 50);
+    }
+    case 'all_characters_affinity': {
+      const threshold = cond.value || 50;
+      return Object.values(gameState.affinity).every(v => v >= threshold);
+    }
+    case 'received_gift': {
+      const charId = cond.target || '';
+      return gameState.receivedGifts && gameState.receivedGifts.includes(charId);
+    }
+    case 'tournament_wins': return gameState.tournamentWins.length >= (cond.value || 1);
+    case 'won_tournament': {
+      const tid = cond.target || '';
+      return gameState.tournamentWins.includes(tid);
+    }
+    case 'tournament_tier_wins': {
+      const tier = cond.target || '入门';
+      const count = gameState.tournamentWins.filter(tid => {
+        const t = TOURNAMENTS.find(x => x.id === tid);
+        return t && t.tier === tier;
+      }).length;
+      return count >= (cond.value || 1);
+    }
+    case 'location_visits': {
+      const locId = cond.target || '';
+      return (gameState.locationVisits && gameState.locationVisits[locId] || 0) >= (cond.value || 1);
+    }
+    case 'weeks': return gameState.week >= (cond.value || 1);
+    case 'age': return gameState.age >= (cond.value || 1);
+    case 'duel_power_threshold': return getDuelPower() >= (cond.value || 100);
+    case 'power_threshold': case 'soul_threshold': case 'luck_threshold':
+    case 'proficiency_threshold': case 'intelligence_threshold': case 'all_main_stats_threshold': {
+      const stats = getTotalStats();
+      if (cond.type === 'all_main_stats_threshold') {
+        const threshold = cond.value || 1;
+        return ['search','expand','disrupt','resist','suppress'].every(k => (stats[k] || 0) >= threshold);
+      }
+      const statKey = cond.type.replace('_threshold', '');
+      return (stats[statKey] || 0) >= (cond.value || 1);
+    }
+    case 'duel_points': return (gameState.duelPoints || 0) >= (cond.value || 1);
+    default: return false;
+  }
+}
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (!gameState.achievements.includes(a.id) && checkAchievementCondition(a)) {
+      gameState.achievements.push(a.id);
+      showToast(`成就解锁：${a.name}！`);
+      addEventLog(`解锁成就【${a.name}】`);
+      // 特殊奖励
+      if (a.rewardCard && CARD_DB[a.rewardCard]) {
+        addCardToCollection(a.rewardCard);
+        addEventLog(`成就奖励：获得 ${CARD_DB[a.rewardCard].name}`);
+      }
+      if (a.rewardDuelPoints) {
+        gameState.duelPoints = (gameState.duelPoints || 0) + a.rewardDuelPoints;
+        addEventLog(`成就奖励：获得 ${a.rewardDuelPoints} 决斗点`);
+      }
+      if (a.rewardEvent) {
+        if (!gameState.unlockedEvents) gameState.unlockedEvents = [];
+        if (!gameState.unlockedEvents.includes(a.rewardEvent)) gameState.unlockedEvents.push(a.rewardEvent);
+      }
+    }
+  });
+  // 检查是否解锁了隐藏天赋
+  checkUnlockHiddenTalents();
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achievement-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(a => {
+    const unlocked = gameState.achievements.includes(a.id);
+    const bonusText = Object.entries(a.bonus).map(([k, v]) => {
+      if (k === 'all') return `全属性+${v}`;
+      const names = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度' };
+      return `${names[k] || k}+${v}`;
+    }).join(' ');
+
+    const div = document.createElement('div');
+    div.className = `achievement-item ${unlocked ? 'unlocked' : 'locked'}`;
+    div.innerHTML = `
+      <div class="achievement-icon">${unlocked ? '🏆' : '🔒'}</div>
+      <div class="achievement-name">${a.name}</div>
+      <div class="achievement-desc">${a.desc}</div>
+      ${bonusText ? `<div class="achievement-bonus">加成：${bonusText}</div>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ===== 排行榜 =====
+function renderRanking() {
+  const list = document.getElementById('rank-list');
+  const playerScore = gameState.wins * 100 + gameState.duelPoints + gameState.tournamentWins.length * 500;
+
+  const npcs = [
+    { name:'阿图姆（暗游戏）', score: 99999 },
+    { name:'海马濑人', score: 85000 },
+    { name:'城之内克也', score: 60000 },
+    { name:'马利克', score: 55000 },
+    { name:'貘良了', score: 50000 },
+    { name:'基斯·霍华德', score: 40000 },
+    { name:'御伽龙儿', score: 30000 },
+    { name:'昆虫羽蛾', score: 25000 },
+    { name:'恐龙龙崎', score: 22000 },
+    { name:'本田广', score: 5000 },
+  ];
+
+  const all = [...npcs, { name:'你', score: playerScore, isPlayer: true }];
+  all.sort((a, b) => b.score - a.score);
+
+  list.innerHTML = '';
+  all.slice(0, 15).forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'rank-item' + (p.isPlayer ? ' player' : '');
+    div.innerHTML = `
+      <div class="rank-number">${i + 1}</div>
+      <div class="rank-name">${p.name}${p.isPlayer ? '（你）' : ''}</div>
+      <div class="rank-score">${p.score.toLocaleString()}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ===== 卡片管理系统 =====
+// 已移至独立编辑器 dev-tool.html，游戏内不再包含管理功能
+let detailCardId = null;
+// ===== 卡片详情弹窗 =====
+function showCardDetail(cardId) {
+  console.log('showCardDetail called with:', cardId);
+  const card = CARD_DB[cardId];
+  if (!card) { console.error('Card not found:', cardId); return; }
+  detailCardId = cardId;
+
+  const typeLabel = card.type === 'monster' ? '怪兽卡' : card.type === 'spell' ? '魔法卡' : card.type === 'trap' ? '陷阱卡' : '额外卡组怪兽';
+
+  // 安全设置元素文本
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  const rarityEl = document.getElementById('cd-rarity');
+  if (rarityEl) {
+    rarityEl.textContent = card.rarity;
+    rarityEl.setAttribute('data-rarity', card.rarity);
+    const rarityColors = { UR: ['rgba(245,158,11,0.2)','#f59e0b'], SR: ['rgba(139,92,246,0.2)','#a78bfa'], R: ['rgba(59,130,246,0.2)','#60a5fa'], N: ['rgba(156,163,175,0.2)','#9ca3af'] };
+    const rc = rarityColors[card.rarity] || rarityColors.N;
+    rarityEl.style.background = rc[0];
+    rarityEl.style.color = rc[1];
+  }
+
+  setText('cd-name', card.name);
+  setText('cd-type', typeLabel);
+  setText('cd-archetype', card.archetype ? `系列：${card.archetype}` : '');
+
+  ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
+    const source = ['power','soul','luck','proficiency','intelligence'].includes(k) ? (card.sub || {}) : (card.stats || {});
+    const val = source[k] || 0;
+    setText('cd-' + k, val > 0 ? '+' + val : val);
+  });
+
+  const owned = gameState.collectionCount[cardId] || 0;
+  const inMain = gameState.mainDeck.filter(c => c === cardId).length;
+  const inExtra = gameState.extraDeck.filter(c => c === cardId).length;
+  setText('cd-owned', `拥有：${owned}张 | 主卡组：${inMain}张 | 额外：${inExtra}张`);
+
+  const isExtra = card.type === 'extra';
+  const deckName = isExtra ? '额外卡组' : '主卡组';
+  const maxDeck = isExtra ? 15 : 60;
+  const getDeckCount = isExtra ? getExtraDeckCount : getMainDeckCount;
+
+  const plusBtn = document.getElementById('cd-plus-btn');
+  const minusBtn = document.getElementById('cd-minus-btn');
+
+  // 内部函数：重新计算当前状态并更新UI
+  const updateUI = () => {
+    const currentOwned = gameState.collectionCount[cardId] || 0;
+    const currentInMain = gameState.mainDeck.filter(c => c === cardId).length;
+    const currentInExtra = gameState.extraDeck.filter(c => c === cardId).length;
+    const currentInDeck = isExtra ? currentInExtra : currentInMain;
+    setText('cd-owned', `拥有：${currentOwned}张 | 主卡组：${currentInMain}张 | 额外：${currentInExtra}张`);
+    if (plusBtn) plusBtn.disabled = currentOwned <= currentInDeck;
+    if (minusBtn) minusBtn.disabled = currentInDeck <= 0;
+  };
+
+  if (plusBtn) {
+    plusBtn.onclick = () => {
+      const currentOwned = gameState.collectionCount[cardId] || 0;
+      const currentInDeck = isExtra ? gameState.extraDeck.filter(c => c === cardId).length : gameState.mainDeck.filter(c => c === cardId).length;
+      if (getDeckCount() >= maxDeck) { showToast(`${deckName}已满（最多${maxDeck}张）`); return; }
+      if (currentInDeck >= 3) { showToast('同名卡最多投入3张'); return; }
+      if (currentOwned <= currentInDeck) { showToast('牌库中没有更多这张卡了'); return; }
+      if (isExtra) {
+        gameState.extraDeck.push(cardId);
+      } else {
+        gameState.mainDeck.push(cardId);
+      }
+      updateUI();
+      updateAllDisplays();
+      saveGame();
+      showToast(`已加入${deckName}`);
+    };
+  }
+
+  if (minusBtn) {
+    minusBtn.onclick = () => {
+      const currentInDeck = isExtra ? gameState.extraDeck.filter(c => c === cardId).length : gameState.mainDeck.filter(c => c === cardId).length;
+      if (currentInDeck <= 0) { showToast(`${deckName}中没有这张卡`); return; }
+      if (isExtra) {
+        const idx = gameState.extraDeck.indexOf(cardId);
+        if (idx > -1) gameState.extraDeck.splice(idx, 1);
+      } else {
+        const idx = gameState.mainDeck.indexOf(cardId);
+        if (idx > -1) gameState.mainDeck.splice(idx, 1);
+      }
+      updateUI();
+      updateAllDisplays();
+      saveGame();
+      showToast(`已从${deckName}移除`);
+    };
+  }
+
+  // 初始化UI状态
+  updateUI();
+
+  const modal = document.getElementById('card-detail-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    console.log('Card detail modal shown');
+  } else {
+    console.error('card-detail-modal not found');
+  }
+}
+
+function closeCardDetail() {
+  document.getElementById('card-detail-modal').style.display = 'none';
+  detailCardId = null;
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'card-detail-modal') closeCardDetail();
+});
+
+// ===== 导航绑定 =====
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('牌佬模拟器脚本加载成功');
+
+  // 绑定开始界面按钮
+  const randomBtn = document.getElementById('random-talent-btn');
+  if (randomBtn) {
+    randomBtn.addEventListener('click', () => {
+      console.log('随机天赋按钮被点击');
+      randomTalents();
+    });
+  } else {
+    console.error('未找到随机天赋按钮');
+  }
+
+  const startBtn = document.getElementById('start-game-btn');
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      console.log('开始游戏按钮被点击');
+      startGame();
+    });
+  } else {
+    console.error('未找到开始游戏按钮');
+  }
+
+  // 更新隐藏天赋解锁提示
+  const hiddenInfo = document.getElementById('hidden-talent-info');
+  if (hiddenInfo) {
+    const unlocked = getUnlockedHiddenTalents();
+    const totalHidden = TALENTS.filter(t => t.hidden).length;
+    if (unlocked.length > 0) {
+      hiddenInfo.textContent = `🔓 已解锁隐藏天赋 ${unlocked.length}/${totalHidden} 个，可在随机天赋中出现`;
+    } else {
+      hiddenInfo.textContent = `🔒 共有 ${totalHidden} 个隐藏天赋，达成特定成就即可解锁`;
+    }
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.onclick = () => switchSubView(btn.dataset.view);
+  });
+
+  document.querySelectorAll('.deck-tab').forEach(tab => {
+    tab.onclick = () => {
+      currentDeckTab = tab.dataset.deckTab;
+      renderDeckView();
+    };
+  });
+
+  // 结束模拟 / 重置存档按钮
+  const endSimBtn = document.getElementById('end-sim-btn');
+  if (endSimBtn) {
+    endSimBtn.addEventListener('click', () => {
+      showConfirmModal(
+        '结束模拟',
+        '确定要结束当前模拟并重置存档吗？所有进度将被清除，无法恢复。',
+        '确认重置',
+        '再想想',
+        () => {
+          clearSave();
+          showToast('存档已重置，正在重新开始...');
+          setTimeout(() => location.reload(), 800);
+        }
+      );
+    });
+  }
+
+  // 检查存档
+  if (loadGame() && gameState.week > 0) {
+    switchView('game');
+    updateAllDisplays();
+    renderLocations();
+    showToast('已恢复上次的存档');
+  } else {
+    console.log('无存档，渲染天赋选择界面');
+    renderTalents();
+  }
+});
+</script>
+
+</body>
+</html>
