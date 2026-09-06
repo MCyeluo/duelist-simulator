@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+0<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1630,7 +1630,7 @@ const OPPONENTS = [
   {
     "id": "op001",
     "name": "新手决斗者",
-    "basePower": 800,
+    "basePower": 500,
     "variance": 80,
     "difficulty": 1,
     "desc": "刚接触决斗的新手，牌力较弱"
@@ -1638,15 +1638,15 @@ const OPPONENTS = [
   {
     "id": "op002",
     "name": "校园决斗者",
-    "basePower": 1200,
-    "variance": 300,
+    "basePower": 800,
+    "variance": 200,
     "difficulty": 2,
     "desc": "学校里的决斗爱好者，有一定基础"
   },
   {
     "id": "op003",
     "name": "卡店常客",
-    "basePower": 1400,
+    "basePower": 1200,
     "variance": 400,
     "difficulty": 3,
     "desc": "经常在卡店决斗的老手，经验丰富"
@@ -1695,12 +1695,17 @@ const OPPONENTS = [
 
 // ===== 决斗配置（可由开发工具编辑）=====
 const DUEL_CONFIG = {
-  "maxTurns": 8,
+  "quickMaxTurns": 30,
+  "masterMaxTurns": 60,
   "playerBasePower": 100,
   "quickModeBonus": 1.2,
   "masterModeBonus": 1.4,
-  "npcGrowthStartDay": 196,
-  "npcGrowthInterval": 28,
+  "quickOpponentMin": 0,
+  "quickOpponentMax": 3,
+  "masterOpponentMin": 3,
+  "masterOpponentMax": 6,
+  "npcGrowthStartDay": 365,
+  "npcGrowthInterval": 56,
   "npcGrowthRate": 0.125,
   "winDuelPointsQuick": 200,
   "winDuelPointsMaster": 800,
@@ -1914,7 +1919,7 @@ const TOURNAMENTS = [
       "卡店新手",
       "卡店老手"
     ],
-    "opponentBasePower": 1200,
+    "opponentBasePower": 1000,
     "opponentPowerGrowth": 0.3,
     "rewardRarities": [
       "N",
@@ -2388,6 +2393,20 @@ const EVENTS = {
         }
       ],
       "log": "在龟游戏屋整理卡组，决斗理解提升"
+    },
+    {
+      "id": "kame_work",
+      "name": "打工帮忙",
+      "probability": 0.5,
+      "title": "龟游戏屋",
+      "text": "在店里帮忙，得到了双六爷爷的报酬",
+      "effects": [
+        {
+          "type": "addDuelPoints",
+          "amount": 150
+        }
+      ],
+      "log": "在龟游戏屋打工从双六爷爷处获得了150决斗点"
     }
   ],
   "cardshop": [
@@ -2571,8 +2590,7 @@ const EVENTS = {
       "effects": [
         {
           "type": "bonusStat",
-          "charId": "random_school",
-          "amount": 5,
+          "amount": 3,
           "stat": "intelligence"
         }
       ],
@@ -2704,7 +2722,7 @@ const EVENTS = {
       "cost": {
         "duelPoints": 1000
       },
-      "failText": "海马乐园的入场费需要100决斗点，你目前的决斗点不够。",
+      "failText": "海马乐园的入场费需要1000决斗点，你目前的决斗点不够。",
       "options": [
         {
           "name": "接受挑战",
@@ -2730,7 +2748,8 @@ const EVENTS = {
           "log": "在海马乐园参观"
         }
       ],
-      "log": "进入海马乐园"
+      "log": "进入海马乐园",
+      "oneTime": true
     },
     {
       "id": "kaiba_rare",
@@ -3626,14 +3645,19 @@ function runDataDrivenEvent(loc) {
             showToast('卡组条件不足，无法进行决斗！');
             return;
           }
-          executeEffects(op.effects || [], selectedEvent, loc);
+          const rewards = executeEffects(op.effects || [], selectedEvent, loc);
           // 选项级别的skipTime：该选项不占用回合时间
           if (op.skipTime) {
             gameState.week -= 7;
             if (gameState.week < 1) gameState.week = 1;
             gameState.age = 18 + Math.floor(gameState.week / 365);
           }
-          if (op.log) addEventLog(op.log);
+          // 日志：优先使用选项的log，否则使用事件的log
+          let logText = op.log || selectedEvent.log;
+          if (logText) {
+            if (rewards.cardName) logText = logText.replace('{cardName}', rewards.cardName);
+            addEventLog(logText);
+          }
           checkAchievements();
           updateAllDisplays();
           saveGame();
@@ -3672,8 +3696,16 @@ function executeEffects(effects, event, loc) {
         break;
       }
       case 'randomCardByRarity': {
-        const rarity = ef.rarity === 'random' ? choice(['N','R','SR','UR']) : ef.rarity;
-        const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+        const rarity = (!ef.rarity || ef.rarity === 'random') ? choice(['N','R','SR','UR']) : ef.rarity;
+        let pool;
+        if (ef.pool && ef.pool.length) {
+          // 从指定卡池中按稀有度筛选
+          pool = ef.pool.map(id => CARD_DB[id]).filter(c => c && c.rarity === rarity);
+          // 如果指定卡池中没有该稀有度的卡，从指定卡池中随机选
+          if (!pool.length) pool = ef.pool.map(id => CARD_DB[id]).filter(c => c);
+        } else {
+          pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+        }
         if (pool.length) {
           const card = choice(pool);
           addCardToCollection(card.id);
@@ -3985,8 +4017,10 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
       difficulty: customOpponent.difficulty || 3 
     };
   } else {
-    // 从OPPONENTS数据库生成随机对手
-    const diffIdx = mode === 'master' ? rand(2, OPPONENTS.length - 1) : rand(0, Math.min(3, OPPONENTS.length - 1));
+    // 从OPPONENTS数据库生成随机对手（使用配置中的范围）
+    const oppMin = mode === 'master' ? DUEL_CONFIG.masterOpponentMin : DUEL_CONFIG.quickOpponentMin;
+    const oppMax = mode === 'master' ? Math.min(DUEL_CONFIG.masterOpponentMax, OPPONENTS.length - 1) : Math.min(DUEL_CONFIG.quickOpponentMax, OPPONENTS.length - 1);
+    const diffIdx = rand(oppMin, oppMax);
     const opponentTemplate = OPPONENTS[diffIdx];
 
     // NPC牌力随时间增长（使用DUEL_CONFIG配置）
@@ -4120,7 +4154,8 @@ function runDuelTurn() {
       document.getElementById('duel-player-power').textContent = '牌力 ' + Math.round(currentDuel.playerPower);
       document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
 
-      if (currentDuel.turn > 5 || currentDuel.playerPower <= 0 || currentDuel.opponentPower <= 0) {
+      const maxTurns = currentDuel.mode === 'master' ? DUEL_CONFIG.masterMaxTurns : DUEL_CONFIG.quickMaxTurns;
+      if (currentDuel.turn > maxTurns || currentDuel.playerPower <= 0 || currentDuel.opponentPower <= 0) {
         finishDuel();
       } else {
         setTimeout(() => runDuelTurn(), 600);
