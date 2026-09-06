@@ -1045,6 +1045,7 @@ body::before {
       <div class="time-display">
         <span>第 <strong id="week-display">1</strong> 天</span>
         <span>|<span> <strong id="age-display">18</strong> 岁</span>
+        <span>|<span> 决斗点 <strong id="duel-points-display">0</strong></span>
       </div>
     </div>
 
@@ -1061,11 +1062,11 @@ body::before {
     <div class="content-area">
       <!-- 主页 -->
       <div id="subview-home" class="view active">
-        <div class="panel" style="margin-bottom:16px;">
+        <div class="panel" style="margin-bottom:12px;">
           <div class="panel-title">牌力评估</div>
-          <div style="text-align:center; padding:20px 0;">
-            <div style="font-size:48px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
-            <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">实时计算 · 基于当前属性和卡组</div>
+          <div style="text-align:center; padding:12px 0;">
+            <div style="font-size:36px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">实时计算 · 基于当前属性和卡组</div>
           </div>
         </div>
         <div class="stats-grid">
@@ -1075,16 +1076,11 @@ body::before {
           <div class="stat-box proficiency"><div class="stat-box-label">熟练度</div><div class="stat-box-value" id="stat-proficiency">0</div></div>
           <div class="stat-box intelligence"><div class="stat-box-label">情报力</div><div class="stat-box-value" id="stat-intelligence">0</div></div>
         </div>
-        <div style="font-size:11px; color:var(--text-muted); margin:8px 0 16px; text-align:center;">
+        <div style="font-size:11px; color:var(--text-muted); margin:8px 0 12px; text-align:center;">
           熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
         </div>
 
-        <div class="panel">
-          <div class="panel-title">本次行动 - 选择地点</div>
-          <div class="locations-grid" id="locations-grid"></div>
-        </div>
-
-        <div class="panel">
+        <div class="panel" style="margin-bottom:12px;">
           <div class="panel-title">卡组概况</div>
           <div class="deck-summary">
             <div class="deck-summary-item">
@@ -1104,18 +1100,18 @@ body::before {
               <div class="deck-summary-value"><span id="win-count">0</span>胜<span id="lose-count">0</span>负</div>
             </div>
           </div>
-          <div style="font-size:11px; color:var(--text-muted); line-height:1.8;">
-            主卡组≥20张可进行快速决斗 · 主卡组≥40张可进行大师决斗<br>
-            主卡组最多60张 · 额外卡组最多15张 · 同名卡最多3张
-            决斗获胜可通过赌卡规则获取对手卡片
+        </div>
+
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">最近事件</div>
+          <div id="recent-events" style="font-size:11px; color:var(--text-secondary); line-height:1.6; max-height:100px; overflow-y:auto; padding-right:4px;">
+            你的牌佬之路才刚刚开始...
           </div>
         </div>
 
         <div class="panel">
-          <div class="panel-title">最近事件</div>
-          <div id="recent-events" style="font-size:12px; color:var(--text-secondary); line-height:1.8; max-height:150px; overflow-y:auto;">
-            你的牌佬之路才刚刚开始...
-          </div>
+          <div class="panel-title">本次行动 - 选择地点</div>
+          <div class="locations-grid" id="locations-grid"></div>
         </div>
 
         <div style="text-align:center; margin-top:16px;">
@@ -3439,9 +3435,15 @@ function updateAllDisplays() {
   document.getElementById('collection-count').textContent = gameState.collection.length;
   document.getElementById('win-count').textContent = gameState.wins;
   document.getElementById('lose-count').textContent = gameState.losses;
-  // 最近事件
+  // 决斗点实时显示
+  const dpEl = document.getElementById('duel-points-display');
+  if (dpEl) dpEl.textContent = gameState.duelPoints || 0;
+  // 最近事件（只显示最近5条，简化格式）
   const re = document.getElementById('recent-events');
-  if (re) re.innerHTML = gameState.recentEvents.map(e => `<div>${e}</div>`).join('') || '你的牌佬之路才刚刚开始...';
+  if (re) {
+    const recent = gameState.recentEvents.slice(0, 5);
+    re.innerHTML = recent.map(e => `<div style="padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.05);">${e}</div>`).join('') || '<div style="color:var(--text-muted);">你的牌佬之路才刚刚开始...</div>';
+  }
 }
 
 // ===== 地点渲染与行动 =====
@@ -4035,9 +4037,13 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty };
   }
 
-  // 计算玩家战力（天赋胜率加成）
+  // 计算玩家初始牌力（生命值）= 基础牌力 + 综合属性加成
+  const stats = getTotalStats();
   const winRateBonus = getTalentBonus('winRateBonus', 0);
-  const basePlayerPower = Math.round(getDuelPower());
+  const basePlayerPower = DUEL_CONFIG.playerBasePower + 
+    Math.round((stats.search || 0) * 1.5 + (stats.expand || 0) * 1.5 + 
+    (stats.disrupt || 0) * 1.5 + (stats.resist || 0) * 1.5 + 
+    (stats.suppress || 0) * 1.5 + (stats.power || 0) * 2.0);
   const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100));
 
   currentDuel = {
@@ -4046,6 +4052,8 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     opponent,
     playerPower: playerPowerWithBonus,
     opponentPower: opponent.power,
+    playerMaxPower: playerPowerWithBonus,
+    opponentMaxPower: opponent.power,
     turn: 1,
     log: [],
     finished: false,
@@ -4084,173 +4092,192 @@ function runDuelTurn() {
   if (currentDuel.finished) return;
 
   const stats = getTotalStats();
-  const luck = stats.luck || 0;
-  const soul = stats.soul || 0;
-  const search = stats.search || 0;
-  const expand = stats.expand || 0;
-  const disrupt = stats.disrupt || 0;
-  const resist = stats.resist || 0;
-  const suppress = stats.suppress || 0;
 
   setTimeout(() => {
-    if (currentDuel.turn === 1) {
-      addDuelLog('你的回合——抽卡！');
-      // 检索+掏度影响起手
-      const startRoll = rand(-20, 20) + luck + search * 0.5;
-      if (startRoll > 15) {
-        addDuelLog('完美起手！核心卡全部上手！');
-        currentDuel.playerPower += 20;
-      } else if (startRoll > 5) {
-        addDuelLog('关键抽卡！你抽到了需要的卡！');
-        currentDuel.playerPower += 12;
-      } else if (startRoll < -10) {
-        addDuelLog('手札事故...起手非常不理想。');
-        currentDuel.playerPower -= 15;
-      } else if (startRoll < 0) {
-        addDuelLog('起手一般，需要后续运营。');
-        currentDuel.playerPower -= 5;
-      }
-    }
+    // ===== 玩家回合：检索+展开 =====
+    addDuelLog(`第${currentDuel.turn}回合——你的回合`, 'turn');
 
-    // ===== 战斗事件系统 =====
-    triggerBattleEvent(stats);
+    // 检索+展开计算本回合交互强度（熟练度影响展开和检索）
+    const searchExpandBase = (stats.search || 0) * 0.6 + 
+                              (stats.expand || 0) * 1.2 + 
+                              (stats.proficiency || 0) * 0.4 + 
+                              (stats.power || 0) * 0.6;
+    const expandRoll = Math.random();
+    const expandGreat = expandRoll < 0.1 + (stats.expand || 0) * 0.008 + (stats.proficiency || 0) * 0.005;
+    const expandSuccess = expandRoll < 0.5 + (stats.expand || 0) * 0.015 + (stats.proficiency || 0) * 0.008;
 
-    // 模拟回合展开（展开属性影响展开成功率）
-    const expandRoll = rand(0, 100) + expand * 0.8 - disrupt * 0.3;
-    if (expandRoll > 75) {
-      addDuelLog('你完美展开！场上站满了怪兽，场面优势巨大！');
-      currentDuel.playerPower += rand(8, 18);
-    } else if (expandRoll > 40) {
-      addDuelLog('你做了常规展开，场面稳步建立。');
-      currentDuel.playerPower += rand(2, 8);
-    } else if (expandRoll > 20) {
-      addDuelLog('你的展开受到一些干扰，但还是做出了场面。');
-      currentDuel.playerPower += rand(0, 3);
+    let playerInteraction = 0;
+    if (expandGreat) {
+      playerInteraction = searchExpandBase * 2.0;
+      addDuelLog('✨ 完美展开！核心Combo全部达成，场面优势巨大！');
+    } else if (expandSuccess) {
+      playerInteraction = searchExpandBase * 1.0;
+      addDuelLog('你完成了常规展开，场面稳步建立。');
     } else {
-      addDuelLog('你的展开被对方彻底干扰了，场面非常被动！');
-      currentDuel.playerPower -= rand(3, 10);
+      playerInteraction = searchExpandBase * 0.3;
+      addDuelLog('你的展开受到一些干扰，但还是做出了场面。');
     }
+
+    // 战斗事件（可能额外增加交互强度或直接削减对手牌力）
+    triggerBattleEvent(stats, (eventBonus, eventDamage) => {
+      playerInteraction += eventBonus || 0;
+      if (eventDamage) currentDuel.opponentPower -= eventDamage;
+    });
 
     setTimeout(() => {
+      // ===== 对手回合 =====
       addDuelLog(`对方回合——${currentDuel.opponent.name}的操作！`, 'turn');
 
-      // 干扰+压制属性影响对方展开
-      const opponentExpandRoll = rand(0, 100) - disrupt * 0.6 - suppress * 0.4 + resist * 0.2;
-      if (opponentExpandRoll > 75) {
-        addDuelLog('对方展开非常迅速，场面压力很大！');
-        currentDuel.opponentPower += rand(8, 18);
-      } else if (opponentExpandRoll > 40) {
-        addDuelLog('对方做了常规展开。');
-        currentDuel.opponentPower += rand(2, 8);
-      } else if (opponentExpandRoll > 20) {
-        addDuelLog('对方的展开受到你的一些干扰。');
-        currentDuel.opponentPower += rand(0, 3);
-      } else {
-        addDuelLog('对方的展开被你的干扰彻底打断了！');
-        currentDuel.opponentPower -= rand(3, 10);
+      // 根据对手牌力反推属性（用于计算干扰/抗性减免）
+      const oppTotal = currentDuel.opponent.power / 8;
+      const oppResist = oppTotal * 0.15;
+      const oppPower = oppTotal * 0.15;
+
+      // 对手展开交互强度
+      const opponentExpandBase = oppTotal * 0.4 + oppPower * 0.5;
+      let opponentInteraction = opponentExpandBase * (0.5 + Math.random() * 0.5);
+
+      // 玩家干扰（情报力影响干扰和压制）
+      const disruptPower = (stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4;
+      const disruptSuccess = Math.random() < 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008;
+      if (disruptSuccess) {
+        // 抗性减免：对手抗性+强度减少干扰效果
+        const resistFactor = Math.min(0.7, disruptPower * 0.018 * (1 - oppResist * 0.025 - oppPower * 0.015));
+        opponentInteraction *= (1 - resistFactor);
+        addDuelLog(`⚡ 干扰成功！对方展开被打断，交互效率降低${Math.round(resistFactor * 100)}%！`);
       }
 
-      currentDuel.turn++;
-      document.getElementById('duel-player-power').textContent = '牌力 ' + Math.round(currentDuel.playerPower);
-      document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
+      // 玩家压制（直接削减对手牌力）
+      const suppressPower = (stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4;
+      const suppressSuccess = Math.random() < 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008;
+      let suppressDamage = 0;
+      if (suppressSuccess) {
+        suppressDamage = suppressPower * 0.6 * (1 - Math.min(0.5, oppResist * 0.025 + oppPower * 0.015));
+        addDuelLog(`🔥 压制成功！对方场面被破坏，损失${Math.round(suppressDamage)}点牌力！`);
+      }
 
-      const maxTurns = currentDuel.mode === 'master' ? DUEL_CONFIG.masterMaxTurns : DUEL_CONFIG.quickMaxTurns;
-      if (currentDuel.turn > maxTurns || currentDuel.playerPower <= 0 || currentDuel.opponentPower <= 0) {
+      // ===== 结算 =====
+      currentDuel.opponentPower -= playerInteraction;
+      currentDuel.playerPower -= opponentInteraction;
+      currentDuel.opponentPower -= suppressDamage;
+
+      addDuelLog(`你的展开为你带来 ${Math.round(playerInteraction)} 点牌力优势，对方展开带来 ${Math.round(opponentInteraction)} 点压力`);
+
+      // 更新显示
+      currentDuel.turn++;
+      document.getElementById('duel-player-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.playerPower));
+      document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.opponentPower));
+
+      // 胜负判定：牌力归零即败
+      if (currentDuel.playerPower <= 0 && currentDuel.opponentPower <= 0) {
+        // 同归于尽，算玩家败
+        addDuelLog('双方牌力同时归零...你勉强输掉了决斗。', 'lose');
+        finishDuel();
+      } else if (currentDuel.opponentPower <= 0) {
+        addDuelLog('对方牌力归零！决斗胜利！', 'win');
+        finishDuel();
+      } else if (currentDuel.playerPower <= 0) {
+        addDuelLog('你的牌力归零...决斗失败。', 'lose');
         finishDuel();
       } else {
-        setTimeout(() => runDuelTurn(), 600);
+        // 检查最大回合数
+        const maxTurns = currentDuel.mode === 'master' ? DUEL_CONFIG.masterMaxTurns : DUEL_CONFIG.quickMaxTurns;
+        if (currentDuel.turn > maxTurns) {
+          if (currentDuel.playerPower > currentDuel.opponentPower) {
+            addDuelLog(`回合数耗尽（${maxTurns}回合），你的剩余牌力更高，决斗胜利！`, 'win');
+          } else {
+            addDuelLog(`回合数耗尽（${maxTurns}回合），对方剩余牌力更高，决斗失败...`, 'lose');
+          }
+          finishDuel();
+        } else {
+          setTimeout(() => runDuelTurn(), 600);
+        }
       }
     }, 700);
   }, 700);
 }
 
 // ===== 战斗事件系统 =====
-function triggerBattleEvent(stats) {
-  // 每回合概率触发战斗事件，系列卡组提升概率，天赋可加成
-  let triggerRate = getArchetypeLuckBonus();
-  // 天赋可定义的战斗事件概率加成(%)
+function triggerBattleEvent(stats, callback) {
+  // 魂度和掏度影响幸运事件触发概率
+  const soul = stats.soul || 0;
+  const luck = stats.luck || 0;
+  let triggerRate = 0.25 + soul * 0.008 + luck * 0.008;
+  // 系列卡组加成
+  triggerRate += getArchetypeLuckBonus() - 0.3;
+  // 天赋加成
   const battleBonus = getTalentBonus('battleEventBonus', 0);
-  // 天赋可定义的幸运事件概率加成(%)
   const luckBonus = getTalentBonus('luckEventBonus', 0);
-  triggerRate = Math.min(0.9, triggerRate + (battleBonus + luckBonus) / 100);
-  if (Math.random() > triggerRate) return;
+  triggerRate = Math.min(0.85, triggerRate + (battleBonus + luckBonus) / 100);
+  
+  if (Math.random() > triggerRate) { if (callback) callback(0, 0); return; }
+
+  let eventBonus = 0;
+  let eventDamage = 0;
 
   const events = [
     {
       name: '神抽',
-      condition: () => (stats.luck || 0) > 8 && Math.random() < 0.3,
+      condition: () => luck > 5 && Math.random() < 0.4,
       effect: () => {
         addDuelLog('✨ 神抽！你在关键时刻抽到了那张卡！', 'event');
-        currentDuel.playerPower += rand(10, 20);
+        eventBonus += luck * 1.5 + rand(5, 15);
       }
     },
     {
       name: '魂之羁绊',
-      condition: () => (stats.soul || 0) > 8 && Math.random() < 0.3,
+      condition: () => soul > 5 && Math.random() < 0.4,
       effect: () => {
         addDuelLog('🔥 魂之羁绊！卡片回应了你的心意！', 'event');
-        currentDuel.playerPower += rand(8, 15);
+        eventBonus += soul * 1.5 + rand(5, 12);
       }
     },
     {
       name: '效果命中',
-      condition: () => (stats.disrupt || 0) > 6 && Math.random() < 0.4,
+      condition: () => (stats.disrupt || 0) > 4 && Math.random() < 0.4,
       effect: () => {
         addDuelLog('⚡ 效果命中！你的干扰效果完美发动！', 'event');
-        currentDuel.opponentPower -= rand(8, 15);
+        eventDamage += (stats.disrupt || 0) * 1.0 + rand(5, 12);
       }
     },
     {
       name: '效果抵抗',
-      condition: () => (stats.resist || 0) > 6 && Math.random() < 0.4,
+      condition: () => (stats.resist || 0) > 4 && Math.random() < 0.35,
       effect: () => {
         addDuelLog('🛡️ 效果抵抗！你成功抵抗了对方的效果！', 'event');
-        currentDuel.playerPower += rand(5, 12);
+        eventBonus += (stats.resist || 0) * 0.8 + rand(3, 10);
       }
     },
     {
       name: '场面压制',
-      condition: () => (stats.suppress || 0) > 6 && Math.random() < 0.35,
+      condition: () => (stats.suppress || 0) > 4 && Math.random() < 0.35,
       effect: () => {
         addDuelLog('👊 场面压制！你的场面让对方无法动弹！', 'event');
-        currentDuel.opponentPower -= rand(6, 12);
+        eventDamage += (stats.suppress || 0) * 0.8 + rand(4, 10);
       }
     },
     {
       name: '精准检索',
-      condition: () => (stats.search || 0) > 6 && Math.random() < 0.35,
+      condition: () => (stats.search || 0) > 4 && Math.random() < 0.35,
       effect: () => {
         addDuelLog('🔍 精准检索！你从卡组中找到了需要的卡！', 'event');
-        currentDuel.playerPower += rand(6, 12);
+        eventBonus += (stats.search || 0) * 0.8 + rand(4, 10);
       }
     },
     {
       name: '连锁展开',
-      condition: () => (stats.expand || 0) > 8 && Math.random() < 0.3,
+      condition: () => (stats.expand || 0) > 6 && Math.random() < 0.3,
       effect: () => {
         addDuelLog('🔗 连锁展开！你的卡组像齿轮一样完美运转！', 'event');
-        currentDuel.playerPower += rand(10, 18);
+        eventBonus += (stats.expand || 0) * 1.0 + rand(6, 14);
       }
     },
     {
       name: '对方神抽',
-      condition: () => Math.random() < 0.15,
+      condition: () => Math.random() < 0.12,
       effect: () => {
         addDuelLog('💀 对方神抽！对手也抽到了关键卡！', 'event');
-        currentDuel.opponentPower += rand(8, 15);
-      }
-    },
-    {
-      name: '裁判判定',
-      condition: () => Math.random() < 0.1,
-      effect: () => {
-        if (Math.random() < 0.5) {
-          addDuelLog('📋 裁判判定！你的效果被确认有效！', 'event');
-          currentDuel.playerPower += rand(5, 10);
-        } else {
-          addDuelLog('📋 裁判判定！对方的效果被确认有效！', 'event');
-          currentDuel.opponentPower += rand(5, 10);
-        }
+        eventDamage = 0; // 对方神抽由对手回合处理，这里只记录
       }
     },
   ];
@@ -4261,6 +4288,8 @@ function triggerBattleEvent(stats) {
     const event = choice(validEvents);
     event.effect();
   }
+
+  if (callback) callback(eventBonus, eventDamage);
 }
 
 function finishDuel() {
