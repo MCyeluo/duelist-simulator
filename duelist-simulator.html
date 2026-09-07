@@ -1357,19 +1357,39 @@ let CARD_DB = {
   m027: { id:'m027', name:'混沌战士', type:'monster', rarity:'UR', archetype:'混沌', stats:{search:0,expand:7,disrupt:7,resist:7,suppress:7}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
   m028: { id:'m028', name:'冲锋陷阵的队长', type:'monster', rarity:'SR', archetype:'战士', stats:{search:0,expand:4,disrupt:0,resist:6,suppress:2}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
   m029: { id:'m029', name:'效果遮蒙者', type:'monster', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:8,resist:4,suppress:4}, sub:{power:8,soul:2,proficiency:0,intelligence:0} },
+  m030: { id:'m030', name:'救援猫', type:'monster', rarity:'N', archetype:'救援', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
 
   // 额外卡组
   e001: { id:'e001', name:'青眼究极龙', type:'extra', rarity:'UR', archetype:'青眼', stats:{search:0,expand:0,disrupt:3,resist:3,suppress:9}, sub:{power:10,soul:10,proficiency:0,intelligence:0} },
-  e002: { id:'e002', name:'圣女 贞德', type:'extra', rarity:'N', archetype:'', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  e002: { id:'e002', name:'圣女 贞德', type:'extra', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:1,proficiency:0,intelligence:0} },
   e003: { id:'e003', name:'暗黑魔龙', type:'extra', rarity:'SR', archetype:'恶魔', stats:{search:0,expand:5,disrupt:0,resist:4,suppress:5}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
   e004: { id:'e004', name:'龙骑士盖亚', type:'extra', rarity:'SR', archetype:'盖亚', stats:{search:0,expand:0,disrupt:2,resist:6,suppress:6}, sub:{power:6,soul:7,proficiency:0,intelligence:0} },
   e005: { id:'e005', name:'有翼幻兽 奇美拉', type:'extra', rarity:'R', archetype:'幻兽', stats:{search:6,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
   e006: { id:'e006', name:'冰结界之龙 光枪龙', type:'extra', rarity:'SR', archetype:'冰结界', stats:{search:0,expand:0,disrupt:8,resist:5,suppress:5}, sub:{power:6,soul:5,proficiency:0,intelligence:0} },
   e007: { id:'e007', name:'黑蔷薇龙', type:'extra', rarity:'SR', archetype:'蔷薇', stats:{search:0,expand:4,disrupt:6,resist:0,suppress:6}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
   e008: { id:'e008', name:'星尘龙', type:'extra', rarity:'UR', archetype:'龙', stats:{search:0,expand:6,disrupt:8,resist:8,suppress:6}, sub:{power:8,soul:10,proficiency:0,intelligence:0} },
-  e009: { id:'e009', name:'真红魔龙', type:'extra', rarity:'UR', archetype:'龙', stats:{search:3,expand:4,disrupt:0,resist:7,suppress:8}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
+  e009: { id:'e009', name:'红莲魔龙', type:'extra', rarity:'UR', archetype:'龙', stats:{search:3,expand:4,disrupt:0,resist:7,suppress:8}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
   e010: { id:'e010', name:'迷宫的魔战车', type:'extra', rarity:'N', archetype:'迷宫', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
   e011: { id:'e011', name:'双头雷龙', type:'extra', rarity:'N', archetype:'雷龙', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  e012: { id:'e012', name:'奇迹鸟', type:'extra', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:2}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  e013: { id:'e013', name:'混沌男巫', type:'extra', rarity:'N', archetype:'混沌', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:1,soul:3,proficiency:0,intelligence:0} },
+  e014: { id:'e014', name:'融合体', type:'extra', rarity:'N', archetype:'融合', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:1}, sub:{power:1,soul:1,proficiency:0,intelligence:0} },
+  e015: { id:'e015', name:'旧神 诺登', type:'extra', rarity:'R', archetype:'旧神', stats:{search:0,expand:4,disrupt:0,resist:0,suppress:4}, sub:{power:4,soul:4,proficiency:0,intelligence:0} },
+  e016: { id:'e016', name:'旧神 努茨', type:'extra', rarity:'SR', archetype:'旧神', stats:{search:0,expand:7,disrupt:7,resist:0,suppress:4}, sub:{power:7,soul:2,proficiency:0,intelligence:0} },
+  e017: { id:'e017', name:'沼地的泥龙王', type:'extra', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:6,suppress:0}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
+  e018: { id:'e018', name:'外毒多头蛇', type:'extra', rarity:'R', archetype:'泛用', stats:{search:3,expand:0,disrupt:6,resist:0,suppress:0}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
+  e019: { id:'e019', name:'超雷龙', type:'extra', rarity:'UR', archetype:'雷龙', stats:{search:0,expand:0,disrupt:9,resist:8,suppress:9}, sub:{power:9,soul:7,proficiency:0,intelligence:0} },
+  e020: { id:'e020', name:'黑炎之骑士', type:'extra', rarity:'R', archetype:'泛用', stats:{search:2,expand:6,disrupt:0,resist:5,suppress:0}, sub:{power:5,soul:4,proficiency:0,intelligence:0} },
+  e021: { id:'e021', name:'千眼纳祭神', type:'extra', rarity:'SR', archetype:'眼纳祭神', stats:{search:0,expand:0,disrupt:7,resist:8,suppress:8}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  e022: { id:'e022', name:'异星的最终战士', type:'extra', rarity:'R', archetype:'战士', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:3,proficiency:0,intelligence:0} },
+  e023: { id:'e023', name:'青眼卡通究极龙', type:'extra', rarity:'UR', archetype:'青眼,卡通', stats:{search:6,expand:3,disrupt:0,resist:8,suppress:9}, sub:{power:9,soul:7,proficiency:0,intelligence:0} },
+  e024: { id:'e024', name:'始祖之龙王', type:'extra', rarity:'UR', archetype:'龙', stats:{search:0,expand:0,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
+  e025: { id:'e025', name:'雷神龙-雷龙', type:'extra', rarity:'UR', archetype:'雷龙', stats:{search:0,expand:3,disrupt:6,resist:9,suppress:8}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
+  e026: { id:'e026', name:'神·史莱姆', type:'extra', rarity:'UR', archetype:'史莱姆', stats:{search:0,expand:9,disrupt:0,resist:9,suppress:8}, sub:{power:9,soul:7,proficiency:0,intelligence:0} },
+  e027: { id:'e027', name:'天位骑士', type:'extra', rarity:'SR', archetype:'骑士', stats:{search:0,expand:0,disrupt:8,resist:5,suppress:7}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  e028: { id:'e028', name:'真红眼超越黑龙', type:'extra', rarity:'SR', archetype:'真红眼', stats:{search:0,expand:8,disrupt:8,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  e029: { id:'e029', name:'龙骑士 黑魔术师', type:'extra', rarity:'UR', archetype:'黑魔导', stats:{search:0,expand:7,disrupt:3,resist:8,suppress:7}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
+  e030: { id:'e030', name:'超魔导龙骑士-真红眼龙骑士', type:'extra', rarity:'UR', archetype:'真红眼', stats:{search:3,expand:3,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
 
   // 魔法卡
   s001: { id:'s001', name:'死者苏生', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:0,expand:8,disrupt:0,resist:6,suppress:6}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
@@ -1396,10 +1416,16 @@ let CARD_DB = {
   s022: { id:'s022', name:'天降的宝扎', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:8,expand:8,disrupt:2,resist:2,suppress:6}, sub:{power:8,soul:2,proficiency:0,intelligence:0} },
   s023: { id:'s023', name:'鹰身女妖的羽毛扫', type:'spell', rarity:'UR', archetype:'鹰身', stats:{search:2,expand:6,disrupt:2,resist:8,suppress:8}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
   s024: { id:'s024', name:'大龙卷', type:'spell', rarity:'N', archetype:'风', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  s025: { id:'s025', name:'粗人预料', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  s026: { id:'s026', name:'暗之诱惑', type:'spell', rarity:'R', archetype:'泛用', stats:{search:6,expand:6,disrupt:0,resist:0,suppress:0}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
+  s027: { id:'s027', name:'微笑世界', type:'spell', rarity:'SR', archetype:'泛用', stats:{search:0,expand:2,disrupt:2,resist:0,suppress:2}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  s028: { id:'s028', name:'心变', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:3,expand:0,disrupt:9,resist:3,suppress:8}, sub:{power:9,soul:3,proficiency:0,intelligence:0} },
+  s029: { id:'s029', name:'被封印的黄金柜', type:'spell', rarity:'SR', archetype:'被封印的', stats:{search:8,expand:8,disrupt:0,resist:0,suppress:6}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  s030: { id:'s030', name:'雷击', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:3,expand:4,disrupt:8,resist:5,suppress:8}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
 
   // 陷阱卡
   t001: { id:'t001', name:'激流葬', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
-  t002: { id:'t002', name:'神圣防护罩 -反射镜力-', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:3,suppress:7}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
+  t002: { id:'t002', name:'神圣防护罩 -反射镜力-', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:3,suppress:7}, sub:{power:9,soul:7,proficiency:0,intelligence:0} },
   t003: { id:'t003', name:'奈落的落穴', type:'trap', rarity:'R', archetype:'洞穴', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:3}, sub:{power:5,soul:3,proficiency:0,intelligence:0} },
   t004: { id:'t004', name:'次元幽闭', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:0}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
   t005: { id:'t005', name:'魔法筒', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:2}, sub:{power:4,soul:3,proficiency:0,intelligence:0} },
@@ -1407,16 +1433,27 @@ let CARD_DB = {
   t007: { id:'t007', name:'血之代偿', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:6,disrupt:2,resist:0,suppress:3}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
   t008: { id:'t008', name:'王宫的通告', type:'trap', rarity:'R', archetype:'王宫', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:4}, sub:{power:5,soul:2,proficiency:0,intelligence:0} },
   t009: { id:'t009', name:'活死人的呼声', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:6,disrupt:2,resist:0,suppress:2}, sub:{power:6,soul:3,proficiency:0,intelligence:0} },
-  t010: { id:'t010', name:'神之宣告', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:7,suppress:7}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
+  t010: { id:'t010', name:'神之宣告', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:7,suppress:9}, sub:{power:9,soul:5,proficiency:0,intelligence:0} },
   t011: { id:'t011', name:'神之警告', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:6,suppress:6}, sub:{power:7,soul:4,proficiency:0,intelligence:0} },
   t012: { id:'t012', name:'突破技能', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:3}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
-  t013: { id:'t013', name:'无限泡影', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:0,expand:0,disrupt:7,resist:4,suppress:4}, sub:{power:7,soul:3,proficiency:0,intelligence:0} },
+  t013: { id:'t013', name:'无限泡影', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:4,proficiency:0,intelligence:0} },
   t014: { id:'t014', name:'落穴', type:'trap', rarity:'N', archetype:'洞穴', stats:{search:0,expand:0,disrupt:3,resist:0,suppress:0}, sub:{power:3,soul:1,proficiency:0,intelligence:0} },
   t015: { id:'t015', name:'无底的落穴', type:'trap', rarity:'SR', archetype:'洞穴', stats:{search:0,expand:0,disrupt:6,resist:2,suppress:6}, sub:{power:6,soul:4,proficiency:0,intelligence:0} },
   t016: { id:'t016', name:'伏兵', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:4,disrupt:4,resist:0,suppress:0}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
   t017: { id:'t017', name:'夹击', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:4}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
   t018: { id:'t018', name:'沙尘之大龙卷', type:'trap', rarity:'N', archetype:'风', stats:{search:0,expand:0,disrupt:3,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
   t019: { id:'t019', name:'荒野的大龙卷', type:'trap', rarity:'R', archetype:'风', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:3}, sub:{power:4,soul:1,proficiency:0,intelligence:0} },
+  t020: { id:'t020', name:'连锁破坏', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:5,resist:0,suppress:5}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  t021: { id:'t021', name:'红色重启', type:'trap', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:9,resist:7,suppress:9}, sub:{power:9,soul:4,proficiency:0,intelligence:0} },
+  t022: { id:'t022', name:'白衣天使', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:3,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  t023: { id:'t023', name:'龙之血族', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:3}, sub:{power:1,soul:2,proficiency:0,intelligence:0} },
+  t024: { id:'t024', name:'伪陷阱', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:3,suppress:0}, sub:{power:3,soul:2,proficiency:0,intelligence:0} },
+  t025: { id:'t025', name:'第六感', type:'trap', rarity:'R', archetype:'泛用', stats:{search:6,expand:6,disrupt:0,resist:0,suppress:0}, sub:{power:4,soul:2,proficiency:0,intelligence:0} },
+  t026: { id:'t026', name:'时间机器', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:0,disrupt:0,resist:3,suppress:0}, sub:{power:1,soul:1,proficiency:0,intelligence:0} },
+  t027: { id:'t027', name:'雷破', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:4,resist:0,suppress:4}, sub:{power:6,soul:1,proficiency:0,intelligence:0} },
+  t028: { id:'t028', name:'异次元的落穴', type:'trap', rarity:'N', archetype:'洞穴', stats:{search:0,expand:0,disrupt:3,resist:0,suppress:0}, sub:{power:2,soul:1,proficiency:0,intelligence:0} },
+  t029: { id:'t029', name:'对手登场', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  t030: { id:'t030', name:'打草惹蛇', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:7,expand:8,disrupt:0,resist:0,suppress:8}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
 
 };
 
@@ -1618,7 +1655,10 @@ const TALENTS = [
     },
     "winRateBonus": 15,
     "unlockType": "affinity",
-    "unlockAffinity": { "characterId": "yugi", "level": 30 }
+    "unlockAffinity": {
+      "characterId": "yugi",
+      "level": 30
+    }
   },
   {
     "id": "destiny_encounter",
@@ -1822,185 +1862,6 @@ const DUEL_CONFIG = {
   "resonanceCostPerLevel": 2
 };
 
-// ===== 战斗事件数据库（可由开发工具编辑，支持复合条件）=====
-const BATTLE_EVENTS = [
-  {
-    "id": "be001",
-    "name": "神抽",
-    "icon": "✨",
-    "log": "神抽！你在关键时刻抽到了那张卡！",
-    "conditions": [
-      { "type": "statMin", "stat": "luck", "value": 5 },
-      { "type": "random", "value": 0.4 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "luck", "bonusMult": 1.5, "bonusMin": 5, "bonusMax": 15 },
-    "weight": 10
-  },
-  {
-    "id": "be002",
-    "name": "魂之羁绊",
-    "icon": "🔥",
-    "log": "魂之羁绊！卡片回应了你的心意！",
-    "conditions": [
-      { "type": "statMin", "stat": "soul", "value": 5 },
-      { "type": "random", "value": 0.4 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "soul", "bonusMult": 1.5, "bonusMin": 5, "bonusMax": 12 },
-    "weight": 10
-  },
-  {
-    "id": "be003",
-    "name": "效果命中",
-    "icon": "⚡",
-    "log": "效果命中！你的干扰效果完美发动！",
-    "conditions": [
-      { "type": "statMin", "stat": "disrupt", "value": 4 },
-      { "type": "random", "value": 0.4 }
-    ],
-    "effect": { "damageType": "stat", "damageStat": "disrupt", "damageMult": 1.0, "damageMin": 5, "damageMax": 12 },
-    "weight": 10
-  },
-  {
-    "id": "be004",
-    "name": "效果抵抗",
-    "icon": "🛡️",
-    "log": "效果抵抗！你成功抵抗了对方的效果！",
-    "conditions": [
-      { "type": "statMin", "stat": "resist", "value": 4 },
-      { "type": "random", "value": 0.35 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "resist", "bonusMult": 0.8, "bonusMin": 3, "bonusMax": 10 },
-    "weight": 8
-  },
-  {
-    "id": "be005",
-    "name": "场面压制",
-    "icon": "👊",
-    "log": "场面压制！你的场面让对方无法动弹！",
-    "conditions": [
-      { "type": "statMin", "stat": "suppress", "value": 4 },
-      { "type": "random", "value": 0.35 }
-    ],
-    "effect": { "damageType": "stat", "damageStat": "suppress", "damageMult": 0.8, "damageMin": 4, "damageMax": 10 },
-    "weight": 8
-  },
-  {
-    "id": "be006",
-    "name": "精准检索",
-    "icon": "🔍",
-    "log": "精准检索！你从卡组中找到了需要的卡！",
-    "conditions": [
-      { "type": "statMin", "stat": "search", "value": 4 },
-      { "type": "random", "value": 0.35 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "search", "bonusMult": 0.8, "bonusMin": 4, "bonusMax": 10 },
-    "weight": 8
-  },
-  {
-    "id": "be007",
-    "name": "连锁展开",
-    "icon": "🔗",
-    "log": "连锁展开！你的卡组像齿轮一样完美运转！",
-    "conditions": [
-      { "type": "statMin", "stat": "expand", "value": 6 },
-      { "type": "random", "value": 0.3 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "expand", "bonusMult": 1.0, "bonusMin": 6, "bonusMax": 14 },
-    "weight": 7
-  },
-  {
-    "id": "be008",
-    "name": "对方神抽",
-    "icon": "💀",
-    "log": "对方神抽！对手也抽到了关键卡！",
-    "conditions": [
-      { "type": "random", "value": 0.12 }
-    ],
-    "effect": { "bonusType": "none" },
-    "weight": 5
-  },
-  {
-    "id": "be009",
-    "name": "熟练度爆发",
-    "icon": "💪",
-    "log": "熟练度爆发！你的操作流畅无比，打出了精彩的连锁！",
-    "conditions": [
-      { "type": "statMin", "stat": "proficiency", "value": 8 },
-      { "type": "random", "value": 0.3 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "proficiency", "bonusMult": 1.2, "bonusMin": 5, "bonusMax": 12 },
-    "weight": 6
-  },
-  {
-    "id": "be010",
-    "name": "情报优势",
-    "icon": "📋",
-    "log": "情报优势！你早已预判了对手的行动！",
-    "conditions": [
-      { "type": "statMin", "stat": "intelligence", "value": 8 },
-      { "type": "random", "value": 0.3 }
-    ],
-    "effect": { "damageType": "stat", "damageStat": "intelligence", "damageMult": 1.0, "damageMin": 4, "damageMax": 10 },
-    "weight": 6
-  },
-  // ===== 隐藏特殊事件（需要隐藏事件加成天赋）=====
-  {
-    "id": "be101",
-    "name": "背后灵指引",
-    "icon": "👻",
-    "log": "背后灵指引！一道神秘声音在你耳边低语，指引你做出了最佳选择！",
-    "conditions": [
-      { "type": "hiddenBonus", "value": 0 },
-      { "type": "random", "value": 0.25 }
-    ],
-    "effect": { "bonusType": "fixed", "bonusValue": 25, "bonusMin": 10, "bonusMax": 25 },
-    "weight": 8,
-    "hidden": true
-  },
-  {
-    "id": "be102",
-    "name": "命运逆转",
-    "icon": "🌟",
-    "log": "命运逆转！局势在这一刻发生了不可思议的逆转！",
-    "conditions": [
-      { "type": "hiddenBonus", "value": 0 },
-      { "type": "losing", "value": 0 },
-      { "type": "random", "value": 0.2 }
-    ],
-    "effect": { "bonusType": "fixed", "bonusValue": 30, "bonusMin": 15, "bonusMax": 30, "damageType": "fixed", "damageValue": 15, "damageMin": 5, "damageMax": 15 },
-    "weight": 6,
-    "hidden": true
-  },
-  {
-    "id": "be103",
-    "name": "奇迹连锁",
-    "icon": "✨",
-    "log": "奇迹连锁！你的卡组发动了前所未有的完美连锁！",
-    "conditions": [
-      { "type": "hiddenBonus", "value": 0 },
-      { "type": "statMin", "stat": "expand", "value": 3 },
-      { "type": "random", "value": 0.2 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "expand", "bonusMult": 2.0, "bonusMin": 10, "bonusMax": 20 },
-    "weight": 6,
-    "hidden": true
-  },
-  {
-    "id": "be104",
-    "name": "灵魂共鸣",
-    "icon": "🔥",
-    "log": "灵魂共鸣！你与卡片之间的羁绊达到了前所未有的高度！",
-    "conditions": [
-      { "type": "hiddenBonus", "value": 0 },
-      { "type": "statMin", "stat": "soul", "value": 5 },
-      { "type": "random", "value": 0.2 }
-    ],
-    "effect": { "bonusType": "stat", "bonusStat": "soul", "bonusMult": 2.0, "bonusMin": 10, "bonusMax": 25 },
-    "weight": 6,
-    "hidden": true
-  }
-];
-
 // ===== 地点定义 =====
 const LOCATIONS = [
   {
@@ -2085,9 +1946,21 @@ const CHARACTERS = [
     "desc": "龟游戏屋的少年，拥有千年积木，暗游戏人格是传说中的决斗王。",
     "avatar": "游",
     "giftCard": "m002",
-    "giftType": "talent",
-    "giftTalent": "duelist_will",
-    "giftDesc": "暗游戏认可了你的实力，传授你决斗王的意志。",
+    "gifts": [
+      {
+        "unlockAffinity": 30,
+        "type": "card",
+        "cardId": "m002",
+        "desc": "游戏把自己的备用卡送给你。"
+      },
+      {
+        "unlockAffinity": 80,
+        "type": "talent",
+        "talentId": "duelist_will",
+        "desc": "暗游戏认可了你的实力，传授你决斗王的意志。"
+      }
+    ],
+    "giftDesc": "暗游戏认可了你的实力，他把自己的王牌卡和决斗王的意志都传授给了你。",
     "canChallenge": true,
     "power": 28000,
     "challengeReward": "m002",
@@ -2099,12 +1972,24 @@ const CHARACTERS = [
     "desc": "游戏的挚友，从菜鸟成长为一流决斗者，王牌是真红眼黑龙。",
     "avatar": "城",
     "giftCard": "e003",
-    "giftType": "cardPoints",
-    "giftCardPoints": 50,
-    "giftDesc": "城之内把他攒的稀有卡都分解了，把卡点送给你。",
+    "gifts": [
+      {
+        "unlockAffinity": 30,
+        "type": "card",
+        "cardId": "e003",
+        "desc": "城之内把真红眼黑龙的融合形态送给你。"
+      },
+      {
+        "unlockAffinity": 80,
+        "type": "cardPoints",
+        "amount": 50,
+        "desc": "城之内把他攒的稀有卡都分解了，把卡点送给你。"
+      }
+    ],
+    "giftDesc": "城之内把他的稀有卡和攒的卡点都送给你了，兄弟之间不用客气。",
     "canChallenge": true,
     "power": 20000,
-    "challengeReward": "e003",
+    "challengeReward": "m003",
     "challengeDesc": "与城之内的友情决斗，获胜可获得真红眼黑龙。"
   },
   {
@@ -2113,9 +1998,25 @@ const CHARACTERS = [
     "desc": "海马公司社长，青眼白龙的拥有者，冷酷而强大的决斗者。",
     "avatar": "海",
     "giftCard": "m001",
-    "giftType": "stats",
-    "giftStats": { "power": 5, "intelligence": 3 },
-    "giftDesc": "海马用公司的最新技术帮你优化了卡组，强度+5，情报力+3。",
+    "gifts": [
+      {
+        "unlockAffinity": 30,
+        "type": "card",
+        "cardId": "m001",
+        "desc": "海马把青眼的失败品扔给了你。"
+      },
+      {
+        "unlockAffinity": 60,
+        "type": "stats",
+        "stats": {
+          "power": 10
+        },
+        "desc": "海马用公司的最新技术帮你优化了卡组。",
+        "stat": "power",
+        "amount": 10
+      }
+    ],
+    "giftDesc": "海马用公司的最新技术帮你优化了卡组，还送了你一张青眼白龙。",
     "canChallenge": true,
     "power": 24000,
     "challengeReward": "m001",
@@ -2129,11 +2030,19 @@ const CHARACTERS = [
     "giftCard": "m008",
     "giftType": "duelPoints",
     "giftDuelPoints": 500,
-    "giftDesc": "杏子把打工赚的钱都给你买卡包了，获得500决斗点。",
+    "giftDesc": "杏子把打工赚的钱都给你买卡包了，获得5000决斗点。",
     "canChallenge": false,
     "power": 6000,
     "challengeReward": null,
-    "challengeDesc": ""
+    "challengeDesc": "",
+    "gifts": [
+      {
+        "unlockAffinity": 30,
+        "type": "duelPoints",
+        "amount": 5000,
+        "desc": "你得到了她在女仆咖啡厅兼职的报酬。"
+      }
+    ]
   },
   {
     "id": "honda",
@@ -2711,7 +2620,8 @@ const EVENTS = {
     {
       "id": "kame_destiny",
       "name": "命运的邂逅",
-      "probability": 0.08,
+      "probability": 0.15,
+      "oneTime": true,
       "title": "龟游戏屋",
       "text": "你在店里整理卡片时，一张神秘的卡片滑落到你手中。你感受到了一股奇妙的力量，仿佛命运在这一刻发生了改变...",
       "effects": [
@@ -2720,8 +2630,7 @@ const EVENTS = {
           "talentId": "destiny_encounter"
         }
       ],
-      "log": "在龟游戏屋经历了命运的邂逅，解锁了特殊天赋",
-      "cooldown": 999
+      "log": "在龟游戏屋经历了命运的邂逅，解锁了特殊天赋【命运的邂逅】（新存档可用）"
     }
   ],
   "cardshop": [
@@ -5019,88 +4928,112 @@ function renderCharacters() {
 
 function interactCharacter(c) {
   const affinity = gameState.affinity[c.id] || 0;
-  const hasReceivedGift = gameState.receivedGifts && gameState.receivedGifts.includes(c.id);
+  // 兼容旧格式：receivedGifts是数组时，转换为对象格式
+  if (!gameState.receivedGifts) gameState.receivedGifts = {};
+  if (Array.isArray(gameState.receivedGifts)) {
+    const oldArr = gameState.receivedGifts;
+    gameState.receivedGifts = {};
+    oldArr.forEach(cid => { gameState.receivedGifts[cid] = [0]; });
+  }
+  const receivedList = gameState.receivedGifts[c.id] || [];
+
   const options = [
     { name: '聊天交流（好感+3）', action: () => { gainAffinity(c.id, 3); addEventLog(`与${c.name}聊天交流`); showToast(`${c.name} 好感度+3`); } },
     { name: '讨论卡组（好感+5）', action: () => { gainAffinity(c.id, 5); addEventLog(`与${c.name}讨论卡组`); showToast(`${c.name} 好感度+5`); } },
   ];
 
-  // 赠礼：只触发一次，不扣除好感度，支持多种类型
-  if (affinity >= 30 && !hasReceivedGift) {
-    const giftType = c.giftType || 'card';
-    let giftName = '';
-    if (giftType === 'card' && c.giftCard && CARD_DB[c.giftCard]) {
-      giftName = CARD_DB[c.giftCard].name;
-    } else if (giftType === 'talent' && c.giftTalent) {
-      const talent = TALENTS.find(t => t.id === c.giftTalent);
-      giftName = talent ? talent.name : '神秘天赋';
-    } else if (giftType === 'stats') {
-      giftName = '属性强化';
-    } else if (giftType === 'cardPoints') {
-      giftName = `${c.giftCardPoints || 0}卡点`;
-    } else if (giftType === 'duelPoints') {
-      giftName = `${c.giftDuelPoints || 0}决斗点`;
-    }
+  // 构建赠礼列表（兼容旧格式）
+  let gifts = c.gifts || [];
+  if (gifts.length === 0 && c.giftType) {
+    gifts = [{ unlockAffinity: 30, type: c.giftType, cardId: c.giftCard, talentId: c.giftTalent, stats: c.giftStats, amount: c.giftCardPoints || c.giftDuelPoints, desc: c.giftDesc }];
+  }
+  if (gifts.length === 0 && c.giftCard) {
+    gifts = [{ unlockAffinity: 30, type: 'card', cardId: c.giftCard }];
+  }
 
-    options.push({
-      name: `索要赠礼（好感30解锁·限一次·${giftName}）`,
-      action: () => {
-        const giftDesc = c.giftDesc || `${c.name}送给你一份特别的礼物。`;
-        let rewardText = '';
-
-        switch(giftType) {
-          case 'card':
-            if (c.giftCard && CARD_DB[c.giftCard]) {
-              addCardToCollection(c.giftCard);
-              rewardText = `获得卡片【${CARD_DB[c.giftCard].name}】`;
-            }
-            break;
-          case 'talent':
-            if (c.giftTalent) {
-              if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
-              if (!gameState.unlockedTalents.includes(c.giftTalent)) {
-                gameState.unlockedTalents.push(c.giftTalent);
-                const talent = TALENTS.find(t => t.id === c.giftTalent);
-                rewardText = `解锁天赋【${talent ? talent.name : c.giftTalent}】（新存档可用）`;
-              } else {
-                rewardText = '该天赋已解锁';
-              }
-            }
-            break;
-          case 'stats':
-            if (c.giftStats) {
-              if (!gameState.bonusStats) gameState.bonusStats = {};
-              Object.entries(c.giftStats).forEach(([k, v]) => {
-                gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
-              });
-              const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
-              rewardText = Object.entries(c.giftStats).map(([k, v]) => `${statNames[k]||k}+${v}`).join('，');
-            }
-            break;
-          case 'cardPoints':
-            gameState.cardPoints = (gameState.cardPoints || 0) + (c.giftCardPoints || 0);
-            rewardText = `获得${c.giftCardPoints}卡点`;
-            break;
-          case 'duelPoints':
-            gameState.duelPoints = (gameState.duelPoints || 0) + (c.giftDuelPoints || 0);
-            rewardText = `获得${c.giftDuelPoints}决斗点`;
-            break;
-        }
-
-        showEventModal(c.name, `${giftDesc}\n\n${rewardText}`, null, [{name:'收下', action:()=>{}}]);
-        addEventLog(`从${c.name}处获得赠礼：${rewardText}`);
-        // 记录获得赠礼（只触发一次）
-        if (!gameState.receivedGifts) gameState.receivedGifts = [];
-        if (!gameState.receivedGifts.includes(c.id)) gameState.receivedGifts.push(c.id);
-        checkAchievements();
-        updateAllDisplays();
-        saveGame();
+  // 多挡位赠礼：每个赠礼单独检查好感度和领取状态
+  gifts.forEach((g, idx) => {
+    const unlockAff = g.unlockAffinity || 30;
+    const hasReceived = receivedList.includes(idx);
+    if (affinity >= unlockAff && !hasReceived) {
+      // 生成赠礼名称
+      let giftName = '礼物';
+      if (g.type === 'card' && g.cardId && CARD_DB[g.cardId]) giftName = CARD_DB[g.cardId].name;
+      else if (g.type === 'talent' && g.talentId) {
+        const t = TALENTS.find(x => x.id === g.talentId);
+        giftName = t ? t.name : '天赋';
       }
-    });
-  } else if (hasReceivedGift) {
+      else if (g.type === 'stats') {
+        const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+        giftName = g.stats ? Object.entries(g.stats).map(([k,v]) => `${statNames[k]||k}+${v}`).join('，') : '属性强化';
+      }
+      else if (g.type === 'cardPoints') giftName = `${g.amount||0}卡点`;
+      else if (g.type === 'duelPoints') giftName = `${g.amount||0}决斗点`;
+
+      options.push({
+        name: `索要赠礼（好感${unlockAff}解锁·限一次·${giftName}）`,
+        action: () => {
+          const giftDesc = g.desc || c.giftDesc || `${c.name}送给你一份特别的礼物。`;
+          let rewardText = '';
+
+          switch(g.type) {
+            case 'card':
+              if (g.cardId && CARD_DB[g.cardId]) {
+                addCardToCollection(g.cardId);
+                rewardText = `获得卡片【${CARD_DB[g.cardId].name}】`;
+              }
+              break;
+            case 'talent':
+              if (g.talentId) {
+                if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+                if (!gameState.unlockedTalents.includes(g.talentId)) {
+                  gameState.unlockedTalents.push(g.talentId);
+                  const talent = TALENTS.find(t => t.id === g.talentId);
+                  rewardText = `解锁天赋【${talent ? talent.name : g.talentId}】（新存档可用）`;
+                } else {
+                  rewardText = '该天赋已解锁';
+                }
+              }
+              break;
+            case 'stats':
+              if (g.stats) {
+                if (!gameState.bonusStats) gameState.bonusStats = {};
+                Object.entries(g.stats).forEach(([k, v]) => {
+                  gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
+                });
+                const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+                rewardText = Object.entries(g.stats).map(([k, v]) => `${statNames[k]||k}+${v}`).join('，');
+              }
+              break;
+            case 'cardPoints':
+              gameState.cardPoints = (gameState.cardPoints || 0) + (g.amount || 0);
+              rewardText = `获得${g.amount}卡点`;
+              break;
+            case 'duelPoints':
+              gameState.duelPoints = (gameState.duelPoints || 0) + (g.amount || 0);
+              rewardText = `获得${g.amount}决斗点`;
+              break;
+          }
+
+          showEventModal(c.name, `${giftDesc}\n\n${rewardText}`, null, [{name:'收下', action:()=>{}}]);
+          addEventLog(`从${c.name}处获得赠礼：${rewardText}`);
+          // 记录该赠礼已领取
+          if (!gameState.receivedGifts[c.id]) gameState.receivedGifts[c.id] = [];
+          if (!gameState.receivedGifts[c.id].includes(idx)) gameState.receivedGifts[c.id].push(idx);
+          checkAchievements();
+          updateAllDisplays();
+          saveGame();
+        }
+      });
+    }
+  });
+
+  // 检查是否所有赠礼都已领取
+  const allReceived = gifts.length > 0 && gifts.every((g, idx) => receivedList.includes(idx));
+  if (allReceived) {
     options.push({
-      name: '赠礼已领取',
-      action: () => { showToast('你已经从这个角色处获得过赠礼了'); }
+      name: '赠礼已全部领取',
+      action: () => { showToast('你已经从这个角色处领取过所有赠礼了'); }
     });
   }
 
