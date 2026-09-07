@@ -1603,6 +1603,37 @@ const TALENTS = [
     "tournamentCheatIncreaseRate": 1
   },
   {
+    "id": "duelist_will",
+    "name": "决斗王的意志",
+    "rarity": "UR",
+    "desc": "【好感度解锁】暗游戏传授的决斗王意志。全主属性+4，强度+8，魂度+8，胜率+15%",
+    "effects": {
+      "search": 4,
+      "expand": 4,
+      "disrupt": 4,
+      "resist": 4,
+      "suppress": 4,
+      "power": 8,
+      "soul": 8
+    },
+    "winRateBonus": 15,
+    "unlockType": "affinity",
+    "unlockAffinity": { "characterId": "yugi", "level": 30 }
+  },
+  {
+    "id": "destiny_encounter",
+    "name": "命运的邂逅",
+    "rarity": "SR",
+    "desc": "【事件解锁】在童实野市的命运邂逅，改变了你的决斗之路。检索+5，展开+5，掏度+8",
+    "effects": {
+      "search": 5,
+      "expand": 5,
+      "luck": 8
+    },
+    "unlockType": "event",
+    "unlockEvent": "special_destiny"
+  },
+  {
     "id": "legend_soul",
     "name": "传说之魂",
     "rarity": "UR",
@@ -1612,6 +1643,8 @@ const TALENTS = [
     },
     "bonus": {},
     "cardAttributeMultiplier": 1.5,
+    "cardBonusType": "archetype",
+    "cardBonusValue": "龙",
     "hidden": true,
     "unlockAchievement": "blue_eyes"
   },
@@ -1626,6 +1659,8 @@ const TALENTS = [
     },
     "bonus": {},
     "cardAttributeMultiplier": 1.5,
+    "cardBonusType": "type",
+    "cardBonusValue": "spell",
     "hidden": true,
     "unlockAchievement": "dark_magician"
   },
@@ -2050,6 +2085,9 @@ const CHARACTERS = [
     "desc": "龟游戏屋的少年，拥有千年积木，暗游戏人格是传说中的决斗王。",
     "avatar": "游",
     "giftCard": "m002",
+    "giftType": "talent",
+    "giftTalent": "duelist_will",
+    "giftDesc": "暗游戏认可了你的实力，传授你决斗王的意志。",
     "canChallenge": true,
     "power": 28000,
     "challengeReward": "m002",
@@ -2061,6 +2099,9 @@ const CHARACTERS = [
     "desc": "游戏的挚友，从菜鸟成长为一流决斗者，王牌是真红眼黑龙。",
     "avatar": "城",
     "giftCard": "e003",
+    "giftType": "cardPoints",
+    "giftCardPoints": 50,
+    "giftDesc": "城之内把他攒的稀有卡都分解了，把卡点送给你。",
     "canChallenge": true,
     "power": 20000,
     "challengeReward": "e003",
@@ -2072,6 +2113,9 @@ const CHARACTERS = [
     "desc": "海马公司社长，青眼白龙的拥有者，冷酷而强大的决斗者。",
     "avatar": "海",
     "giftCard": "m001",
+    "giftType": "stats",
+    "giftStats": { "power": 5, "intelligence": 3 },
+    "giftDesc": "海马用公司的最新技术帮你优化了卡组，强度+5，情报力+3。",
     "canChallenge": true,
     "power": 24000,
     "challengeReward": "m001",
@@ -2083,6 +2127,9 @@ const CHARACTERS = [
     "desc": "游戏的青梅竹马，梦想成为舞者，一直在默默支持游戏。",
     "avatar": "杏",
     "giftCard": "m008",
+    "giftType": "duelPoints",
+    "giftDuelPoints": 500,
+    "giftDesc": "杏子把打工赚的钱都给你买卡包了，获得500决斗点。",
     "canChallenge": false,
     "power": 6000,
     "challengeReward": null,
@@ -2660,6 +2707,21 @@ const EVENTS = {
         }
       ],
       "log": "在龟游戏屋打工从双六爷爷处获得了150决斗点"
+    },
+    {
+      "id": "kame_destiny",
+      "name": "命运的邂逅",
+      "probability": 0.08,
+      "title": "龟游戏屋",
+      "text": "你在店里整理卡片时，一张神秘的卡片滑落到你手中。你感受到了一股奇妙的力量，仿佛命运在这一刻发生了改变...",
+      "effects": [
+        {
+          "type": "unlockTalent",
+          "talentId": "destiny_encounter"
+        }
+      ],
+      "log": "在龟游戏屋经历了命运的邂逅，解锁了特殊天赋",
+      "cooldown": 999
     }
   ],
   "cardshop": [
@@ -3319,17 +3381,56 @@ function getBaseStats() {
 
 function getDeckStats() {
   const s = { search:0, expand:0, disrupt:0, resist:0, suppress:0, power:0, soul:0, luck:0, proficiency:0, intelligence:0 };
-  // 天赋可定义的卡片属性倍率
-  let builderBonus = getTalentMultiplier('cardAttributeMultiplier', 1);
+  // 获取所有天赋的卡片加成配置
+  const talentBonuses = [];
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t.cardAttributeMultiplier && t.cardAttributeMultiplier !== 1) {
+      talentBonuses.push({
+        multiplier: t.cardAttributeMultiplier,
+        scopeType: t.cardBonusType || 'all',
+        scopeValue: t.cardBonusValue || ''
+      });
+    }
+  });
+
+  // 计算单张卡的最终倍率
+  function getCardMultiplier(card) {
+    let mult = 1;
+    talentBonuses.forEach(b => {
+      let match = false;
+      switch(b.scopeType) {
+        case 'all':
+          match = true;
+          break;
+        case 'type':
+          match = card.type === b.scopeValue;
+          break;
+        case 'archetype':
+          match = card.archetype === b.scopeValue;
+          break;
+        case 'cards':
+          match = (b.scopeValue || '').split(',').map(s=>s.trim()).includes(card.id);
+          break;
+      }
+      if (match) mult *= b.multiplier;
+    });
+    return mult;
+  }
+
   gameState.mainDeck.forEach(cardId => {
     const c = CARD_DB[cardId];
-    if (c && c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * builderBonus; });
-    if (c && c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * builderBonus; });
+    if (!c) return;
+    const mult = getCardMultiplier(c);
+    if (c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * mult; });
+    if (c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * mult; });
   });
   gameState.extraDeck.forEach(cardId => {
     const c = CARD_DB[cardId];
-    if (c && c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * builderBonus * 0.5; });
-    if (c && c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * builderBonus * 0.5; });
+    if (!c) return;
+    const mult = getCardMultiplier(c) * 0.5;
+    if (c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * mult; });
+    if (c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * mult; });
   });
   return s;
 }
@@ -3542,9 +3643,14 @@ function randomTalents() {
   selectedTalents = [];
   currentTalentPool = [];
 
-  // 从普通天赋+已解锁的隐藏天赋中随机抽取6个不重复的
+  // 从普通天赋+已解锁的隐藏天赋+已解锁的特殊天赋中随机抽取6个不重复的
   const unlockedHidden = getUnlockedHiddenTalents();
-  const availableTalents = TALENTS.filter(t => !t.hidden || unlockedHidden.includes(t.id));
+  const unlockedSpecial = gameState.unlockedTalents || [];
+  const availableTalents = TALENTS.filter(t => {
+    if (t.hidden) return unlockedHidden.includes(t.id);
+    if (t.unlockType && t.unlockType !== 'default') return unlockedSpecial.includes(t.id);
+    return true;
+  });
   const allTalents = [...availableTalents];
   while (currentTalentPool.length < 6 && allTalents.length > 0) {
     const idx = Math.floor(Math.random() * allTalents.length);
@@ -3590,6 +3696,7 @@ function startGame() {
     receivedGifts: [],
     unlockedEvents: [],
     unlockedHiddenTalents: [],
+    unlockedTalents: [],
   };
   CHARACTERS.forEach(c => { gameState.affinity[c.id] = 0; });
 
@@ -4049,6 +4156,24 @@ function executeEffects(effects, event, loc) {
           gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + (ef.amount || 1);
         });
         result.displayItems.push({ name: `全主属性+${ef.amount || 1}（永久）` });
+        break;
+      }
+      case 'unlockTalent': {
+        if (ef.talentId) {
+          if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+          if (!gameState.unlockedTalents.includes(ef.talentId)) {
+            gameState.unlockedTalents.push(ef.talentId);
+            const talent = TALENTS.find(t => t.id === ef.talentId);
+            result.displayItems.push({ name: `解锁天赋【${talent ? talent.name : ef.talentId}】（新存档可用）` });
+          } else {
+            result.displayItems.push({ name: '天赋已解锁' });
+          }
+        }
+        break;
+      }
+      case 'cardPoints': {
+        gameState.cardPoints = (gameState.cardPoints || 0) + (ef.amount || 0);
+        result.displayItems.push({ name: `获得${ef.amount}卡点` });
         break;
       }
       case 'duel': {
@@ -4826,7 +4951,7 @@ function renderDeckView() {
 function toggleCardInDeck(cardId, cardType) {
   const isExtra = cardType === 'extra';
   const targetDeck = isExtra ? 'extraDeck' : 'mainDeck';
-  const maxCount = isExtra ? 15 : 50;
+  const maxCount = isExtra ? 15 : 60;
   const currentCount = isExtra ? getExtraDeckCount() : getMainDeckCount();
 
   const idx = gameState[targetDeck].indexOf(cardId);
@@ -4845,6 +4970,19 @@ function toggleCardInDeck(cardId, cardType) {
     const inDeck = gameState.mainDeck.filter(id => id === cardId).length + gameState.extraDeck.filter(id => id === cardId).length;
     if (inDeck >= owned) {
       showToast('牌库中没有更多这张卡了！');
+      return;
+    }
+    // 检查天赋卡组限制
+    const card = CARD_DB[cardId];
+    const deckRestriction = gameState.talents.map(tid => TALENTS.find(t => t.id === tid)?.deckRestriction).filter(Boolean)[0];
+    const deckArchetype = gameState.talents.map(tid => TALENTS.find(t => t.id === tid)?.deckArchetype).filter(Boolean)[0];
+    if (deckRestriction && card && card.type !== deckRestriction) {
+      const typeNames = { monster:'怪兽', spell:'魔法', trap:'陷阱', extra:'额外' };
+      showToast(`天赋限制：卡组只能包含${typeNames[deckRestriction]||deckRestriction}卡！`);
+      return;
+    }
+    if (deckArchetype && card && card.archetype !== deckArchetype) {
+      showToast(`天赋限制：卡组只能包含${deckArchetype}系列卡！`);
       return;
     }
     gameState[targetDeck].push(cardId);
@@ -4887,23 +5025,73 @@ function interactCharacter(c) {
     { name: '讨论卡组（好感+5）', action: () => { gainAffinity(c.id, 5); addEventLog(`与${c.name}讨论卡组`); showToast(`${c.name} 好感度+5`); } },
   ];
 
-  // 赠礼：只触发一次，不扣除好感度
+  // 赠礼：只触发一次，不扣除好感度，支持多种类型
   if (affinity >= 30 && !hasReceivedGift) {
+    const giftType = c.giftType || 'card';
+    let giftName = '';
+    if (giftType === 'card' && c.giftCard && CARD_DB[c.giftCard]) {
+      giftName = CARD_DB[c.giftCard].name;
+    } else if (giftType === 'talent' && c.giftTalent) {
+      const talent = TALENTS.find(t => t.id === c.giftTalent);
+      giftName = talent ? talent.name : '神秘天赋';
+    } else if (giftType === 'stats') {
+      giftName = '属性强化';
+    } else if (giftType === 'cardPoints') {
+      giftName = `${c.giftCardPoints || 0}卡点`;
+    } else if (giftType === 'duelPoints') {
+      giftName = `${c.giftDuelPoints || 0}决斗点`;
+    }
+
     options.push({
-      name: `索要赠礼（好感30解锁·限一次）`,
+      name: `索要赠礼（好感30解锁·限一次·${giftName}）`,
       action: () => {
-        const giftCard = CARD_DB[c.giftCard];
-        if (giftCard) {
-          addCardToCollection(c.giftCard);
-          showEventModal(c.name, `${c.name}从卡盒里拿出一张【${giftCard.name}】递给你："这张卡送给你，好好使用它。"`, null, [{name:'收下', action:()=>{}}]);
-          addEventLog(`从${c.name}处获得赠礼【${giftCard.name}】`);
-          // 记录获得赠礼（只触发一次）
-          if (!gameState.receivedGifts) gameState.receivedGifts = [];
-          if (!gameState.receivedGifts.includes(c.id)) gameState.receivedGifts.push(c.id);
-        } else {
-          showEventModal(c.name, `${c.name}翻了翻卡盒："抱歉，我今天没带什么可以送你的卡。"`, null, [{name:'离开'}]);
-          addEventLog(`${c.name}没有可赠送的卡片`);
+        const giftDesc = c.giftDesc || `${c.name}送给你一份特别的礼物。`;
+        let rewardText = '';
+
+        switch(giftType) {
+          case 'card':
+            if (c.giftCard && CARD_DB[c.giftCard]) {
+              addCardToCollection(c.giftCard);
+              rewardText = `获得卡片【${CARD_DB[c.giftCard].name}】`;
+            }
+            break;
+          case 'talent':
+            if (c.giftTalent) {
+              if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+              if (!gameState.unlockedTalents.includes(c.giftTalent)) {
+                gameState.unlockedTalents.push(c.giftTalent);
+                const talent = TALENTS.find(t => t.id === c.giftTalent);
+                rewardText = `解锁天赋【${talent ? talent.name : c.giftTalent}】（新存档可用）`;
+              } else {
+                rewardText = '该天赋已解锁';
+              }
+            }
+            break;
+          case 'stats':
+            if (c.giftStats) {
+              if (!gameState.bonusStats) gameState.bonusStats = {};
+              Object.entries(c.giftStats).forEach(([k, v]) => {
+                gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
+              });
+              const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+              rewardText = Object.entries(c.giftStats).map(([k, v]) => `${statNames[k]||k}+${v}`).join('，');
+            }
+            break;
+          case 'cardPoints':
+            gameState.cardPoints = (gameState.cardPoints || 0) + (c.giftCardPoints || 0);
+            rewardText = `获得${c.giftCardPoints}卡点`;
+            break;
+          case 'duelPoints':
+            gameState.duelPoints = (gameState.duelPoints || 0) + (c.giftDuelPoints || 0);
+            rewardText = `获得${c.giftDuelPoints}决斗点`;
+            break;
         }
+
+        showEventModal(c.name, `${giftDesc}\n\n${rewardText}`, null, [{name:'收下', action:()=>{}}]);
+        addEventLog(`从${c.name}处获得赠礼：${rewardText}`);
+        // 记录获得赠礼（只触发一次）
+        if (!gameState.receivedGifts) gameState.receivedGifts = [];
+        if (!gameState.receivedGifts.includes(c.id)) gameState.receivedGifts.push(c.id);
         checkAchievements();
         updateAllDisplays();
         saveGame();
