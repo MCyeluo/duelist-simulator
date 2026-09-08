@@ -495,6 +495,13 @@ body::before {
 .tournament-rewards { font-size: 11px; color: var(--accent-green-light); margin-bottom: 10px; }
 
 /* ===== 成就 ===== */
+.achievement-tab-panel { display: none; }
+.achievement-tab-panel.active { display: block; }
+.talent-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
 .achievement-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
@@ -517,6 +524,33 @@ body::before {
 .achievement-item.unlocked .achievement-name { color: var(--accent-gold); }
 .achievement-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-bottom: 6px; }
 .achievement-bonus { font-size: 10px; color: var(--accent-green-light); }
+
+/* ===== 任务系统 ===== */
+.task-list { display: flex; flex-direction: column; gap: 12px; }
+.task-section { display: flex; flex-direction: column; gap: 8px; }
+.task-section-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--border-subtle); }
+.task-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px; padding: 12px;
+  transition: all 0.2s;
+}
+.task-item.completed { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.05); opacity: 0.6; }
+.task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.task-name { font-size: 13px; font-weight: 700; }
+.task-item.completed .task-name { color: var(--accent-green-light); text-decoration: line-through; }
+.task-status { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.task-item.completed .task-status { color: var(--accent-green-light); }
+.task-item.claimable { border-color: var(--accent-gold); background: rgba(212, 175, 55, 0.1); box-shadow: 0 0 12px rgba(212, 175, 55, 0.3); animation: claimablePulse 2s ease-in-out infinite; }
+.task-item.claimable .task-name { color: var(--accent-gold); }
+.task-item.claimable .task-status { color: var(--accent-gold); }
+@keyframes claimablePulse { 0%,100% { box-shadow: 0 0 8px rgba(212,175,55,0.2); } 50% { box-shadow: 0 0 16px rgba(212,175,55,0.5); } }
+.task-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 6px; }
+.task-story { font-size: 10px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; padding: 6px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; font-style: italic; }
+.task-progress-bar { width: 100%; height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.task-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold)); border-radius: 3px; transition: width 0.3s; }
+.task-item.completed .task-progress-fill { background: var(--accent-green); }
+.task-reward { font-size: 10px; color: var(--accent-gold); }
 
 /* ===== 排行榜 ===== */
 .rank-list { display: flex; flex-direction: column; gap: 6px; }
@@ -1020,14 +1054,34 @@ body::before {
 <body>
 
 <div id="app">
-  <!-- 开始视图 -->
+  <!-- 开始视图（主菜单） -->
   <div id="view-start" class="view active">
     <div class="start-view">
       <div class="start-title">牌佬模拟器</div>
       <div class="start-subtitle">童 实 野 市 篇</div>
-      <div class="talent-section">
+      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v3.0 完整版</div>
+
+      <!-- 主菜单 -->
+      <div id="main-menu" class="panel" style="max-width:400px;margin:0 auto;padding:24px;">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button class="btn btn-gold" id="menu-new-game" style="width:100%;padding:14px;font-size:15px;">🎮 开始新游戏</button>
+          <button class="btn btn-secondary" id="menu-continue" style="width:100%;padding:14px;font-size:15px;display:none;">📂 继续游戏</button>
+          <button class="btn btn-secondary" id="menu-tutorial" style="width:100%;padding:14px;font-size:15px;">📖 新手引导</button>
+        </div>
+        <div style="text-align:center; font-size:11px; color:var(--text-muted); line-height:1.8; margin-top:20px;">
+          初始年龄 18 岁 · 每回合7天 · 在童实野市收集卡片、组建卡组、挑战决斗者<br>
+          主卡组20张可快速决斗 · 40张可大师决斗（主卡组最多60张/额外最多15张）<br>
+          <span id="hidden-talent-info" style="color:#ffd700;"></span>
+        </div>
+      </div>
+
+      <!-- 天赋选择子页面 -->
+      <div id="talent-select-panel" style="display:none;">
         <div class="panel">
-          <div class="panel-title">从以下6个随机天赋中选择2个</div>
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>从以下6个随机天赋中选择2个</span>
+            <button class="btn btn-secondary btn-sm" id="back-to-menu" style="padding:4px 10px;font-size:11px;">← 返回菜单</button>
+          </div>
           <div class="talent-grid" id="talent-grid"></div>
           <div class="selected-talents-display" id="selected-talents-display"></div>
           <div class="btn-group">
@@ -1036,10 +1090,386 @@ body::before {
           </div>
           <div style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:8px;" id="talent-hint">点击"随机天赋"抽取6个天赋，选择其中2个后即可开始游戏</div>
         </div>
-        <div style="text-align:center; font-size:11px; color:var(--text-muted); line-height:1.8;">
-          初始年龄 18 岁 · 每回合7天 · 在童实野市收集卡片、组建卡组、挑战决斗者<br>
-          主卡组20张可快速决斗 · 40张可大师决斗（主卡组最多60张/额外最多15张）<br>
-          <span id="hidden-talent-info" style="color:#ffd700;"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 演示视图（新手引导用，不影响游戏主体） -->
+  <div id="view-demo" class="view">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="game-logo" style="cursor:pointer;">牌佬模拟器 · 演示模式</div>
+        <div class="dev-badge" style="display:block;background:#fbbf24;color:#1a1a2e;">DEMO</div>
+      </div>
+      <div class="top-bar-stats">
+        <div class="top-stat search"><span>检索</span><span class="top-stat-value">45</span></div>
+        <div class="top-stat expand"><span>展开</span><span class="top-stat-value">52</span></div>
+        <div class="top-stat disrupt"><span>干扰</span><span class="top-stat-value">38</span></div>
+        <div class="top-stat resist"><span>抗性</span><span class="top-stat-value">41</span></div>
+        <div class="top-stat suppress"><span>压制</span><span class="top-stat-value">35</span></div>
+      </div>
+      <div class="time-display">
+        <span>第 <strong>15</strong> 天</span>
+        <span>|<span> <strong>18</strong> 岁</span>
+        <span>|<span> 决斗点 <strong>120</strong></span>
+      </div>
+    </div>
+
+    <div class="main-nav">
+      <button class="nav-btn demo-nav active" data-demo="home">主页</button>
+      <button class="nav-btn demo-nav" data-demo="deck">卡组</button>
+      <button class="nav-btn demo-nav" data-demo="duel">决斗</button>
+      <button class="nav-btn demo-nav" data-demo="characters">角色</button>
+    </div>
+
+    <div class="content-area">
+      <!-- 演示主页 -->
+      <div id="demo-home" class="demo-view active">
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">牌力评估</div>
+          <div style="text-align:center; padding:10px 0 6px;">
+            <div style="font-size:32px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">1250</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">实时计算 · 基于当前属性和卡组</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 8px 8px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">强度</div>
+              <div style="font-size:14px;font-weight:700;color:#f59e0b;">65</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">魂度</div>
+              <div style="font-size:14px;font-weight:700;color:#ec4899;">40</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">掏度</div>
+              <div style="font-size:14px;font-weight:700;color:#10b981;">55</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">熟练度</div>
+              <div style="font-size:14px;font-weight:700;color:#3b82f6;">30</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">情报力</div>
+              <div style="font-size:14px;font-weight:700;color:#8b5cf6;">25</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="panel" style="margin:0;">
+            <div class="panel-title">卡组概况</div>
+            <div style="font-size:11px;">
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">主卡组</span>
+                <span style="font-weight:600;">25/60</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">额外卡组</span>
+                <span style="font-weight:600;">5/15</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">牌库卡片</span>
+                <span style="font-weight:600;">42</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                <span style="color:var(--text-muted);">决斗战绩</span>
+                <span style="font-weight:600;">3胜1负</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin:0;">
+            <div class="panel-title">任务追踪</div>
+            <div style="font-size:11px;max-height:140px;overflow-y:auto;">
+              <div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+                <div style="font-weight:600;color:#fbbf24;">收集20张卡片</div>
+                <div style="font-size:10px;color:var(--text-muted);">进度：15/20</div>
+              </div>
+              <div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);">
+                <div style="font-weight:600;">完成第一次决斗</div>
+                <div style="font-size:10px;color:#10b981;">✓ 已完成</div>
+              </div>
+              <div style="padding:6px 0;">
+                <div style="font-weight:600;color:var(--text-muted);">参加卡店比赛</div>
+                <div style="font-size:10px;color:var(--text-muted);">未解锁</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">最近事件</div>
+          <div style="font-size:11px; color:var(--text-secondary); line-height:1.6; max-height:80px; overflow-y:auto; padding-right:4px;">
+            第15天：在卡店遇到了城之内克也，讨论了卡组构筑<br>
+            第14天：开卡包获得【青眼白龙】！<br>
+            第12天：快速决斗胜利，获得20决斗点<br>
+            第10天：来到童实野市，开始了你的牌佬之路
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">本次行动 - 选择地点</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;text-align:center;cursor:pointer;border:1px solid var(--border-subtle);">
+              <div style="font-size:20px;">🏠</div>
+              <div style="font-size:12px;font-weight:600;margin-top:4px;">龟游戏屋</div>
+            </div>
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;text-align:center;cursor:pointer;border:1px solid var(--border-subtle);">
+              <div style="font-size:20px;">🏪</div>
+              <div style="font-size:12px;font-weight:600;margin-top:4px;">卡店</div>
+            </div>
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;text-align:center;cursor:pointer;border:1px solid var(--border-subtle);">
+              <div style="font-size:20px;">🏫</div>
+              <div style="font-size:12px;font-weight:600;margin-top:4px;">童实野高中</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 演示卡组页面 -->
+      <div id="demo-deck" class="demo-view" style="display:none;">
+        <div class="panel">
+          <div class="panel-title">卡组属性 <span style="background:linear-gradient(90deg,#ffd700,#ff6b6b); color:#1a1a2e; padding:2px 10px; border-radius:10px; font-size:12px; margin-left:8px;">青眼</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">
+            <div style="text-align:center;padding:8px;background:var(--bg-card);border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-muted);">检索</div>
+              <div style="font-size:18px;font-weight:700;color:#3b82f6;">45</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--bg-card);border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-muted);">展开</div>
+              <div style="font-size:18px;font-weight:700;color:#8b5cf6;">52</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--bg-card);border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-muted);">干扰</div>
+              <div style="font-size:18px;font-weight:700;color:#ef4444;">38</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--bg-card);border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-muted);">抗性</div>
+              <div style="font-size:18px;font-weight:700;color:#10b981;">41</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--bg-card);border-radius:6px;">
+              <div style="font-size:10px;color:var(--text-muted);">压制</div>
+              <div style="font-size:18px;font-weight:700;color:#f59e0b;">35</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="panel" style="margin:0;">
+            <div class="panel-title">主卡组 (25/60)</div>
+            <div style="font-size:11px;max-height:200px;overflow-y:auto;">
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>青眼白龙</span><span style="color:#fbbf24;">UR ×2</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>青眼亚白龙</span><span style="color:#ec4899;">SR ×1</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>破灭之爆裂疾风弹</span><span style="color:#3b82f6;">R ×2</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>融合</span><span style="color:#6b7280;">N ×2</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                <span>...还有20张</span><span style="color:var(--text-muted);">点击查看</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin:0;">
+            <div class="panel-title">额外卡组 (5/15)</div>
+            <div style="font-size:11px;max-height:200px;overflow-y:auto;">
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>青眼究极龙</span><span style="color:#fbbf24;">UR ×1</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border-subtle);">
+                <span>青眼双爆裂龙</span><span style="color:#ec4899;">SR ×1</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:4px 0;">
+                <span>...还有3张</span><span style="color:var(--text-muted);">点击查看</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">牌库 (42张) - 点击+添加到卡组</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:10px;">
+            <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;border:1px solid #fbbf24;">
+              <div style="font-weight:600;">青眼白龙</div>
+              <div style="color:#fbbf24;">UR</div>
+              <div style="margin-top:4px;"><span style="color:#10b981;cursor:pointer;">+</span> <span style="color:var(--text-muted);">2/3</span></div>
+            </div>
+            <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+              <div style="font-weight:600;">暗黑骑士盖亚</div>
+              <div style="color:#3b82f6;">R</div>
+              <div style="margin-top:4px;"><span style="color:#10b981;cursor:pointer;">+</span> <span style="color:var(--text-muted);">0/3</span></div>
+            </div>
+            <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+              <div style="font-weight:600;">神圣防护罩</div>
+              <div style="color:#ec4899;">SR</div>
+              <div style="margin-top:4px;"><span style="color:#10b981;cursor:pointer;">+</span> <span style="color:var(--text-muted);">1/3</span></div>
+            </div>
+            <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+              <div style="font-weight:600;">强欲之壶</div>
+              <div style="color:#6b7280;">N</div>
+              <div style="margin-top:4px;"><span style="color:#10b981;cursor:pointer;">+</span> <span style="color:var(--text-muted);">0/3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 演示决斗页面 -->
+      <div id="demo-duel" class="demo-view" style="display:none;">
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">快速决斗 · 第3回合</div>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:10px 0;">
+            <div style="text-align:center;">
+              <div style="font-size:12px;color:var(--text-muted);">你</div>
+              <div style="font-size:28px;font-weight:bold;color:#10b981;">850</div>
+              <div style="font-size:10px;color:var(--text-muted);">牌力</div>
+              <div style="height:6px;background:var(--bg-card);border-radius:3px;margin-top:4px;overflow:hidden;">
+                <div style="height:100%;width:85%;background:linear-gradient(90deg,#10b981,#34d399);"></div>
+              </div>
+            </div>
+            <div style="font-size:24px;color:var(--text-muted);">VS</div>
+            <div style="text-align:center;">
+              <div style="font-size:12px;color:var(--text-muted);">对手 · 城之内克也</div>
+              <div style="font-size:28px;font-weight:bold;color:#ef4444;">620</div>
+              <div style="font-size:10px;color:var(--text-muted);">牌力</div>
+              <div style="height:6px;background:var(--bg-card);border-radius:3px;margin-top:4px;overflow:hidden;">
+                <div style="height:100%;width:62%;background:linear-gradient(90deg,#ef4444,#f87171);"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">战斗日志</div>
+          <div style="font-size:11px;line-height:1.8;max-height:150px;overflow-y:auto;">
+            <div><span style="color:#10b981;">回合3</span> 你发动【强欲之壶】，检索+15，牌力增长</div>
+            <div><span style="color:#ef4444;">回合3</span> 对手发动【神圣防护罩】，干扰你的展开</div>
+            <div><span style="color:#10b981;">回合2</span> 你召唤【青眼白龙】，展开+20，牌力大幅增长</div>
+            <div><span style="color:#fbbf24;">回合2</span> 幸运事件！掏度触发，额外抽取一张卡</div>
+            <div><span style="color:#ef4444;">回合1</span> 对手先攻，召唤【真红眼黑龙】</div>
+            <div><span style="color:var(--text-muted);">决斗开始</span> 双方牌力1000，先将对方牌力归零者获胜</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">本回合操作</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+            <button class="btn btn-secondary" style="padding:10px;">🔍 检索 (检索属性)</button>
+            <button class="btn btn-secondary" style="padding:10px;">⚡ 展开 (展开属性)</button>
+            <button class="btn btn-secondary" style="padding:10px;">🛡️ 干扰 (干扰属性)</button>
+            <button class="btn btn-secondary" style="padding:10px;">🏰 压制 (压制属性)</button>
+          </div>
+          <div style="text-align:center;margin-top:10px;">
+            <button class="btn btn-gold" style="width:100%;padding:12px;">结束回合</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 演示角色页面 -->
+      <div id="demo-characters" class="demo-view" style="display:none;">
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title">童实野市的决斗者们</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:18px;">🎮</div>
+                <div>
+                  <div style="font-weight:600;">武藤游戏</div>
+                  <div style="font-size:10px;color:var(--text-muted);">传说中的决斗王</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">好感度 45/100</div>
+                <div style="height:4px;background:var(--bg-card);border-radius:2px;overflow:hidden;">
+                  <div style="height:100%;width:45%;background:linear-gradient(90deg,#ec4899,#f472b6);"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">聊天</button>
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">讨论卡组</button>
+                <button class="btn btn-gold btn-sm" style="flex:1;padding:4px;font-size:10px;">挑战</button>
+              </div>
+            </div>
+
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;font-size:18px;">🔥</div>
+                <div>
+                  <div style="font-weight:600;">城之内克也</div>
+                  <div style="font-size:10px;color:var(--text-muted);">热血的赌徒决斗者</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">好感度 62/100</div>
+                <div style="height:4px;background:var(--bg-card);border-radius:2px;overflow:hidden;">
+                  <div style="height:100%;width:62%;background:linear-gradient(90deg,#ec4899,#f472b6);"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">聊天</button>
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">讨论卡组</button>
+                <button class="btn btn-gold btn-sm" style="flex:1;padding:4px;font-size:10px;">挑战</button>
+              </div>
+            </div>
+
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);display:flex;align-items:center;justify-content:center;font-size:18px;">❄️</div>
+                <div>
+                  <div style="font-weight:600;">海马濑人</div>
+                  <div style="font-size:10px;color:var(--text-muted);">海马集团社长</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">好感度 15/100</div>
+                <div style="height:4px;background:var(--bg-card);border-radius:2px;overflow:hidden;">
+                  <div style="height:100%;width:15%;background:linear-gradient(90deg,#ec4899,#f472b6);"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">聊天</button>
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">讨论卡组</button>
+                <button class="btn btn-gold btn-sm" style="flex:1;padding:4px;font-size:10px;">挑战</button>
+              </div>
+            </div>
+
+            <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border-subtle);">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:18px;">🔮</div>
+                <div>
+                  <div style="font-weight:600;">真崎杏子</div>
+                  <div style="font-size:10px;color:var(--text-muted);">温柔的支持者</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px;">好感度 78/100</div>
+                <div style="height:4px;background:var(--bg-card);border-radius:2px;overflow:hidden;">
+                  <div style="height:100%;width:78%;background:linear-gradient(90deg,#ec4899,#f472b6);"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">聊天</button>
+                <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:10px;">讨论卡组</button>
+                <button class="btn btn-gold btn-sm" style="flex:1;padding:4px;font-size:10px;">挑战</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">好感度说明</div>
+          <div style="font-size:11px;line-height:1.8;color:var(--text-secondary);">
+            • <b>聊天</b>：提升少量好感度，了解角色背景故事<br>
+            • <b>讨论卡组</b>：提升中等好感度，有概率获得卡组建议<br>
+            • <b>挑战</b>：与角色进行决斗，胜利后获得好感度和稀有卡片<br>
+            • <b>赠礼</b>：好感度达到一定程度解锁，获得卡片、天赋、属性等奖励<br>
+            • 好感度最高100，达到特定值可解锁特殊剧情和奖励
+          </div>
         </div>
       </div>
     </div>
@@ -1049,7 +1479,14 @@ body::before {
   <div id="view-game" class="view">
     <div class="top-bar">
       <div class="top-bar-left">
-        <div class="game-logo" id="game-logo" style="cursor:pointer;">牌佬模拟器</div>
+        <div id="player-avatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;margin-right:10px;flex-shrink:0;" onclick="openProfileModal()" title="点击查看个人主页">🎮</div>
+        <div style="cursor:pointer;" onclick="openProfileModal()">
+          <div class="game-logo" id="game-logo" style="cursor:pointer;font-size:14px;">牌佬模拟器</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:1px;">
+            <span id="player-name-display" style="color:#fbbf24;">无名决斗者</span>
+            <span id="player-title-display" style="margin-left:6px;padding:1px 6px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:8px;color:#fff;font-size:9px;">新手决斗者</span>
+          </div>
+        </div>
         <div class="dev-badge" id="dev-badge" style="display:none;">DEV</div>
       </div>
       <div class="top-bar-stats">
@@ -1074,7 +1511,9 @@ body::before {
       <button class="nav-btn" data-view="duel">决斗</button>
       <button class="nav-btn" data-view="characters">角色</button>
       <button class="nav-btn" data-view="tournament">比赛</button>
+      <button class="nav-btn" data-view="task">任务</button>
       <button class="nav-btn" data-view="achievement">成就</button>
+      <button class="nav-btn" data-view="talents">天赋</button>
       <button class="nav-btn" data-view="ranking">排行</button>
     </div>
 
@@ -1083,40 +1522,67 @@ body::before {
       <div id="subview-home" class="view active">
         <div class="panel" style="margin-bottom:12px;">
           <div class="panel-title">牌力评估</div>
-          <div style="text-align:center; padding:12px 0;">
-            <div style="font-size:36px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">实时计算 · 基于当前属性和卡组</div>
+          <div style="text-align:center; padding:10px 0 6px;">
+            <div style="font-size:32px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">实时计算 · 基于当前属性和卡组</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 8px 8px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">强度</div>
+              <div style="font-size:14px;font-weight:700;color:#f59e0b;" id="stat-power">0</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">魂度</div>
+              <div style="font-size:14px;font-weight:700;color:#ec4899;" id="stat-soul">0</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">掏度</div>
+              <div style="font-size:14px;font-weight:700;color:#10b981;" id="stat-luck">0</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">熟练度</div>
+              <div style="font-size:14px;font-weight:700;color:#3b82f6;" id="stat-proficiency">0</div>
+            </div>
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+              <div style="font-size:9px;color:var(--text-muted);">情报力</div>
+              <div style="font-size:14px;font-weight:700;color:#8b5cf6;" id="stat-intelligence">0</div>
+            </div>
+          </div>
+          <div style="font-size:9px; color:var(--text-muted); text-align:center; padding-bottom:6px;">
+            熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
           </div>
         </div>
-        <div class="stats-grid">
-          <div class="stat-box power"><div class="stat-box-label">强度</div><div class="stat-box-value" id="stat-power">0</div></div>
-          <div class="stat-box soul"><div class="stat-box-label">魂度</div><div class="stat-box-value" id="stat-soul">0</div></div>
-          <div class="stat-box luck"><div class="stat-box-label">掏度</div><div class="stat-box-value" id="stat-luck">0</div></div>
-          <div class="stat-box proficiency"><div class="stat-box-label">熟练度</div><div class="stat-box-value" id="stat-proficiency">0</div></div>
-          <div class="stat-box intelligence"><div class="stat-box-label">情报力</div><div class="stat-box-value" id="stat-intelligence">0</div></div>
-        </div>
-        <div style="font-size:11px; color:var(--text-muted); margin:8px 0 12px; text-align:center;">
-          熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
-        </div>
 
-        <div class="panel" style="margin-bottom:12px;">
-          <div class="panel-title">卡组概况</div>
-          <div class="deck-summary">
-            <div class="deck-summary-item">
-              <div class="deck-summary-label">主卡组</div>
-              <div class="deck-summary-value"><span id="main-deck-count">0</span>/60</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="panel" style="margin:0;">
+            <div class="panel-title">卡组概况</div>
+            <div style="font-size:11px;">
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">主卡组</span>
+                <span style="font-weight:600;"><span id="main-deck-count">0</span>/60</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">额外卡组</span>
+                <span style="font-weight:600;"><span id="extra-deck-count">0</span>/15</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border-subtle);">
+                <span style="color:var(--text-muted);">牌库卡片</span>
+                <span style="font-weight:600;" id="collection-count">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                <span style="color:var(--text-muted);">决斗战绩</span>
+                <span style="font-weight:600;"><span id="win-count">0</span>胜<span id="lose-count">0</span>负</span>
+              </div>
             </div>
-            <div class="deck-summary-item">
-              <div class="deck-summary-label">额外卡组</div>
-              <div class="deck-summary-value"><span id="extra-deck-count">0</span>/15</div>
+          </div>
+
+          <div class="panel" style="margin:0;">
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>任务追踪</span>
+              <span style="font-size:9px;color:var(--text-muted);cursor:pointer;" onclick="switchSubView('task')">全部 →</span>
             </div>
-            <div class="deck-summary-item">
-              <div class="deck-summary-label">牌库卡片</div>
-              <div class="deck-summary-value" id="collection-count">0</div>
-            </div>
-            <div class="deck-summary-item">
-              <div class="deck-summary-label">决斗战绩</div>
-              <div class="deck-summary-value"><span id="win-count">0</span>胜<span id="lose-count">0</span>负</div>
+            <div id="home-task-panel" style="font-size:11px;max-height:140px;overflow-y:auto;">
+              <div style="text-align:center;color:var(--text-muted);padding:8px;">暂无任务</div>
             </div>
           </div>
         </div>
@@ -1133,8 +1599,9 @@ body::before {
           <div class="locations-grid" id="locations-grid"></div>
         </div>
 
-        <div style="text-align:center; margin-top:16px;">
-          <button class="btn btn-danger" id="end-sim-btn" style="width:100%; max-width:300px;">结束模拟 / 重置存档</button>
+        <div style="text-align:center; margin-top:16px; display:flex; gap:8px; justify-content:center;">
+          <button class="btn btn-secondary" id="back-to-menu-btn" style="flex:1; max-width:200px;">🏠 返回主菜单</button>
+          <button class="btn btn-danger" id="end-sim-btn" style="flex:1; max-width:200px;">结束模拟 / 重置存档</button>
         </div>
       </div>
 
@@ -1259,11 +1726,27 @@ body::before {
         </div>
       </div>
 
+      <!-- 任务 -->
+      <div id="subview-task" class="view">
+        <div class="panel">
+          <div class="panel-title">任务系统 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（完成任务获得奖励，推进剧情）</span></div>
+          <div class="task-list" id="task-list"></div>
+        </div>
+      </div>
+
       <!-- 成就 -->
       <div id="subview-achievement" class="view">
         <div class="panel">
           <div class="panel-title">成就系统 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（解锁后提供永久属性加成）</span></div>
           <div class="achievement-grid" id="achievement-grid"></div>
+        </div>
+      </div>
+
+      <!-- 天赋图鉴 -->
+      <div id="subview-talents" class="view">
+        <div class="panel">
+          <div class="panel-title">天赋图鉴 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（已获得/未获得/隐藏天赋）</span></div>
+          <div id="talent-codex-grid" class="talent-grid-container"></div>
         </div>
       </div>
 
@@ -1311,6 +1794,242 @@ body::before {
         <button class="btn btn-primary" id="cd-plus-btn" style="flex:1;">+1</button>
       </div>
       <button class="btn btn-danger" id="cd-dismantle-btn" style="width:100%; margin-top:8px; display:none;">分解多余卡片（获得卡点）</button>
+    </div>
+  </div>
+</div>
+
+<!-- 卡片获得弹窗 -->
+<div id="card-obtain-modal" class="modal-overlay" style="display:none;z-index:10000;">
+  <div class="card-detail-box" style="max-width:420px;animation:cardObtainPop 0.4s ease-out;">
+    <div style="text-align:center;margin-bottom:12px;">
+      <div style="font-size:14px;font-weight:bold;color:#fbbf24;">✨ 获得新卡片 ✨</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px;" id="obtain-progress">第 1 / 3 张</div>
+    </div>
+    <div class="card-detail-header">
+      <div class="card-detail-rarity" id="obtain-rarity">UR</div>
+      <div class="card-detail-name" id="obtain-name">青眼白龙</div>
+    </div>
+    <div class="card-detail-type" id="obtain-type">怪兽卡</div>
+    <div class="card-detail-archetype" id="obtain-archetype">青眼系列</div>
+    <div class="card-detail-stats">
+      <div class="cd-stat"><span class="cd-stat-label">检索</span><span class="cd-stat-value search" id="obtain-search">+2</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">展开</span><span class="cd-stat-value expand" id="obtain-expand">+8</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">干扰</span><span class="cd-stat-value disrupt" id="obtain-disrupt">+1</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">抗性</span><span class="cd-stat-value resist" id="obtain-resist">+5</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">压制</span><span class="cd-stat-value suppress" id="obtain-suppress">+7</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">强度</span><span class="cd-stat-value power" id="obtain-power">9</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">魂度</span><span class="cd-stat-value soul" id="obtain-soul">8</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">掏度</span><span class="cd-stat-value luck" id="obtain-luck">0</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">熟练度</span><span class="cd-stat-value" id="obtain-proficiency" style="color:#06b6d4;">0</span></div>
+      <div class="cd-stat"><span class="cd-stat-label">情报力</span><span class="cd-stat-value" id="obtain-intelligence" style="color:#a855f7;">0</span></div>
+    </div>
+    <div class="card-detail-owned" id="obtain-owned">拥有：1张</div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-secondary" id="obtain-skip-all" style="flex:1;">全部跳过</button>
+      <button class="btn btn-gold" id="obtain-next" style="flex:1;">下一张</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes cardObtainPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<!-- 名字输入弹窗 -->
+<div id="name-input-modal" class="modal-overlay" style="display:none;z-index:10001;">
+  <div class="card-detail-box" style="max-width:380px;text-align:center;">
+    <div style="font-size:18px;font-weight:bold;color:#fbbf24;margin-bottom:8px;">✏️ 为你的决斗者命名</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">这个名字将伴随你在童实野市的决斗之旅</div>
+    <input type="text" id="player-name-input" maxlength="12" placeholder="请输入你的名字（最多12字）" style="width:100%;padding:12px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;color:#fff;font-size:14px;text-align:center;outline:none;margin-bottom:16px;">
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="skipNameInput()">随机名字</button>
+      <button class="btn btn-gold" style="flex:1;" onclick="confirmNameInput()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 个人主页弹窗 -->
+<div id="profile-modal" class="modal-overlay" style="display:none;z-index:10002;">
+  <div class="card-detail-box" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <!-- 头部：头像+名字+称号+签名 -->
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border-subtle);">
+      <div id="profile-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer;" title="点击更换头像（暂未开放）">🎮</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span id="profile-name" style="font-size:18px;font-weight:bold;color:#fff;">无名决斗者</span>
+          <span id="profile-title" style="font-size:11px;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">新手决斗者</span>
+        </div>
+        <div id="profile-signature" style="font-size:11px;color:var(--text-muted);margin-top:4px;cursor:pointer;font-style:italic;" title="点击编辑个性签名">这个人很懒，什么都没留下...</div>
+      </div>
+    </div>
+
+    <!-- 基本信息 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">基本信息</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;">
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">年龄</div>
+          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-age">18岁</div>
+        </div>
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">天数</div>
+          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-week">第1天</div>
+        </div>
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">牌力</div>
+          <div style="font-weight:bold;background:linear-gradient(90deg,#ffd700,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:14px;" id="profile-power">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 决斗战绩 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">决斗战绩</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;">
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">总决斗</div>
+          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-duels">0</div>
+        </div>
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">胜利</div>
+          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-wins">0</div>
+        </div>
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">失败</div>
+          <div style="font-weight:bold;color:#ef4444;font-size:14px;" id="profile-losses">0</div>
+        </div>
+        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+          <div style="color:var(--text-muted);">胜率</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:14px;" id="profile-winrate">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主属性 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">主属性</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">检索</div>
+          <div style="font-weight:bold;color:#3b82f6;font-size:14px;" id="profile-search">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">展开</div>
+          <div style="font-weight:bold;color:#8b5cf6;font-size:14px;" id="profile-expand">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">干扰</div>
+          <div style="font-weight:bold;color:#ef4444;font-size:14px;" id="profile-disrupt">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">抗性</div>
+          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-resist">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">压制</div>
+          <div style="font-weight:bold;color:#f59e0b;font-size:14px;" id="profile-suppress">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 副属性 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">副属性</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">强度</div>
+          <div style="font-weight:bold;color:#f59e0b;font-size:14px;" id="profile-power-stat">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">魂度</div>
+          <div style="font-weight:bold;color:#ec4899;font-size:14px;" id="profile-soul">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">掏度</div>
+          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-luck">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">熟练度</div>
+          <div style="font-weight:bold;color:#06b6d4;font-size:14px;" id="profile-proficiency">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">情报力</div>
+          <div style="font-weight:bold;color:#a855f7;font-size:14px;" id="profile-intelligence">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 特殊属性 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">特殊属性</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">决斗点</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:14px;" id="profile-duel-points">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">卡点</div>
+          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-card-points">0</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">收藏卡片</div>
+          <div style="font-weight:bold;color:#3b82f6;font-size:14px;" id="profile-collection">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卡组概况 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">卡组概况</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">主卡组</div>
+          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-main-deck">0/60</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">额外卡组</div>
+          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-extra-deck">0/15</div>
+        </div>
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">系列标签</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:12px;" id="profile-archetype">无</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 成就和称号 -->
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">已获称号</div>
+      <div id="profile-titles" style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
+        <span style="padding:4px 10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">新手决斗者</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div class="panel-title" style="margin-bottom:8px;">已解锁成就</div>
+      <div id="profile-achievements" style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
+        <span style="color:var(--text-muted);">暂无成就</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeProfileModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 个性签名编辑弹窗 -->
+<div id="signature-edit-modal" class="modal-overlay" style="display:none;z-index:10003;">
+  <div class="card-detail-box" style="max-width:360px;text-align:center;">
+    <div style="font-size:16px;font-weight:bold;color:#fbbf24;margin-bottom:12px;">✏️ 编辑个性签名</div>
+    <textarea id="signature-input" maxlength="50" rows="3" placeholder="输入你的个性签名（最多50字）" style="width:100%;padding:10px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;color:#fff;font-size:13px;outline:none;resize:none;margin-bottom:12px;"></textarea>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeSignatureEdit()">取消</button>
+      <button class="btn btn-gold" style="flex:1;" onclick="saveSignature()">保存</button>
     </div>
   </div>
 </div>
@@ -2560,6 +3279,189 @@ const ACHIEVEMENTS = [
   }
 ];
 
+// ===== 任务定义 =====
+const TASKS = [
+  // ===== 引导任务 =====
+  {
+    id: 'guide_001', name: '初入童实野', type: 'guide', order: 1,
+    desc: '前往龟游戏屋，开启你的决斗者之旅。',
+    story: '时空模拟器将你送到了过去的童实野市。你需要先找到一个落脚点，龟游戏屋似乎是个不错的选择。',
+    condition: { type: 'visit_location', target: 'kame', value: 1 },
+    reward: { duelPoints: 50, stats: { intelligence: 2 } }
+  },
+  {
+    id: 'guide_002', name: '卡组的基础', type: 'guide', order: 2,
+    desc: '收集至少10张卡片，组建你的第一副卡组。',
+    story: '没有卡组的决斗者不是合格的决斗者。在卡店购买卡包，收集你的第一批卡片吧。',
+    condition: { type: 'collect_cards', value: 10 },
+    reward: { duelPoints: 100, cards: ['m010'] }
+  },
+  {
+    id: 'guide_003', name: '初次出击', type: 'guide', order: 3,
+    desc: '主卡组达到20张，进行你的第一次快速决斗。',
+    story: '卡组已经初具规模，是时候检验一下实力了。前往决斗场进行快速决斗！',
+    condition: { type: 'quick_duel', value: 1 },
+    reward: { duelPoints: 150, stats: { proficiency: 3 } }
+  },
+  {
+    id: 'guide_004', name: '大师之路', type: 'guide', order: 4,
+    desc: '主卡组达到40张，额外卡组达到5张，完成一次大师决斗。',
+    story: '快速决斗只是热身，真正的决斗者需要在大师决斗中证明自己。',
+    condition: { type: 'master_duel', value: 1 },
+    reward: { duelPoints: 300, cardPoints: 20, stats: { intelligence: 5 } }
+  },
+  {
+    id: 'guide_005', name: '社交达人', type: 'guide', order: 5,
+    desc: '与武藤游戏的好感度达到20。',
+    story: '在这个城市，人脉也是实力的一部分。与传说中的决斗者武藤游戏建立联系吧。',
+    condition: { type: 'affinity', target: 'yugi', value: 20 },
+    reward: { duelPoints: 100, stats: { soul: 5 } }
+  },
+  {
+    id: 'guide_006', name: '初尝胜果', type: 'guide', order: 6,
+    desc: '累计获得5场决斗胜利。',
+    story: '胜利是决斗者最好的证明。继续磨练你的技术，赢得更多的决斗吧！',
+    condition: { type: 'duel_wins', value: 5 },
+    reward: { duelPoints: 200, cards: ['m015'] }
+  },
+  {
+    id: 'guide_007', name: '赛事参与', type: 'guide', order: 7,
+    desc: '参加一次卡店比赛。',
+    story: '单打独斗的决斗是不完整的。参加卡店比赛，与更多决斗者交流吧。',
+    condition: { type: 'tournament_participate', value: 1 },
+    reward: { duelPoints: 150, stats: { proficiency: 5 } }
+  },
+  {
+    id: 'guide_008', name: '引导完成', type: 'guide', order: 8,
+    desc: '完成所有引导任务，成为一名合格的决斗者。',
+    story: '你已经掌握了决斗者的基本技能。接下来，去追寻更高的目标吧！',
+    condition: { type: 'complete_task', target: 'guide_007', value: 1 },
+    reward: { duelPoints: 500, cards: ['m020'], title: '时空旅人' }
+  },
+
+  // ===== 主线任务 =====
+  {
+    id: 'main_001', name: '时空的涟漪', type: 'main', order: 1,
+    desc: '牌力达到500，引起某些存在的注意。',
+    story: '你的到来已经改变了这个时代的走向。随着实力的提升，你感受到了一股来自未来的视线...',
+    condition: { type: 'power', value: 500 },
+    reward: { duelPoints: 300, stats: { soul: 10 } }
+  },
+  {
+    id: 'main_002', name: '传说的碎片', type: 'main', order: 2,
+    desc: '收集3张UR稀有度的卡片。',
+    story: '未来的记忆中，有几张卡片在世界毁灭时发出了耀眼的光芒。找到它们，也许能揭开真相的一角。',
+    condition: { type: 'card_rarity', target: 'UR', value: 3 },
+    reward: { duelPoints: 500, cardPoints: 30 }
+  },
+  {
+    id: 'main_003', name: '王者的资质', type: 'main', order: 3,
+    desc: '赢得一场中级以上卡店比赛。',
+    story: '要成为决斗王，就必须在正式比赛中证明自己。中级比赛的冠军，是你迈向顶点的第一步。',
+    condition: { type: 'tournament_win', target: '中级', value: 1 },
+    reward: { duelPoints: 800, cards: ['m025'], stats: { power: 10 } }
+  },
+  {
+    id: 'main_004', name: '命运的相遇', type: 'main', order: 4,
+    desc: '与武藤游戏的好感度达到60。',
+    story: '武藤游戏身上有着与你相似的时空波动。也许他知道些什么...深入了解这个少年吧。',
+    condition: { type: 'affinity', target: 'yugi', value: 60 },
+    reward: { duelPoints: 500, stats: { soul: 15, luck: 10 } }
+  },
+  {
+    id: 'main_005', name: '过去与未来', type: 'main', order: 5,
+    desc: '年龄达到20岁，牌力达到2000。',
+    story: '两年的时光转瞬即逝。你在这个时代留下了自己的足迹，但未来毁灭的真相依然笼罩在迷雾中...',
+    condition: { type: 'age', value: 20 },
+    reward: { duelPoints: 1000, cardPoints: 50, stats: { intelligence: 15 } }
+  },
+  {
+    id: 'main_006', name: '决斗王的挑战', type: 'main', order: 6,
+    desc: '在挑战中击败武藤游戏。',
+    story: '是时候了。与传说中的决斗王进行一场宿命的对决。这场决斗的结果，也许会改变两个时代的命运。',
+    condition: { type: 'defeat_character', target: 'yugi', value: 1 },
+    reward: { duelPoints: 2000, cards: ['m002'], title: '超越王者之人' }
+  },
+  {
+    id: 'main_007', name: '真相的边缘', type: 'main', order: 7,
+    desc: '收集5张神之卡或传说级卡片，牌力达到5000。',
+    story: '你终于触碰到了真相的边缘。世界毁灭的原因，与这些传说中的卡片有着千丝万缕的联系...',
+    condition: { type: 'power', value: 5000 },
+    reward: { duelPoints: 3000, cardPoints: 100, title: '时空观测者' }
+  },
+
+  // ===== 支线任务（地图探索） =====
+  {
+    id: 'side_001', name: '城市漫步者', type: 'side', order: 1,
+    desc: '访问童实野市所有地点各一次。',
+    story: '了解这座城市的每一个角落，也许能发现隐藏在日常中的线索。',
+    condition: { type: 'visit_all_locations', value: 1 },
+    reward: { duelPoints: 200, stats: { intelligence: 5 } }
+  },
+  {
+    id: 'side_002', name: '卡店常客', type: 'side', order: 2,
+    desc: '在卡店购买卡包10次。',
+    story: '卡店老板似乎认识很多人。多去几次，也许能听到一些有趣的传闻。',
+    condition: { type: 'visit_location', target: 'cardshop', value: 10 },
+    reward: { duelPoints: 150, cards: ['m012'] }
+  },
+  {
+    id: 'side_003', name: '公园的秘密', type: 'side', order: 3,
+    desc: '在中央公园休息5次。',
+    story: '中央公园的长椅上，总是能遇到各种各样的人。也许某个人会告诉你一些不为人知的故事。',
+    condition: { type: 'visit_location', target: 'park', value: 5 },
+    reward: { duelPoints: 100, stats: { soul: 5 } }
+  },
+  {
+    id: 'side_004', name: '海马集团', type: 'side', order: 4,
+    desc: '访问海马公司5次，与海马濑人好感度达到30。',
+    story: '海马集团掌握着这个时代最先进的技术。也许他们的研究中，有关于时空的线索。',
+    condition: { type: 'affinity', target: 'kaiba', value: 30 },
+    reward: { duelPoints: 300, stats: { intelligence: 10 } }
+  },
+  {
+    id: 'side_005', name: '友情的羁绊', type: 'side', order: 5,
+    desc: '与城之内克也好感度达到50。',
+    story: '城之内是个热血的决斗者，与他成为朋友，你会感受到真正的友情。',
+    condition: { type: 'affinity', target: 'jonouchi', value: 50 },
+    reward: { duelPoints: 200, cards: ['e003'], stats: { luck: 10 } }
+  },
+
+  // ===== 隐藏任务 =====
+  {
+    id: 'hidden_001', name: '时空的悖论', type: 'hidden', order: 1,
+    desc: '在20岁前牌力达到3000。',
+    story: '你改变了太多的历史，时空开始出现不稳定的迹象...这究竟是好事还是坏事？',
+    condition: { type: 'power', value: 3000 },
+    unlockCondition: { type: 'age', value: 19 },
+    reward: { duelPoints: 1500, cardPoints: 80, title: '时空悖论者' }
+  },
+  {
+    id: 'hidden_002', name: '卡组的灵魂', type: 'hidden', order: 2,
+    desc: '拥有15张以上同一系列卡片，形成系列卡组。',
+    story: '当你与卡组的羁绊达到一定程度时，你会听到卡片的声音...它们在诉说着什么？',
+    condition: { type: 'archetype_deck', value: 1 },
+    unlockCondition: { type: 'collect_cards', value: 30 },
+    reward: { duelPoints: 800, stats: { soul: 20, proficiency: 10 } }
+  },
+  {
+    id: 'hidden_003', name: '不败传说', type: 'hidden', order: 3,
+    desc: '连续获得10场决斗胜利。',
+    story: '十连胜！你的名字开始在决斗者之间流传。有人说，你像是从未来来的传说...',
+    condition: { type: 'win_streak', value: 10 },
+    unlockCondition: { type: 'duel_wins', value: 5 },
+    reward: { duelPoints: 1200, title: '不败的决斗者' }
+  },
+  {
+    id: 'hidden_004', name: '未来的记忆', type: 'hidden', order: 4,
+    desc: '收集所有类型的卡片（怪兽、魔法、陷阱、额外）各10张以上。',
+    story: '模糊的记忆碎片开始拼凑起来...未来毁灭的那一天，所有类型的卡片都在发光...',
+    condition: { type: 'all_card_types', value: 1 },
+    unlockCondition: { type: 'collect_cards', value: 40 },
+    reward: { duelPoints: 1000, cardPoints: 50, stats: { intelligence: 20 } }
+  },
+];
+
 // ===== 事件定义 =====
 const EVENTS = {
   "kame": [
@@ -3252,6 +4154,12 @@ function loadGame() {
       if (!gameState.receivedGifts) gameState.receivedGifts = [];
       if (!gameState.unlockedEvents) gameState.unlockedEvents = [];
       if (!gameState.unlockedHiddenTalents) gameState.unlockedHiddenTalents = [];
+      if (!gameState.completedTasks) gameState.completedTasks = [];
+      if (!gameState.claimableTasks) gameState.claimableTasks = [];
+      if (!gameState.titles) gameState.titles = [];
+      if (!gameState.winStreak) gameState.winStreak = 0;
+      if (!gameState.tournamentParticipations) gameState.tournamentParticipations = 0;
+      if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
       return true;
     }
   } catch(e) {}
@@ -3591,6 +4499,325 @@ function randomTalents() {
   renderTalents();
 }
 
+// ===== 新手引导系统 =====
+const TUTORIAL_STEPS = [
+  {
+    id: 'welcome',
+    title: '欢迎来到童实野市',
+    content: '你是一位来自未来的决斗者，利用时空模拟器回到了过去的童实野市。你的目标是成为决斗王，同时寻找未来被毁灭的真相。<br><br>本引导将带你了解游戏的基本玩法，随时可以点击「跳过引导」直接开始游戏。<br><br>点击「开始新游戏」按钮进入天赋选择。',
+    target: '#menu-new-game',
+    position: 'bottom',
+    autoNext: false,
+    check: () => document.getElementById('talent-select-panel').style.display === 'block'
+  },
+  {
+    id: 'talent_select',
+    title: '选择你的天赋',
+    content: '每个决斗者都有独特的天赋。点击「随机天赋」按钮抽取6个天赋，然后选择其中2个作为你的初始天赋。<br><br>天赋分为N/R/SR/UR四个品质，品质越高效果越强。部分隐藏天赋需要达成成就后才能解锁。',
+    target: '#random-talent-btn',
+    position: 'bottom',
+    autoNext: false,
+    check: () => selectedTalents.length >= 2
+  },
+  {
+    id: 'start_game',
+    title: '开始你的决斗之旅',
+    content: '选择好2个天赋后，点击「开启牌佬之路」按钮正式开始游戏。<br><br>游戏中每回合代表7天，你需要通过收集卡片、构筑卡组、参加决斗来提升自己的牌力。',
+    target: '#start-game-btn',
+    position: 'bottom',
+    autoNext: false,
+    check: () => gameState !== null
+  },
+  {
+    id: 'home_overview',
+    title: '主页概览',
+    content: '这是游戏主页，你可以在这里查看：<br>• <b>牌力评估</b>：你的综合战斗力，实时计算<br>• <b>次要属性</b>：强度、魂度、掏度、熟练度、情报力<br>• <b>任务追踪</b>：当前进行中的任务<br>• <b>卡组概况</b>：你的卡组状态<br>• <b>选择地点</b>：每次行动消耗7天，触发事件获取卡片<br><br>底部导航栏可以切换各个功能页面。',
+    target: '.content-area',
+    position: 'center',
+    autoNext: true,
+    delay: 5000,
+    gotoView: 'demo',
+    demoView: 'home'
+  },
+  {
+    id: 'get_cards',
+    title: '获取你的第一张卡片',
+    content: '在主页下方的「本次行动 - 选择地点」区域，点击任意地点即可进行一次行动（消耗7天）。<br><br>在不同地点探索可以触发各种事件，有机会获得卡片、提升属性、遇见角色。前期建议多去「龟游戏屋」和「卡店」获取卡片。<br><br>收集到足够的卡片后就可以构筑卡组了。',
+    target: '#locations-grid',
+    position: 'top',
+    autoNext: true,
+    delay: 5000,
+    gotoView: 'demo',
+    demoView: 'home'
+  },
+  {
+    id: 'build_deck',
+    title: '构筑你的卡组',
+    content: '收集到足够的卡片后，点击底部导航的「卡组」按钮进入卡组编辑页面。<br><br>• <b>牌库</b>：你拥有的所有卡片，点击+添加到卡组<br>• <b>主卡组</b>：决斗时使用的卡组，最少20张（快速决斗）或40张（大师决斗），最多60张<br>• <b>额外卡组</b>：最多15张<br>• 同名卡最多投入3张<br>• 同系列卡15张以上触发系列卡组标签，获得额外加成',
+    target: '[data-demo="deck"]',
+    position: 'top',
+    autoNext: true,
+    delay: 6000,
+    gotoView: 'demo',
+    demoView: 'deck'
+  },
+  {
+    id: 'first_duel',
+    title: '进行你的第一次决斗',
+    content: '卡组达到20张后，点击底部导航的「决斗」按钮进入决斗页面。<br><br>• <b>快速决斗</b>：最多30回合，对手牌力较低，适合新手<br>• <b>大师决斗</b>：最多60回合，对手牌力较高，奖励更丰厚<br><br>决斗中牌力代表生命值，通过检索、展开、干扰、抗性、压制等属性与对手交互，先将对方牌力归零者获胜。<br><br>战斗中会随机触发幸运事件，魂度和掏度影响触发概率。',
+    target: '[data-demo="duel"]',
+    position: 'top',
+    autoNext: true,
+    delay: 6000,
+    gotoView: 'demo',
+    demoView: 'duel'
+  },
+  {
+    id: 'characters',
+    title: '与角色互动',
+    content: '点击底部导航的「角色」按钮，可以查看童实野市的各种角色。<br><br>• <b>聊天</b>：提升少量好感度，了解角色背景故事<br>• <b>讨论卡组</b>：提升中等好感度，有概率获得卡组建议<br>• <b>挑战</b>：与角色进行决斗，胜利后获得好感度和稀有卡片<br>• <b>赠礼</b>：好感度达到一定程度解锁，获得卡片、天赋、属性等奖励<br>• 好感度最高100，达到特定值可解锁特殊剧情和奖励',
+    target: '[data-demo="characters"]',
+    position: 'top',
+    autoNext: true,
+    delay: 6000,
+    gotoView: 'demo',
+    demoView: 'characters'
+  },
+  {
+    id: 'complete',
+    title: '引导完成！',
+    content: '恭喜你完成了新手引导！现在你已经了解了游戏的基本玩法。<br><br>更多内容等你探索：<br>• <b>任务系统</b>：完成任务获得奖励，推进剧情<br>• <b>比赛系统</b>：参加卡店比赛和官方赛事，赢取稀有卡片<br>• <b>成就系统</b>：解锁成就获得永久属性加成和隐藏天赋<br>• <b>排行榜</b>：与传说中的决斗者们一较高下<br><br>祝你在童实野市的决斗之旅顺利！',
+    target: null,
+    position: 'center',
+    autoNext: false,
+    isLast: true
+  }
+];
+
+let tutorialCurrentStep = 0;
+let tutorialActive = false;
+let tutorialCheckInterval = null;
+
+function startTutorial() {
+  tutorialCurrentStep = 0;
+  tutorialActive = true;
+  showTutorialStep();
+}
+
+function showTutorialStep() {
+  if (!tutorialActive || tutorialCurrentStep >= TUTORIAL_STEPS.length) {
+    endTutorial();
+    return;
+  }
+
+  const step = TUTORIAL_STEPS[tutorialCurrentStep];
+  const overlay = document.getElementById('tutorial-overlay');
+  const highlight = document.getElementById('tutorial-highlight');
+  const tooltip = document.getElementById('tutorial-tooltip');
+  const stepLabel = document.getElementById('tutorial-step');
+  const titleEl = document.getElementById('tutorial-title');
+  const contentEl = document.getElementById('tutorial-content');
+  const nextBtn = document.getElementById('tutorial-next');
+  const prevBtn = document.getElementById('tutorial-prev');
+
+  overlay.style.display = 'block';
+  stepLabel.textContent = `步骤 ${tutorialCurrentStep + 1}/${TUTORIAL_STEPS.length}`;
+  titleEl.textContent = step.title;
+  contentEl.innerHTML = step.content;
+  nextBtn.textContent = step.isLast ? '完成引导' : '下一步';
+
+  // 上一步按钮：第一步时禁用
+  if (tutorialCurrentStep === 0) {
+    prevBtn.style.opacity = '0.3';
+    prevBtn.style.cursor = 'not-allowed';
+    prevBtn.disabled = true;
+  } else {
+    prevBtn.style.opacity = '1';
+    prevBtn.style.cursor = 'pointer';
+    prevBtn.disabled = false;
+  }
+
+  // 清除之前的检测
+  if (tutorialCheckInterval) {
+    clearInterval(tutorialCheckInterval);
+    tutorialCheckInterval = null;
+  }
+
+  // 自动跳转到相关页面
+  if (step.gotoView) {
+    setTimeout(() => {
+      if (step.gotoView === 'demo') {
+        // 切换到演示视图
+        switchView('demo');
+        if (step.demoView && typeof switchDemoView === 'function') {
+          switchDemoView(step.demoView);
+        }
+      } else if (typeof switchSubView === 'function' && gameState) {
+        switchSubView(step.gotoView);
+      }
+      // 页面切换后重新定位高亮元素
+      setTimeout(() => {
+        if (step.target) {
+          const targetEl = document.querySelector(step.target);
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            highlight.style.display = 'block';
+            highlight.style.left = (rect.left - 4) + 'px';
+            highlight.style.top = (rect.top - 4) + 'px';
+            highlight.style.width = (rect.width + 8) + 'px';
+            highlight.style.height = (rect.height + 8) + 'px';
+            positionTooltip(tooltip, rect, step.position);
+          }
+        }
+      }, 300);
+    }, 200);
+  }
+
+  // 特殊处理：主菜单和天赋选择页面
+  if (step.id === 'welcome') {
+    // 确保显示主菜单
+    document.getElementById('main-menu').style.display = 'block';
+    document.getElementById('talent-select-panel').style.display = 'none';
+  } else if (step.id === 'talent_select' || step.id === 'start_game') {
+    // 确保显示天赋选择页面
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('talent-select-panel').style.display = 'block';
+  }
+
+  // 高亮目标元素
+  if (step.target) {
+    const targetEl = document.querySelector(step.target);
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      highlight.style.display = 'block';
+      highlight.style.left = (rect.left - 4) + 'px';
+      highlight.style.top = (rect.top - 4) + 'px';
+      highlight.style.width = (rect.width + 8) + 'px';
+      highlight.style.height = (rect.height + 8) + 'px';
+
+      // 定位提示框
+      positionTooltip(tooltip, rect, step.position);
+    } else {
+      highlight.style.display = 'none';
+      positionTooltipCenter(tooltip);
+    }
+  } else {
+    highlight.style.display = 'none';
+    positionTooltipCenter(tooltip);
+  }
+
+  // 自动下一步
+  if (step.autoNext && step.delay) {
+    setTimeout(() => {
+      if (tutorialActive && tutorialCurrentStep === TUTORIAL_STEPS.indexOf(step)) {
+        nextTutorialStep();
+      }
+    }, step.delay);
+  }
+
+  // 检测条件自动推进
+  if (step.check) {
+    tutorialCheckInterval = setInterval(() => {
+      if (step.check && step.check()) {
+        clearInterval(tutorialCheckInterval);
+        tutorialCheckInterval = null;
+        setTimeout(() => nextTutorialStep(), 500);
+      }
+    }, 500);
+  }
+}
+
+function positionTooltip(tooltip, rect, position) {
+  const tooltipWidth = 360;
+  const tooltipHeight = 200;
+  let left, top;
+
+  switch (position) {
+    case 'top':
+      left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      top = rect.top - tooltipHeight - 20;
+      if (top < 10) top = rect.bottom + 20;
+      break;
+    case 'bottom':
+      left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      top = rect.bottom + 20;
+      if (top + tooltipHeight > window.innerHeight - 10) top = rect.top - tooltipHeight - 20;
+      break;
+    case 'left':
+      left = rect.left - tooltipWidth - 20;
+      top = rect.top + rect.height / 2 - tooltipHeight / 2;
+      break;
+    case 'right':
+      left = rect.right + 20;
+      top = rect.top + rect.height / 2 - tooltipHeight / 2;
+      break;
+    default:
+      left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      top = rect.bottom + 20;
+  }
+
+  // 边界检查
+  left = Math.max(10, Math.min(left, window.innerWidth - tooltipWidth - 10));
+  top = Math.max(10, Math.min(top, window.innerHeight - tooltipHeight - 10));
+
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+function positionTooltipCenter(tooltip) {
+  const tooltipWidth = 360;
+  const tooltipHeight = 250;
+  tooltip.style.left = (window.innerWidth / 2 - tooltipWidth / 2) + 'px';
+  tooltip.style.top = (window.innerHeight / 2 - tooltipHeight / 2) + 'px';
+}
+
+function nextTutorialStep() {
+  tutorialCurrentStep++;
+  if (tutorialCurrentStep >= TUTORIAL_STEPS.length) {
+    endTutorial();
+  } else {
+    showTutorialStep();
+  }
+}
+
+function endTutorial() {
+  tutorialActive = false;
+  if (tutorialCheckInterval) {
+    clearInterval(tutorialCheckInterval);
+    tutorialCheckInterval = null;
+  }
+  document.getElementById('tutorial-overlay').style.display = 'none';
+
+  // 返回主菜单
+  switchView('start');
+  document.getElementById('main-menu').style.display = 'block';
+  document.getElementById('talent-select-panel').style.display = 'none';
+  updateContinueButton();
+
+  // 保存引导完成状态
+  try {
+    localStorage.setItem('duelist_tutorial_completed', 'true');
+  } catch(e) {}
+
+  showToast('新手引导完成！点击「开始新游戏」开始你的决斗之旅');
+}
+
+function skipTutorial() {
+  endTutorial();
+}
+
+// 绑定引导按钮
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('tutorial-next').addEventListener('click', nextTutorialStep);
+  document.getElementById('tutorial-prev').addEventListener('click', () => {
+    if (tutorialCurrentStep > 0) {
+      tutorialCurrentStep--;
+      showTutorialStep();
+    }
+  });
+  document.getElementById('tutorial-skip').addEventListener('click', skipTutorial);
+});
+
 // ===== 游戏开始 =====
 function startGame() {
   // 检查是否选择了2个天赋
@@ -3628,6 +4855,14 @@ function startGame() {
     unlockedEvents: [],
     unlockedHiddenTalents: [],
     unlockedTalents: [],
+    completedTasks: [],
+    claimableTasks: [],
+    titles: [],
+    winStreak: 0,
+    tournamentParticipations: 0,
+    defeatedCharacters: {},
+    name: '无名决斗者',
+    signature: '这个人很懒，什么都没留下...',
   };
   CHARACTERS.forEach(c => { gameState.affinity[c.id] = 0; });
 
@@ -3669,6 +4904,18 @@ function startGame() {
   updateAllDisplays();
   renderLocations();
   showToast('欢迎来到童实野市！');
+
+  // 显示故事背景
+  setTimeout(() => {
+    showEventModal('时空模拟器 · 启动',
+      `你来自未来已经被毁灭的新童实野市。\n\n为了发现世界毁灭的真相，你利用来自未来的科技【时空模拟器】，回到了过去的童实野市。\n\n机器的能力只能够模拟7年时间。你将一边以决斗王为目标，一边寻找未来被毁灭的真相而努力。\n\n殊不知，这个世界也因为你的到来，发生了与众不同的变化...\n\n（提示：完成任务可以获得奖励并推进剧情）`,
+      null, [{ name: '开始旅程', action: () => {
+        // 故事背景关闭后弹出名字输入
+        setTimeout(() => {
+          showNameInput();
+        }, 300);
+      }}]);
+  }, 300);
 }
 
 // 获取天赋倍率辅助函数
@@ -3691,6 +4938,10 @@ function getTalentBonus(field, defaultVal = 0) {
   return bonus;
 }
 
+// 卡片获得队列
+let cardObtainQueue = [];
+let cardObtainShowing = false;
+
 function addCardToCollection(cardId) {
   if (!CARD_DB[cardId]) return;
   if (!gameState.collection.includes(cardId)) {
@@ -3698,6 +4949,204 @@ function addCardToCollection(cardId) {
     gameState.collectionCount[cardId] = 1;
   } else {
     gameState.collectionCount[cardId] = (gameState.collectionCount[cardId] || 1) + 1;
+  }
+  // 加入获得弹窗队列
+  cardObtainQueue.push(cardId);
+  if (!cardObtainShowing) {
+    showNextCardObtain();
+  }
+}
+
+function showNextCardObtain() {
+  if (cardObtainQueue.length === 0) {
+    cardObtainShowing = false;
+    document.getElementById('card-obtain-modal').style.display = 'none';
+    return;
+  }
+  cardObtainShowing = true;
+  const cardId = cardObtainQueue.shift();
+  const card = CARD_DB[cardId];
+  if (!card) {
+    showNextCardObtain();
+    return;
+  }
+
+  const typeMap = { monster:'怪兽卡', spell:'魔法卡', trap:'陷阱卡', extra:'额外卡组' };
+  const owned = gameState.collectionCount[cardId] || 0;
+
+  document.getElementById('obtain-progress').textContent = `还有 ${cardObtainQueue.length} 张待显示`;
+  document.getElementById('obtain-rarity').textContent = card.rarity;
+  document.getElementById('obtain-rarity').setAttribute('data-rarity', card.rarity);
+  document.getElementById('obtain-name').textContent = card.name;
+  document.getElementById('obtain-type').textContent = typeMap[card.type] || card.type;
+  document.getElementById('obtain-archetype').textContent = (card.archetype || '泛用') + '系列';
+  document.getElementById('obtain-search').textContent = '+' + (card.stats.search || 0);
+  document.getElementById('obtain-expand').textContent = '+' + (card.stats.expand || 0);
+  document.getElementById('obtain-disrupt').textContent = '+' + (card.stats.disrupt || 0);
+  document.getElementById('obtain-resist').textContent = '+' + (card.stats.resist || 0);
+  document.getElementById('obtain-suppress').textContent = '+' + (card.stats.suppress || 0);
+  document.getElementById('obtain-power').textContent = card.sub.power || 0;
+  document.getElementById('obtain-soul').textContent = card.sub.soul || 0;
+  document.getElementById('obtain-luck').textContent = card.sub.luck || 0;
+  document.getElementById('obtain-proficiency').textContent = card.sub.proficiency || 0;
+  document.getElementById('obtain-intelligence').textContent = card.sub.intelligence || 0;
+  document.getElementById('obtain-owned').textContent = `拥有：${owned}张`;
+
+  // 如果是最后一张，按钮文字改为"完成"
+  const nextBtn = document.getElementById('obtain-next');
+  nextBtn.textContent = cardObtainQueue.length === 0 ? '完成' : '下一张';
+
+  document.getElementById('card-obtain-modal').style.display = 'flex';
+}
+
+function skipAllCardObtain() {
+  cardObtainQueue = [];
+  cardObtainShowing = false;
+  document.getElementById('card-obtain-modal').style.display = 'none';
+}
+
+// ===== 玩家名字系统 =====
+const RANDOM_NAMES = ['游城十代','不动游星','九十九游马','榊游矢','藤木游作','武藤游戏','海马濑人','城之内克也','真崎杏子','本田广','貘良了','马利克','暗游戏','表游戏','孔雀舞','恐龙龙崎','昆虫羽蛾','盗贼基斯','贝卡斯','海马圭平','武藤双六','龙可','龙亚','杰克','十六夜秋','克罗','雷克斯','普拉西多','卢奇亚诺','何塞','阿波利亚','Z-ONE','帕拉多克斯','蓝神','塞拉','马尼','迪瓦','基斯','盗贼','暗貘良','暗马利克','光之假面','暗之假面','迷宫兄弟','大下幸之助','原来如此','天才' ];
+
+function showNameInput() {
+  document.getElementById('player-name-input').value = gameState.name === '无名决斗者' ? '' : gameState.name;
+  document.getElementById('name-input-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('player-name-input').focus(), 100);
+}
+
+function skipNameInput() {
+  const randomName = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+  gameState.name = randomName;
+  document.getElementById('player-name-input').value = randomName;
+  updatePlayerDisplay();
+  saveGame();
+}
+
+function confirmNameInput() {
+  const input = document.getElementById('player-name-input').value.trim();
+  if (input) {
+    gameState.name = input;
+  } else {
+    gameState.name = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+  }
+  document.getElementById('name-input-modal').style.display = 'none';
+  updatePlayerDisplay();
+  saveGame();
+  showToast(`欢迎你，${gameState.name}！`);
+}
+
+// ===== 个人主页系统 =====
+function openProfileModal() {
+  if (!gameState) return;
+  updateProfileModal();
+  document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').style.display = 'none';
+}
+
+function updateProfileModal() {
+  if (!gameState) return;
+
+  // 基本信息
+  document.getElementById('profile-name').textContent = gameState.name;
+  document.getElementById('profile-signature').textContent = gameState.signature;
+  document.getElementById('profile-age').textContent = gameState.age + '岁';
+  document.getElementById('profile-week').textContent = '第' + gameState.week + '天';
+
+  // 牌力
+  const power = getDuelPower();
+  document.getElementById('profile-power').textContent = Math.floor(power);
+
+  // 决斗战绩
+  const total = gameState.wins + gameState.losses;
+  document.getElementById('profile-duels').textContent = total;
+  document.getElementById('profile-wins').textContent = gameState.wins;
+  document.getElementById('profile-losses').textContent = gameState.losses;
+  document.getElementById('profile-winrate').textContent = total > 0 ? Math.floor(gameState.wins / total * 100) + '%' : '0%';
+
+  // 主属性
+  const stats = getTotalStats();
+  document.getElementById('profile-search').textContent = stats.search || 0;
+  document.getElementById('profile-expand').textContent = stats.expand || 0;
+  document.getElementById('profile-disrupt').textContent = stats.disrupt || 0;
+  document.getElementById('profile-resist').textContent = stats.resist || 0;
+  document.getElementById('profile-suppress').textContent = stats.suppress || 0;
+
+  // 副属性
+  document.getElementById('profile-power-stat').textContent = stats.power || 0;
+  document.getElementById('profile-soul').textContent = stats.soul || 0;
+  document.getElementById('profile-luck').textContent = stats.luck || 0;
+  document.getElementById('profile-proficiency').textContent = stats.proficiency || 0;
+  document.getElementById('profile-intelligence').textContent = stats.intelligence || 0;
+
+  // 特殊属性
+  document.getElementById('profile-duel-points').textContent = gameState.duelPoints || 0;
+  document.getElementById('profile-card-points').textContent = gameState.cardPoints || 0;
+  document.getElementById('profile-collection').textContent = gameState.collection.length;
+
+  // 卡组概况
+  document.getElementById('profile-main-deck').textContent = gameState.mainDeck.length + '/60';
+  document.getElementById('profile-extra-deck').textContent = gameState.extraDeck.length + '/15';
+
+  // 系列标签
+  const archetype = getActiveArchetype();
+  document.getElementById('profile-archetype').textContent = archetype || '无';
+
+  // 称号
+  const titlesEl = document.getElementById('profile-titles');
+  if (gameState.titles && gameState.titles.length > 0) {
+    titlesEl.innerHTML = gameState.titles.map(t =>
+      `<span style="padding:4px 10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">${t}</span>`
+    ).join('');
+  } else {
+    titlesEl.innerHTML = '<span style="padding:4px 10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">新手决斗者</span>';
+  }
+
+  // 成就
+  const achEl = document.getElementById('profile-achievements');
+  if (gameState.achievements && gameState.achievements.length > 0) {
+    achEl.innerHTML = gameState.achievements.map(aid => {
+      const ach = ACHIEVEMENTS.find(x => x.id === aid);
+      return ach ? `<span style="padding:4px 10px;background:rgba(245,158,11,0.2);border:1px solid #f59e0b;border-radius:10px;color:#fbbf24;">🏆 ${ach.name}</span>` : '';
+    }).join('');
+  } else {
+    achEl.innerHTML = '<span style="color:var(--text-muted);">暂无成就</span>';
+  }
+}
+
+// ===== 个性签名系统 =====
+function openSignatureEdit() {
+  document.getElementById('signature-input').value = gameState.signature;
+  document.getElementById('signature-edit-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('signature-input').focus(), 100);
+}
+
+function closeSignatureEdit() {
+  document.getElementById('signature-edit-modal').style.display = 'none';
+}
+
+function saveSignature() {
+  const input = document.getElementById('signature-input').value.trim();
+  gameState.signature = input || '这个人很懒，什么都没留下...';
+  document.getElementById('profile-signature').textContent = gameState.signature;
+  document.getElementById('signature-edit-modal').style.display = 'none';
+  saveGame();
+  showToast('个性签名已保存');
+}
+
+// ===== 更新玩家显示 =====
+function updatePlayerDisplay() {
+  if (!gameState) return;
+  const nameEl = document.getElementById('player-name-display');
+  if (nameEl) nameEl.textContent = gameState.name;
+
+  // 称号显示（取第一个称号，没有则显示新手决斗者）
+  const titleEl = document.getElementById('player-title-display');
+  if (titleEl) {
+    const title = (gameState.titles && gameState.titles.length > 0) ? gameState.titles[0] : '新手决斗者';
+    titleEl.textContent = title;
   }
 }
 
@@ -3720,9 +5169,18 @@ function addEventLog(msg) {
 
 // ===== 视图切换 =====
 function switchView(name) {
-  document.querySelectorAll('#view-start, #view-game').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('#view-start, #view-game, #view-demo').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
 }
+
+// 演示页面导航切换
+function switchDemoView(name) {
+  document.querySelectorAll('.demo-view').forEach(v => v.style.display = 'none');
+  document.getElementById('demo-' + name).style.display = 'block';
+  document.querySelectorAll('.demo-nav').forEach(b => b.classList.toggle('active', b.dataset.demo === name));
+}
+
+let currentSubView = 'home';
 
 function switchSubView(name) {
   // 决斗进行中锁定页面，不允许切换
@@ -3730,14 +5188,30 @@ function switchSubView(name) {
     showToast('决斗进行中，无法切换页面！');
     return;
   }
+  currentSubView = name;
   document.querySelectorAll('.content-area .view').forEach(v => v.classList.remove('active'));
   document.getElementById('subview-' + name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   if (name === 'deck') renderDeckView();
   if (name === 'characters') renderCharacters();
   if (name === 'tournament') renderTournaments();
+  if (name === 'task') renderTasks();
   if (name === 'achievement') renderAchievements();
+  if (name === 'talents') {
+    console.log('切换到天赋页面，调用renderTalentGrid...');
+    renderTalentGrid();
+  }
   if (name === 'ranking') renderRanking();
+}
+
+// 刷新当前活动页面（用于操作后实时更新）
+function refreshCurrentView() {
+  if (currentSubView === 'deck') renderDeckView();
+  if (currentSubView === 'characters') renderCharacters();
+  if (currentSubView === 'tournament') renderTournaments();
+  if (currentSubView === 'task') renderTasks();
+  if (currentSubView === 'achievement') renderAchievements();
+  if (currentSubView === 'ranking') renderRanking();
 }
 
 // ===== 显示更新 =====
@@ -3751,6 +5225,8 @@ function updateAllDisplays() {
     const deckEl = document.getElementById('deck-stat-' + k);
     if (deckEl) deckEl.textContent = s[k] || 0;
   });
+  // 玩家名字和称号显示
+  updatePlayerDisplay();
   // 牌力实时计算
   const powerEl = document.getElementById('duel-power-display');
   if (powerEl) powerEl.textContent = getDuelPower();
@@ -3788,6 +5264,8 @@ function updateAllDisplays() {
     const recent = gameState.recentEvents.slice(0, 5);
     re.innerHTML = recent.map(e => `<div style="padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.05);">${e}</div>`).join('') || '<div style="color:var(--text-muted);">你的牌佬之路才刚刚开始...</div>';
   }
+  // 主页任务面板实时更新
+  renderHomeTaskPanel();
 }
 
 // ===== 地点渲染与行动 =====
@@ -3808,6 +5286,9 @@ function renderLocations() {
 }
 
 function visitLocation(loc) {
+  // 记录地点访问次数
+  if (!gameState.locationVisits) gameState.locationVisits = {};
+  gameState.locationVisits[loc.id] = (gameState.locationVisits[loc.id] || 0) + 1;
   // 数据驱动的事件系统（数据来自 EVENTS）
   runDataDrivenEvent(loc);
 }
@@ -4294,6 +5775,7 @@ function showEventModal(title, text, rewards, options) {
         if (options[idx].action) options[idx].action();
       }
       updateAllDisplays();
+      refreshCurrentView();
       saveGame();
     };
   });
@@ -4700,6 +6182,7 @@ function finishDuel() {
 
   if (won) {
     gameState.wins++;
+    gameState.winStreak = (gameState.winStreak || 0) + 1;
     if (!currentDuel.noReward) {
       const dpMult = getTalentMultiplier('duelPointMultiplier', 1);
       gameState.duelPoints += Math.round((currentDuel.mode === 'master' ? 50 : 20) * dpMult);
@@ -4735,6 +6218,7 @@ function finishDuel() {
     `;
   } else {
     gameState.losses++;
+    gameState.winStreak = 0;
     addDuelLog('你输了...', 'lose');
 
     let loseText = '不要气馁，再接再厉！';
@@ -4801,6 +6285,11 @@ function exitDuel() {
   document.getElementById('duel-arena').style.display = 'none';
   // 恢复导航
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
+  checkAchievements();
+  checkTasks();
+  updateAllDisplays();
+  refreshCurrentView();
+  saveGame();
 }
 
 // ===== 卡组管理 =====
@@ -4994,8 +6483,8 @@ function interactCharacter(c) {
   const receivedList = gameState.receivedGifts[c.id] || [];
 
   const options = [
-    { name: '聊天交流（好感+3）', action: () => { gainAffinity(c.id, 3); addEventLog(`与${c.name}聊天交流`); showToast(`${c.name} 好感度+3`); } },
-    { name: '讨论卡组（好感+5）', action: () => { gainAffinity(c.id, 5); addEventLog(`与${c.name}讨论卡组`); showToast(`${c.name} 好感度+5`); } },
+    { name: '聊天交流（好感+3）', action: () => { gainAffinity(c.id, 3); addEventLog(`与${c.name}聊天交流`); showToast(`${c.name} 好感度+3`); renderCharacters(); updateAllDisplays(); saveGame(); } },
+    { name: '讨论卡组（好感+5）', action: () => { gainAffinity(c.id, 5); addEventLog(`与${c.name}讨论卡组`); showToast(`${c.name} 好感度+5`); renderCharacters(); updateAllDisplays(); saveGame(); } },
   ];
 
   // 构建赠礼列表（兼容旧格式）
@@ -5071,12 +6560,13 @@ function interactCharacter(c) {
               break;
           }
 
-          showEventModal(c.name, `${giftDesc}\n\n${rewardText}`, null, [{name:'收下', action:()=>{}}]);
+          showEventModal(c.name, `${giftDesc}\n\n${rewardText}`, null, [{name:'收下', action:()=>{ renderCharacters(); }}]);
           addEventLog(`从${c.name}处获得赠礼：${rewardText}`);
           // 记录该赠礼已领取
           if (!gameState.receivedGifts[c.id]) gameState.receivedGifts[c.id] = [];
           if (!gameState.receivedGifts[c.id].includes(idx)) gameState.receivedGifts[c.id].push(idx);
           checkAchievements();
+          renderCharacters();
           updateAllDisplays();
           saveGame();
         }
@@ -5103,6 +6593,10 @@ function interactCharacter(c) {
           { name: '开始决斗', action: () => {
             const opponent = { name: c.name, power: charPower, difficulty: 5 };
             startDuel('master', false, opponent, (result) => {
+              if (result.won) {
+                if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
+                gameState.defeatedCharacters[c.id] = (gameState.defeatedCharacters[c.id] || 0) + 1;
+              }
               if (result.won && c.challengeReward && CARD_DB[c.challengeReward]) {
                 const rewardCard = CARD_DB[c.challengeReward];
                 addCardToCollection(c.challengeReward);
@@ -5217,6 +6711,9 @@ function joinTournament(tournamentId) {
     basePower: t.opponentBasePower || (t.difficulty * 40),
     powerGrowth: t.opponentPowerGrowth || 0.25,
   };
+
+  // 记录参赛次数
+  gameState.tournamentParticipations = (gameState.tournamentParticipations || 0) + 1;
 
   // 开始第一轮
   runTournamentRound(tournamentState);
@@ -5469,6 +6966,315 @@ function checkAchievementCondition(a) {
   }
 }
 
+// ===== 任务系统 =====
+// 获取任务进度（返回当前值和目标值）
+function getTaskProgress(task) {
+  const cond = task.condition;
+  let current = 0, target = cond.value || 1;
+  switch(cond.type) {
+    case 'visit_location':
+      current = (gameState.locationVisits && gameState.locationVisits[cond.target]) || 0;
+      break;
+    case 'visit_all_locations': {
+      const total = LOCATIONS.length;
+      let visited = 0;
+      LOCATIONS.forEach(l => { if ((gameState.locationVisits && gameState.locationVisits[l.id]) > 0) visited++; });
+      current = visited; target = total;
+      break;
+    }
+    case 'collect_cards':
+      current = gameState.collection.length;
+      break;
+    case 'main_deck_size':
+      current = getMainDeckCount();
+      break;
+    case 'duel_wins':
+      current = gameState.wins || 0;
+      break;
+    case 'quick_duel':
+      current = (gameState.duelCount || 0) - (gameState.masterDuelCount || 0);
+      break;
+    case 'master_duel':
+      current = gameState.masterDuelCount || 0;
+      break;
+    case 'tournament_win':
+      current = (gameState.tournamentWins || []).filter(tid => {
+        const t = TOURNAMENTS.find(x => x.id === tid);
+        return t && t.tier === cond.target;
+      }).length;
+      break;
+    case 'tournament_participate':
+      current = gameState.tournamentParticipations || 0;
+      break;
+    case 'affinity':
+      current = (gameState.affinity && gameState.affinity[cond.target]) || 0;
+      break;
+    case 'age':
+      current = gameState.age;
+      break;
+    case 'specific_card':
+      current = gameState.collection.includes(cond.target) ? 1 : 0;
+      break;
+    case 'card_rarity':
+      current = gameState.collection.filter(id => CARD_DB[id] && CARD_DB[id].rarity === cond.target).length;
+      break;
+    case 'power':
+      current = getDuelPower();
+      break;
+    case 'complete_task':
+      current = (gameState.completedTasks && gameState.completedTasks.includes(cond.target)) ? 1 : 0;
+      break;
+    case 'defeat_character':
+      current = (gameState.defeatedCharacters && gameState.defeatedCharacters[cond.target]) || 0;
+      break;
+    case 'archetype_deck': {
+      const arch = getActiveArchetype();
+      current = arch ? 1 : 0;
+      break;
+    }
+    case 'win_streak':
+      current = gameState.winStreak || 0;
+      break;
+    case 'all_card_types': {
+      const types = ['monster', 'spell', 'trap', 'extra'];
+      let ok = true;
+      types.forEach(t => {
+        const count = gameState.collection.filter(id => CARD_DB[id] && CARD_DB[id].type === t).length;
+        if (count < 10) ok = false;
+      });
+      current = ok ? 1 : 0;
+      target = 1;
+      break;
+    }
+    default:
+      current = 0;
+  }
+  return { current, target, complete: current >= target };
+}
+
+// 检查隐藏任务是否解锁
+function isTaskUnlocked(task) {
+  if (task.type !== 'hidden' || !task.unlockCondition) return true;
+  const cond = task.unlockCondition;
+  const fakeTask = { condition: cond };
+  return getTaskProgress(fakeTask).complete;
+}
+
+// 发放任务奖励
+function grantTaskReward(task) {
+  const r = task.reward || {};
+  const rewards = [];
+  if (r.duelPoints) {
+    gameState.duelPoints = (gameState.duelPoints || 0) + r.duelPoints;
+    rewards.push(`${r.duelPoints}决斗点`);
+  }
+  if (r.cardPoints) {
+    gameState.cardPoints = (gameState.cardPoints || 0) + r.cardPoints;
+    rewards.push(`${r.cardPoints}卡点`);
+  }
+  if (r.cards && r.cards.length) {
+    r.cards.forEach(cid => {
+      if (CARD_DB[cid]) {
+        addCardToCollection(cid);
+        rewards.push(CARD_DB[cid].name);
+      }
+    });
+  }
+  if (r.stats) {
+    if (!gameState.bonusStats) gameState.bonusStats = {};
+    const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+    Object.entries(r.stats).forEach(([k, v]) => {
+      gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
+      rewards.push(`${statNames[k]||k}+${v}`);
+    });
+  }
+  if (r.title) {
+    if (!gameState.titles) gameState.titles = [];
+    if (!gameState.titles.includes(r.title)) gameState.titles.push(r.title);
+    rewards.push(`称号【${r.title}】`);
+  }
+  if (r.talent) {
+    if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+    if (!gameState.unlockedTalents.includes(r.talent)) gameState.unlockedTalents.push(r.talent);
+    const t = TALENTS.find(x => x.id === r.talent);
+    rewards.push(`天赋【${t ? t.name : r.talent}】`);
+  }
+  return rewards.join('、');
+}
+
+// 检查所有任务
+function checkTasks() {
+  if (!gameState.completedTasks) gameState.completedTasks = [];
+  if (!gameState.claimableTasks) gameState.claimableTasks = [];
+  TASKS.forEach(task => {
+    if (gameState.completedTasks.includes(task.id)) return;
+    if (gameState.claimableTasks.includes(task.id)) return;
+    if (!isTaskUnlocked(task)) return;
+    const progress = getTaskProgress(task);
+    if (progress.complete) {
+      gameState.claimableTasks.push(task.id);
+      showToast(`任务可领取：${task.name}！`);
+      addEventLog(`任务【${task.name}】已完成，可领取奖励`);
+    }
+  });
+}
+
+// 领取任务奖励
+function claimTask(taskId) {
+  const task = TASKS.find(t => t.id === taskId);
+  if (!task) return;
+  if (!gameState.claimableTasks || !gameState.claimableTasks.includes(taskId)) return;
+
+  const rewardText = grantTaskReward(task);
+  // 从可领取列表移除，加入已完成列表
+  gameState.claimableTasks = gameState.claimableTasks.filter(id => id !== taskId);
+  if (!gameState.completedTasks) gameState.completedTasks = [];
+  if (!gameState.completedTasks.includes(taskId)) gameState.completedTasks.push(taskId);
+
+  showEventModal('任务完成', `【${task.name}】\n\n${task.desc}\n\n获得奖励：${rewardText}`, null, [{ name: '收下', action: () => { renderTasks(); } }]);
+  addEventLog(`领取任务【${task.name}】奖励：${rewardText}`);
+  checkAchievements();
+  updateAllDisplays();
+  renderTasks();
+  saveGame();
+}
+
+// 渲染任务页面
+function renderTasks() {
+  const container = document.getElementById('task-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const typeNames = { guide: '引导任务', main: '主线任务', side: '支线任务', hidden: '隐藏任务' };
+  const typeColors = { guide: '#3b82f6', main: '#f59e0b', side: '#10b981', hidden: '#8b5cf6' };
+  const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+
+  ['guide', 'main', 'side', 'hidden'].forEach(type => {
+    const tasks = TASKS.filter(t => t.type === type).sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (tasks.length === 0) return;
+
+    // 分类：可领取 > 进行中 > 已完成
+    const claimable = [];
+    const active = [];
+    const completed = [];
+    tasks.forEach(task => {
+      const isCompleted = gameState.completedTasks && gameState.completedTasks.includes(task.id);
+      const isClaimable = gameState.claimableTasks && gameState.claimableTasks.includes(task.id);
+      const unlocked = isTaskUnlocked(task);
+      if (!unlocked && !isCompleted && !isClaimable) return;
+      if (isCompleted) completed.push(task);
+      else if (isClaimable) claimable.push(task);
+      else active.push(task);
+    });
+
+    const allTasks = [...claimable, ...active, ...completed];
+    if (allTasks.length === 0) return;
+
+    const section = document.createElement('div');
+    section.className = 'task-section';
+    section.innerHTML = `<div class="task-section-title" style="color:${typeColors[type]}">${typeNames[type]} <span style="font-size:10px;font-weight:normal;color:var(--text-muted);">(${claimable.length}可领取/${active.length}进行中/${completed.length}已完成)</span></div>`;
+
+    allTasks.forEach(task => {
+      const isCompleted = gameState.completedTasks && gameState.completedTasks.includes(task.id);
+      const isClaimable = gameState.claimableTasks && gameState.claimableTasks.includes(task.id);
+      const progress = getTaskProgress(task);
+      const percent = Math.min(100, Math.round((progress.current / progress.target) * 100));
+
+      const rewardText = [];
+      const r = task.reward || {};
+      if (r.duelPoints) rewardText.push(`${r.duelPoints}决斗点`);
+      if (r.cardPoints) rewardText.push(`${r.cardPoints}卡点`);
+      if (r.cards && r.cards.length) rewardText.push(r.cards.map(id => CARD_DB[id] ? CARD_DB[id].name : id).join('、'));
+      if (r.stats) rewardText.push(Object.entries(r.stats).map(([k,v]) => `${statNames[k]||k}+${v}`).join(' '));
+      if (r.title) rewardText.push(`称号【${r.title}】`);
+      if (r.talent) {
+        const t = TALENTS.find(x => x.id === r.talent);
+        rewardText.push(`天赋【${t ? t.name : r.talent}】`);
+      }
+
+      const div = document.createElement('div');
+      let statusText = '';
+      let statusClass = '';
+      if (isCompleted) { statusText = '✓ 已领取'; statusClass = 'completed'; }
+      else if (isClaimable) { statusText = '🎉 可领取'; statusClass = 'claimable'; }
+      else { statusText = `${progress.current}/${progress.target}`; }
+
+      div.className = `task-item ${statusClass}`;
+      div.innerHTML = `
+        <div class="task-header">
+          <span class="task-name">${task.name}</span>
+          <span class="task-status">${statusText}</span>
+        </div>
+        <div class="task-desc">${task.desc}</div>
+        ${task.story ? `<div class="task-story">${task.story}</div>` : ''}
+        ${!isCompleted ? `<div class="task-progress-bar"><div class="task-progress-fill" style="width:${percent}%"></div></div>` : ''}
+        <div class="task-reward">奖励：${rewardText.join('、') || '无'}</div>
+        ${isClaimable ? `<button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="claimTask('${task.id}')">领取奖励</button>` : ''}
+      `;
+      section.appendChild(div);
+    });
+
+    container.appendChild(section);
+  });
+}
+
+// 主页任务面板渲染（显示进行中的任务）
+function renderHomeTaskPanel() {
+  const panel = document.getElementById('home-task-panel');
+  if (!panel) return;
+
+  const activeTasks = [];
+  TASKS.forEach(task => {
+    if (gameState.completedTasks && gameState.completedTasks.includes(task.id)) return;
+    if (!isTaskUnlocked(task)) return;
+    const progress = getTaskProgress(task);
+    const isClaimable = gameState.claimableTasks && gameState.claimableTasks.includes(task.id);
+    activeTasks.push({ task, progress, isClaimable });
+  });
+
+  // 排序：可领取 > 引导 > 主线 > 支线 > 隐藏
+  const typeOrder = { guide: 0, main: 1, side: 2, hidden: 3 };
+  activeTasks.sort((a, b) => {
+    if (a.isClaimable !== b.isClaimable) return a.isClaimable ? -1 : 1;
+    const typeDiff = (typeOrder[a.task.type] || 9) - (typeOrder[b.task.type] || 9);
+    if (typeDiff !== 0) return typeDiff;
+    return (a.task.order || 0) - (b.task.order || 0);
+  });
+
+  if (activeTasks.length === 0) {
+    panel.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:8px;">暂无进行中的任务</div>';
+    return;
+  }
+
+  // 最多显示5个任务
+  const displayTasks = activeTasks.slice(0, 5);
+  const typeColors = { guide: '#3b82f6', main: '#f59e0b', side: '#10b981', hidden: '#8b5cf6' };
+  const typeNames = { guide: '引导', main: '主线', side: '支线', hidden: '隐藏' };
+
+  panel.innerHTML = displayTasks.map(({ task, progress, isClaimable }) => {
+    const percent = isClaimable ? 100 : Math.min(100, Math.round((progress.current / progress.target) * 100));
+    const bgColor = isClaimable ? 'rgba(212,175,55,0.08)' : 'transparent';
+    const borderColor = isClaimable ? 'rgba(212,175,55,0.3)' : 'var(--border-subtle)';
+    const nameColor = isClaimable ? 'var(--accent-gold)' : 'var(--text-primary)';
+    const statusText = isClaimable ? '🎉 可领取' : `${progress.current}/${progress.target}`;
+    const onClick = isClaimable ? `claimTask('${task.id}')` : "switchSubView('task')";
+    return `
+      <div class="home-task-item" onclick="${onClick}" style="cursor:pointer;padding:6px 8px;margin:2px 0;border:1px solid ${borderColor};border-radius:4px;background:${bgColor};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-weight:600;color:${nameColor};font-size:11px;">
+            <span style="color:${typeColors[task.type]||'#999'};font-size:9px;margin-right:3px;">[${typeNames[task.type]||task.type}]</span>
+            ${task.name}
+          </span>
+          <span style="color:${isClaimable ? 'var(--accent-gold)' : 'var(--text-muted)'};font-size:10px;font-weight:600;">${statusText}</span>
+        </div>
+        <div style="width:100%;height:3px;background:var(--bg-input);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,${isClaimable ? 'var(--accent-gold)' : typeColors[task.type]||'#3b82f6'},var(--accent-gold));transition:width 0.3s;"></div>
+        </div>
+      </div>
+    `;
+  }).join('') + (activeTasks.length > 5 ? `<div style="text-align:center;color:var(--text-muted);font-size:10px;padding-top:4px;cursor:pointer;" onclick="switchSubView('task')">还有 ${activeTasks.length - 5} 个任务，点击查看全部 →</div>` : '');
+}
+
 function checkAchievements() {
   ACHIEVEMENTS.forEach(a => {
     if (!gameState.achievements.includes(a.id) && checkAchievementCondition(a)) {
@@ -5492,6 +7298,8 @@ function checkAchievements() {
   });
   // 检查是否解锁了隐藏天赋
   checkUnlockHiddenTalents();
+  // 检查任务
+  checkTasks();
 }
 
 function renderAchievements() {
@@ -5515,7 +7323,138 @@ function renderAchievements() {
     `;
     grid.appendChild(div);
   });
+  console.log('renderAchievements完成');
 }
+
+// 切换成就/天赋标签页
+function switchAchievementTab(tab) {
+  const achievementsPanel = document.getElementById('achievements-panel');
+  const talentsPanel = document.getElementById('talents-panel');
+  const tabAchievements = document.getElementById('tab-achievements');
+  const tabTalents = document.getElementById('tab-talents');
+
+  if (!achievementsPanel || !talentsPanel) {
+    console.error('成就/天赋面板元素未找到');
+    return;
+  }
+
+  if (tab === 'achievements') {
+    achievementsPanel.classList.add('active');
+    talentsPanel.classList.remove('active');
+    if (tabAchievements) tabAchievements.className = 'btn btn-primary btn-sm';
+    if (tabTalents) tabTalents.className = 'btn btn-secondary btn-sm';
+  } else {
+    achievementsPanel.classList.remove('active');
+    talentsPanel.classList.add('active');
+    if (tabAchievements) tabAchievements.className = 'btn btn-secondary btn-sm';
+    if (tabTalents) tabTalents.className = 'btn btn-primary btn-sm';
+    console.log('切换到天赋图鉴面板，class:', talentsPanel.className);
+    // 延迟到下一帧渲染，确保面板display已生效、DOM就绪
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderTalentGrid();
+        console.log('天赋图鉴渲染完成');
+      });
+    });
+  }
+}
+
+// 渲染天赋图鉴
+function renderTalentGrid() {
+  const grid = document.getElementById('talent-codex-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (!gameState || !TALENTS || !TALENTS.length) {
+    grid.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);">暂无天赋数据</div>';
+    return;
+  }
+
+  const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+  const rarityColors = { N: '#9ca3af', R: '#3b82f6', SR: '#8b5cf6', UR: '#f59e0b' };
+
+  // 已解锁的隐藏天赋（跨存档）
+  let unlockedHidden = [];
+  try {
+    const saved = localStorage.getItem('duelist_unlocked_hidden_talents');
+    if (saved) unlockedHidden = JSON.parse(saved) || [];
+  } catch(e) { unlockedHidden = []; }
+
+  const equipped = gameState.talents || [];
+  const unlocked = gameState.unlockedTalents || [];
+
+  // 按品质排序
+  const order = { UR: 0, SR: 1, R: 2, N: 3 };
+  const sorted = [...TALENTS].sort((a, b) => (order[a.rarity] || 9) - (order[b.rarity] || 9));
+
+  sorted.forEach(t => {
+    if (!t || !t.id) return;
+
+    const isEquipped = equipped.includes(t.id);
+    const isUnlocked = unlocked.includes(t.id);
+    const isHidden = t.hidden === true;
+    const hiddenUnlocked = unlockedHidden.includes(t.id);
+    const obtained = isEquipped || isUnlocked || (isHidden && hiddenUnlocked);
+
+    // 隐藏天赋未解锁时显示为???
+    const showName = (isHidden && !hiddenUnlocked) ? '???' : (t.name || '未知天赋');
+    const showDesc = (isHidden && !hiddenUnlocked) ? '达成特定成就后解锁' : (t.desc || t.description || '暂无描述');
+    const rarity = t.rarity || 'N';
+    const rarityColor = rarityColors[rarity] || '#9ca3af';
+
+    // 属性加成
+    let effectsHtml = '';
+    if (t.effects && !isHidden) {
+      const effects = Object.entries(t.effects).filter(([k, v]) => v && v !== 0);
+      if (effects.length > 0) {
+        effectsHtml = '<div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">' + effects.map(([k, v]) => {
+          const name = statNames[k] || k;
+          return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:1px 6px;background:var(--bg-hover);border-radius:4px;">${name}${v > 0 ? '+' : ''}${v}</span>`;
+        }).join('') + '</div>';
+      }
+    }
+
+    // 特殊效果
+    let specialHtml = '';
+    if (t.specialEffect && !isHidden) {
+      specialHtml = `<div style="margin-top:6px;font-size:11px;color:#fbbf24;">✨ ${t.specialEffect}</div>`;
+    }
+    if (t.winRateBonus && !isHidden) {
+      specialHtml += `<div style="margin-top:4px;font-size:11px;color:#34d399;">⚔️ 胜率+${t.winRateBonus}%</div>`;
+    }
+
+    // 获取方式
+    let obtainText = '';
+    if (isEquipped) obtainText = '✅ 当前存档已装备';
+    else if (isUnlocked) obtainText = '✨ 已通过事件/好感度解锁';
+    else if (isHidden && hiddenUnlocked) obtainText = '🔓 隐藏天赋已解锁';
+    else if (isHidden) obtainText = '🔒 隐藏天赋 · 达成特定成就解锁';
+    else if (t.id === 'duelist_will' || t.id === 'destiny_encounter') obtainText = '📜 可通过特殊事件/好感度解锁';
+    else obtainText = '🎲 开局随机天赋池抽取';
+
+    const obtainColor = obtained ? '#fbbf24' : 'var(--text-muted)';
+
+    const div = document.createElement('div');
+    const bg = isEquipped ? 'rgba(212, 175, 55, 0.08)' : 'var(--bg-card)';
+    const border = isEquipped ? '#fbbf24' : 'var(--border-subtle)';
+    const op = obtained ? '1' : '0.55';
+    div.style.cssText = `background:${bg};border:1px solid ${border};border-radius:8px;padding:12px;opacity:${op};transition:all 0.2s;`;
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-weight:bold;font-size:14px;">${showName}</span>
+        <span style="font-size:10px;color:${rarityColor};font-weight:bold;padding:2px 6px;background:${rarityColor}22;border-radius:4px;">${rarity}</span>
+      </div>
+      <div style="font-size:12px;line-height:1.5;color:var(--text-secondary);min-height:36px;">${showDesc}</div>
+      ${effectsHtml}
+      ${specialHtml}
+      <div style="margin-top:8px;font-size:11px;color:${obtainColor};border-top:1px solid var(--border-subtle);padding-top:6px;">${obtainText}</div>
+    `;
+
+    grid.appendChild(div);
+  });
+}
+
 
 // ===== 排行榜 =====
 function renderRanking() {
@@ -5647,6 +7586,7 @@ function showCardDetail(cardId) {
         gameState.mainDeck.push(cardId);
       }
       updateUI();
+      renderDeckView();
       updateAllDisplays();
       saveGame();
       showToast(`已加入${deckName}`);
@@ -5665,6 +7605,7 @@ function showCardDetail(cardId) {
         if (idx > -1) gameState.mainDeck.splice(idx, 1);
       }
       updateUI();
+      renderDeckView();
       updateAllDisplays();
       saveGame();
       showToast(`已从${deckName}移除`);
@@ -5692,6 +7633,7 @@ function showCardDetail(cardId) {
       }
       gameState.cardPoints = (gameState.cardPoints || 0) + totalPoints;
       updateUI();
+      renderDeckView();
       updateAllDisplays();
       saveGame();
       showToast(`分解 ${extraCount} 张【${card.name}】，获得 ${totalPoints} 卡点`);
@@ -5717,13 +7659,109 @@ function closeCardDetail() {
 
 document.addEventListener('click', (e) => {
   if (e.target.id === 'card-detail-modal') closeCardDetail();
+  if (e.target.id === 'card-obtain-modal') skipAllCardObtain();
+  if (e.target.id === 'profile-modal') closeProfileModal();
+  if (e.target.id === 'signature-edit-modal') closeSignatureEdit();
+});
+
+// 个性签名点击编辑
+document.addEventListener('DOMContentLoaded', () => {
+  const sigEl = document.getElementById('profile-signature');
+  if (sigEl) {
+    sigEl.addEventListener('click', openSignatureEdit);
+  }
+  // 名字输入回车确认
+  const nameInput = document.getElementById('player-name-input');
+  if (nameInput) {
+    nameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') confirmNameInput();
+    });
+  }
+  // 签名输入回车保存
+  const sigInput = document.getElementById('signature-input');
+  if (sigInput) {
+    sigInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') saveSignature();
+    });
+  }
+});
+
+// 卡片获得弹窗按钮绑定
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('obtain-next').addEventListener('click', showNextCardObtain);
+  document.getElementById('obtain-skip-all').addEventListener('click', skipAllCardObtain);
 });
 
 // ===== 导航绑定 =====
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('牌佬模拟器脚本加载成功');
 
-  // 绑定开始界面按钮
+  // ===== 主菜单按钮绑定 =====
+  const menuNewGame = document.getElementById('menu-new-game');
+  if (menuNewGame) {
+    menuNewGame.addEventListener('click', () => {
+      document.getElementById('main-menu').style.display = 'none';
+      document.getElementById('talent-select-panel').style.display = 'block';
+      selectedTalents = [];
+      currentTalentPool = [];
+      renderTalents();
+    });
+  }
+
+  const menuContinue = document.getElementById('menu-continue');
+  if (menuContinue) {
+    menuContinue.addEventListener('click', () => {
+      if (loadGame() && gameState.week > 0) {
+        switchView('game');
+        updateAllDisplays();
+        renderLocations();
+        showToast('已恢复上次的存档');
+      } else {
+        showToast('没有可用的存档');
+      }
+    });
+  }
+
+  const menuTutorial = document.getElementById('menu-tutorial');
+  if (menuTutorial) {
+    menuTutorial.addEventListener('click', () => {
+      startTutorial();
+    });
+  }
+
+  const backToMenu = document.getElementById('back-to-menu');
+  if (backToMenu) {
+    backToMenu.addEventListener('click', () => {
+      document.getElementById('talent-select-panel').style.display = 'none';
+      document.getElementById('main-menu').style.display = 'block';
+    });
+  }
+
+  // ===== 游戏中返回主菜单按钮 =====
+  const backToMenuBtn = document.getElementById('back-to-menu-btn');
+  if (backToMenuBtn) {
+    backToMenuBtn.addEventListener('click', () => {
+      showConfirmModal(
+        '返回主菜单',
+        '确定要返回主菜单吗？当前进度将自动保存。',
+        '保存并返回',
+        '继续游戏',
+        () => {
+          saveGame();
+          switchView('start');
+          // 显示主菜单，隐藏天赋选择
+          document.getElementById('main-menu').style.display = 'block';
+          document.getElementById('talent-select-panel').style.display = 'none';
+          // 更新继续游戏按钮显示
+          updateContinueButton();
+          showToast('游戏已保存，返回主菜单');
+        }
+      );
+    });
+  }
+
+  // ===== 开始界面按钮绑定 =====
   const randomBtn = document.getElementById('random-talent-btn');
   if (randomBtn) {
     randomBtn.addEventListener('click', () => {
@@ -5760,6 +7798,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.onclick = () => switchSubView(btn.dataset.view);
   });
 
+  // 演示页面导航按钮
+  document.querySelectorAll('.demo-nav').forEach(btn => {
+    btn.onclick = () => {
+      if (btn.dataset.demo && typeof switchDemoView === 'function') {
+        switchDemoView(btn.dataset.demo);
+      }
+    };
+  });
+
   document.querySelectorAll('.deck-tab').forEach(tab => {
     tab.onclick = () => {
       currentDeckTab = tab.dataset.deckTab;
@@ -5785,18 +7832,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 检查存档
+  // 检查存档并更新继续游戏按钮
+  updateContinueButton();
   if (loadGame() && gameState.week > 0) {
-    switchView('game');
-    updateAllDisplays();
-    renderLocations();
-    showToast('已恢复上次的存档');
+    // 有存档时停留在主菜单，玩家可以选择继续或新游戏
+    console.log('检测到存档，显示主菜单');
   } else {
-    console.log('无存档，渲染天赋选择界面');
-    renderTalents();
+    console.log('无存档，显示主菜单');
   }
 });
+
+// 更新继续游戏按钮显示
+function updateContinueButton() {
+  const continueBtn = document.getElementById('menu-continue');
+  if (!continueBtn) return;
+  try {
+    const saved = localStorage.getItem('duelist_sim_save');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data && data.week > 0) {
+        continueBtn.style.display = 'block';
+        continueBtn.textContent = `📂 继续游戏（第${data.week}天 · ${data.age}岁）`;
+        return;
+      }
+    }
+  } catch(e) {}
+  continueBtn.style.display = 'none';
+}
 </script>
+
+<!-- 新手引导UI -->
+<div id="tutorial-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:rgba(0,0,0,0.35);">
+  <div id="tutorial-highlight" style="position:absolute;border:2px solid #fbbf24;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,0.35);pointer-events:none;transition:all 0.3s ease;"></div>
+  <div id="tutorial-tooltip" style="position:absolute;background:linear-gradient(135deg,#1a1a2e,#252540);border:1px solid #fbbf24;border-radius:12px;padding:20px;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span id="tutorial-step" style="font-size:11px;color:#fbbf24;font-weight:bold;">步骤 1/9</span>
+      <span id="tutorial-title" style="font-size:15px;font-weight:bold;color:#fff;">欢迎</span>
+    </div>
+    <div id="tutorial-content" style="font-size:13px;line-height:1.7;color:#d0d0e8;margin-bottom:15px;"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+      <button id="tutorial-prev" style="padding:6px 14px;background:transparent;border:1px solid #666;border-radius:6px;color:#999;cursor:pointer;font-size:12px;">上一步</button>
+      <div style="display:flex;gap:8px;">
+        <button id="tutorial-skip" style="padding:6px 14px;background:transparent;border:1px solid #666;border-radius:6px;color:#999;cursor:pointer;font-size:12px;">跳过引导</button>
+        <button id="tutorial-next" style="padding:6px 16px;background:linear-gradient(135deg,#fbbf24,#d4af37);border:none;border-radius:6px;color:#1a1a2e;cursor:pointer;font-size:12px;font-weight:bold;">下一步</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
