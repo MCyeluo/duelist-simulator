@@ -2209,7 +2209,7 @@ const TALENTS = [
   {
     "id": "social",
     "name": "社交达人",
-    "rarity": "R",
+    "rarity": "N",
     "desc": "角色好感度提升速度+50%",
     "effects": {},
     "affinityMultiplier": 1.5
@@ -2221,7 +2221,8 @@ const TALENTS = [
     "desc": "掏度+10，决斗中更容易触发关键抽卡",
     "effects": {
       "luck": 10
-    }
+    },
+    "winRateBonus": 10
   },
   {
     "id": "builder",
@@ -2263,7 +2264,7 @@ const TALENTS = [
   {
     "id": "introvert",
     "name": "社交恐惧",
-    "rarity": "N",
+    "rarity": "R",
     "desc": "角色好感度提升速度-50%，但是更容易得到卡片的认可",
     "effects": {
       "luck": 3,
@@ -2272,7 +2273,9 @@ const TALENTS = [
     "affinityMultiplier": 0.5,
     "exclusive": [
       "social"
-    ]
+    ],
+    "pickupRarityBonus": 1,
+    "pickupBonus": 2
   },
   {
     "id": "clumsy",
@@ -2345,7 +2348,8 @@ const TALENTS = [
     },
     "battleEventBonus": 30,
     "luckEventBonus": 20,
-    "hiddenEventBonus": 50
+    "hiddenEventBonus": 50,
+    "winRateBonus": 20
   },
   {
     "id": "card_shark",
@@ -2358,7 +2362,8 @@ const TALENTS = [
     "winRateBonus": 30,
     "tournamentCheatRisk": true,
     "tournamentCheatBaseRate": 0,
-    "tournamentCheatIncreaseRate": 1
+    "tournamentCheatIncreaseRate": 1,
+    "hiddenEventBonus": 0
   },
   {
     "id": "duelist_will",
@@ -2379,7 +2384,8 @@ const TALENTS = [
     "unlockAffinity": {
       "characterId": "yugi",
       "level": 30
-    }
+    },
+    "hiddenEventBonus": 20
   },
   {
     "id": "destiny_encounter",
@@ -2429,7 +2435,7 @@ const TALENTS = [
     "id": "duel_king",
     "name": "决斗王者",
     "rarity": "UR",
-    "desc": "【隐藏天赋】身经百战的决斗王者，全主属性+5，强度+10，胜率+10%",
+    "desc": "【隐藏天赋】身经百战的决斗王者，全主属性+5，强度+10,所有卡片属性+50%，胜率+10%",
     "effects": {
       "search": 5,
       "expand": 5,
@@ -2442,7 +2448,8 @@ const TALENTS = [
     "bonus": {},
     "winRateBonus": 10,
     "hidden": true,
-    "unlockAchievement": "duel_king"
+    "unlockAchievement": "duel_king",
+    "cardAttributeMultiplier": 1.5
   },
   {
     "id": "collector_master",
@@ -3109,7 +3116,7 @@ const ACHIEVEMENTS = [
       "value": 40
     },
     "bonus": {
-      "power": 3,
+      "power": 5,
       "all": 0
     },
     "unlocked": false
@@ -3123,7 +3130,7 @@ const ACHIEVEMENTS = [
       "value": 1
     },
     "bonus": {
-      "expand": 2
+      "expand": 3
     },
     "unlocked": false
   },
@@ -3136,7 +3143,9 @@ const ACHIEVEMENTS = [
       "value": 10
     },
     "bonus": {
-      "suppress": 3
+      "suppress": 5,
+      "proficiency": 5,
+      "intelligence": 0
     },
     "unlocked": false
   },
@@ -3149,7 +3158,9 @@ const ACHIEVEMENTS = [
       "value": 50
     },
     "bonus": {
-      "disrupt": 5
+      "disrupt": 0,
+      "intelligence": 5,
+      "proficiency": 5
     },
     "unlocked": false
   },
@@ -3162,7 +3173,8 @@ const ACHIEVEMENTS = [
       "value": 5
     },
     "bonus": {
-      "search": 3
+      "search": 5,
+      "intelligence": 5
     },
     "unlocked": false
   },
@@ -3175,7 +3187,9 @@ const ACHIEVEMENTS = [
       "value": 100
     },
     "bonus": {
-      "resist": 3
+      "resist": 0,
+      "all": 5,
+      "intelligence": 5
     },
     "unlocked": false
   },
@@ -3189,7 +3203,9 @@ const ACHIEVEMENTS = [
       "threshold": 50
     },
     "bonus": {
-      "luck": 5
+      "luck": 0,
+      "intelligence": 5,
+      "soul": 5
     },
     "unlocked": false
   },
@@ -3215,7 +3231,8 @@ const ACHIEVEMENTS = [
       "cardId": "m001"
     },
     "bonus": {
-      "soul": 5
+      "soul": 5,
+      "suppress": 5
     },
     "unlocked": false
   },
@@ -3228,7 +3245,8 @@ const ACHIEVEMENTS = [
       "cardId": "m002"
     },
     "bonus": {
-      "search": 5
+      "search": 5,
+      "soul": 5
     },
     "unlocked": false
   },
@@ -3241,7 +3259,7 @@ const ACHIEVEMENTS = [
       "value": 365
     },
     "bonus": {
-      "all": 3
+      "all": 10
     },
     "unlocked": false
   },
@@ -3255,9 +3273,10 @@ const ACHIEVEMENTS = [
       "target": "武藤游戏"
     },
     "bonus": {
-      "all": 5,
+      "all": 10,
       "intelligence": 0,
-      "luck": 10
+      "luck": 10,
+      "soul": 10
     }
   },
   {
@@ -3281,185 +3300,557 @@ const ACHIEVEMENTS = [
 
 // ===== 任务定义 =====
 const TASKS = [
-  // ===== 引导任务 =====
   {
-    id: 'guide_001', name: '初入童实野', type: 'guide', order: 1,
-    desc: '前往龟游戏屋，开启你的决斗者之旅。',
-    story: '时空模拟器将你送到了过去的童实野市。你需要先找到一个落脚点，龟游戏屋似乎是个不错的选择。',
-    condition: { type: 'visit_location', target: 'kame', value: 1 },
-    reward: { duelPoints: 50, stats: { intelligence: 2 } }
+    "id": "guide_001",
+    "name": "初入童实野",
+    "type": "guide",
+    "order": 1,
+    "desc": "前往龟游戏屋，开启你的决斗者之旅。",
+    "story": "时空模拟器将你送到了过去的童实野市。你需要先找到一个落脚点，龟游戏屋似乎是个不错的选择。",
+    "condition": {
+      "type": "visit_location",
+      "target": "kame",
+      "value": 1
+    },
+    "reward": {
+      "duelPoints": 50,
+      "stats": {
+        "intelligence": 2
+      }
+    }
   },
   {
-    id: 'guide_002', name: '卡组的基础', type: 'guide', order: 2,
-    desc: '收集至少10张卡片，组建你的第一副卡组。',
-    story: '没有卡组的决斗者不是合格的决斗者。在卡店购买卡包，收集你的第一批卡片吧。',
-    condition: { type: 'collect_cards', value: 10 },
-    reward: { duelPoints: 100, cards: ['m010'] }
+    "id": "guide_002",
+    "name": "卡组的基础",
+    "type": "guide",
+    "order": 2,
+    "desc": "收集至少10张卡片，组建你的第一副卡组。",
+    "story": "没有卡组的决斗者不是合格的决斗者。在卡店购买卡包，收集你的第一批卡片吧。",
+    "condition": {
+      "type": "collect_cards",
+      "value": 10
+    },
+    "reward": {
+      "duelPoints": 100,
+      "cards": [
+        "m010"
+      ],
+      "stats": {
+        "intelligence": 3
+      }
+    }
   },
   {
-    id: 'guide_003', name: '初次出击', type: 'guide', order: 3,
-    desc: '主卡组达到20张，进行你的第一次快速决斗。',
-    story: '卡组已经初具规模，是时候检验一下实力了。前往决斗场进行快速决斗！',
-    condition: { type: 'quick_duel', value: 1 },
-    reward: { duelPoints: 150, stats: { proficiency: 3 } }
+    "id": "guide_003",
+    "name": "初次出击",
+    "type": "guide",
+    "order": 3,
+    "desc": "主卡组达到20张，进行你的第一次快速决斗。",
+    "story": "卡组已经初具规模，是时候检验一下实力了。前往决斗场进行快速决斗！",
+    "condition": {
+      "type": "quick_duel",
+      "value": 1
+    },
+    "reward": {
+      "duelPoints": 150,
+      "stats": {
+        "proficiency": 3
+      }
+    }
   },
   {
-    id: 'guide_004', name: '大师之路', type: 'guide', order: 4,
-    desc: '主卡组达到40张，额外卡组达到5张，完成一次大师决斗。',
-    story: '快速决斗只是热身，真正的决斗者需要在大师决斗中证明自己。',
-    condition: { type: 'master_duel', value: 1 },
-    reward: { duelPoints: 300, cardPoints: 20, stats: { intelligence: 5 } }
+    "id": "guide_004",
+    "name": "大师之路",
+    "type": "guide",
+    "order": 4,
+    "desc": "主卡组达到40张，额外卡组达到5张，完成一次大师决斗。",
+    "story": "快速决斗只是热身，真正的决斗者需要在大师决斗中证明自己。",
+    "condition": {
+      "type": "master_duel",
+      "value": 1
+    },
+    "reward": {
+      "duelPoints": 300,
+      "cardPoints": 20,
+      "stats": {
+        "intelligence": 5,
+        "proficiency": 5
+      }
+    }
   },
   {
-    id: 'guide_005', name: '社交达人', type: 'guide', order: 5,
-    desc: '与武藤游戏的好感度达到20。',
-    story: '在这个城市，人脉也是实力的一部分。与传说中的决斗者武藤游戏建立联系吧。',
-    condition: { type: 'affinity', target: 'yugi', value: 20 },
-    reward: { duelPoints: 100, stats: { soul: 5 } }
+    "id": "guide_005",
+    "name": "社交达人",
+    "type": "guide",
+    "order": 5,
+    "desc": "与武藤游戏的好感度达到20。",
+    "story": "在这个城市，人脉也是实力的一部分。与传说中的决斗者武藤游戏建立联系吧。",
+    "condition": {
+      "type": "affinity",
+      "target": "yugi",
+      "value": 20
+    },
+    "reward": {
+      "duelPoints": 100,
+      "stats": {
+        "soul": 5
+      }
+    }
   },
   {
-    id: 'guide_006', name: '初尝胜果', type: 'guide', order: 6,
-    desc: '累计获得5场决斗胜利。',
-    story: '胜利是决斗者最好的证明。继续磨练你的技术，赢得更多的决斗吧！',
-    condition: { type: 'duel_wins', value: 5 },
-    reward: { duelPoints: 200, cards: ['m015'] }
+    "id": "guide_006",
+    "name": "初尝胜果",
+    "type": "guide",
+    "order": 6,
+    "desc": "累计获得5场决斗胜利。",
+    "story": "胜利是决斗者最好的证明。继续磨练你的技术，赢得更多的决斗吧！",
+    "condition": {
+      "type": "duel_wins",
+      "value": 5
+    },
+    "reward": {
+      "duelPoints": 200,
+      "cards": [
+        "m015"
+      ],
+      "stats": {
+        "proficiency": 5,
+        "suppress": 5
+      }
+    }
   },
   {
-    id: 'guide_007', name: '赛事参与', type: 'guide', order: 7,
-    desc: '参加一次卡店比赛。',
-    story: '单打独斗的决斗是不完整的。参加卡店比赛，与更多决斗者交流吧。',
-    condition: { type: 'tournament_participate', value: 1 },
-    reward: { duelPoints: 150, stats: { proficiency: 5 } }
+    "id": "guide_007",
+    "name": "赛事参与",
+    "type": "guide",
+    "order": 7,
+    "desc": "参加一次卡店比赛。",
+    "story": "单打独斗的决斗是不完整的。参加卡店比赛，与更多决斗者交流吧。",
+    "reward": {
+      "duelPoints": 150,
+      "stats": {
+        "proficiency": 5,
+        "intelligence": 8
+      }
+    },
+    "conditions": [
+      {
+        "type": "tournament_participate",
+        "value": 1
+      }
+    ]
   },
   {
-    id: 'guide_008', name: '引导完成', type: 'guide', order: 8,
-    desc: '完成所有引导任务，成为一名合格的决斗者。',
-    story: '你已经掌握了决斗者的基本技能。接下来，去追寻更高的目标吧！',
-    condition: { type: 'complete_task', target: 'guide_007', value: 1 },
-    reward: { duelPoints: 500, cards: ['m020'], title: '时空旅人' }
-  },
-
-  // ===== 主线任务 =====
-  {
-    id: 'main_001', name: '时空的涟漪', type: 'main', order: 1,
-    desc: '牌力达到500，引起某些存在的注意。',
-    story: '你的到来已经改变了这个时代的走向。随着实力的提升，你感受到了一股来自未来的视线...',
-    condition: { type: 'power', value: 500 },
-    reward: { duelPoints: 300, stats: { soul: 10 } }
-  },
-  {
-    id: 'main_002', name: '传说的碎片', type: 'main', order: 2,
-    desc: '收集3张UR稀有度的卡片。',
-    story: '未来的记忆中，有几张卡片在世界毁灭时发出了耀眼的光芒。找到它们，也许能揭开真相的一角。',
-    condition: { type: 'card_rarity', target: 'UR', value: 3 },
-    reward: { duelPoints: 500, cardPoints: 30 }
-  },
-  {
-    id: 'main_003', name: '王者的资质', type: 'main', order: 3,
-    desc: '赢得一场中级以上卡店比赛。',
-    story: '要成为决斗王，就必须在正式比赛中证明自己。中级比赛的冠军，是你迈向顶点的第一步。',
-    condition: { type: 'tournament_win', target: '中级', value: 1 },
-    reward: { duelPoints: 800, cards: ['m025'], stats: { power: 10 } }
-  },
-  {
-    id: 'main_004', name: '命运的相遇', type: 'main', order: 4,
-    desc: '与武藤游戏的好感度达到60。',
-    story: '武藤游戏身上有着与你相似的时空波动。也许他知道些什么...深入了解这个少年吧。',
-    condition: { type: 'affinity', target: 'yugi', value: 60 },
-    reward: { duelPoints: 500, stats: { soul: 15, luck: 10 } }
+    "id": "guide_008",
+    "name": "引导完成",
+    "type": "guide",
+    "order": 8,
+    "desc": "完成所有引导任务，成为一名合格的决斗者。",
+    "story": "你已经掌握了决斗者的基本技能。接下来，去追寻更高的目标吧！",
+    "reward": {
+      "duelPoints": 500,
+      "cards": [
+        "m015"
+      ],
+      "title": "时空旅人",
+      "stats": {
+        "search": 5,
+        "expand": 5,
+        "disrupt": 5,
+        "resist": 5,
+        "suppress": 5,
+        "intelligence": 5,
+        "proficiency": 5,
+        "luck": 5,
+        "soul": 5,
+        "power": 5
+      },
+      "cardPoints": 10
+    },
+    "conditions": [
+      {
+        "type": "complete_task",
+        "target": "guide_007",
+        "value": 1
+      }
+    ]
   },
   {
-    id: 'main_005', name: '过去与未来', type: 'main', order: 5,
-    desc: '年龄达到20岁，牌力达到2000。',
-    story: '两年的时光转瞬即逝。你在这个时代留下了自己的足迹，但未来毁灭的真相依然笼罩在迷雾中...',
-    condition: { type: 'age', value: 20 },
-    reward: { duelPoints: 1000, cardPoints: 50, stats: { intelligence: 15 } }
+    "id": "main_001",
+    "name": "时空的涟漪",
+    "type": "main",
+    "order": 1,
+    "desc": "牌力达到1000，引起某些存在的注意。",
+    "story": "你的到来已经改变了这个时代的走向。随着实力的提升，你感受到了一股来自未来的视线...",
+    "reward": {
+      "duelPoints": 300,
+      "stats": {
+        "soul": 10
+      }
+    },
+    "conditions": [
+      {
+        "type": "power",
+        "value": 1000
+      }
+    ]
   },
   {
-    id: 'main_006', name: '决斗王的挑战', type: 'main', order: 6,
-    desc: '在挑战中击败武藤游戏。',
-    story: '是时候了。与传说中的决斗王进行一场宿命的对决。这场决斗的结果，也许会改变两个时代的命运。',
-    condition: { type: 'defeat_character', target: 'yugi', value: 1 },
-    reward: { duelPoints: 2000, cards: ['m002'], title: '超越王者之人' }
+    "id": "main_002",
+    "name": "传说的碎片",
+    "type": "main",
+    "order": 2,
+    "desc": "收集5张UR稀有度的卡片。",
+    "story": "未来的记忆中，有几张卡片在世界毁灭时发出了耀眼的光芒。找到它们，也许能揭开真相的一角。",
+    "reward": {
+      "duelPoints": 1500,
+      "cardPoints": 30
+    },
+    "conditions": [
+      {
+        "type": "card_rarity",
+        "target": "UR",
+        "value": 5
+      }
+    ]
   },
   {
-    id: 'main_007', name: '真相的边缘', type: 'main', order: 7,
-    desc: '收集5张神之卡或传说级卡片，牌力达到5000。',
-    story: '你终于触碰到了真相的边缘。世界毁灭的原因，与这些传说中的卡片有着千丝万缕的联系...',
-    condition: { type: 'power', value: 5000 },
-    reward: { duelPoints: 3000, cardPoints: 100, title: '时空观测者' }
-  },
-
-  // ===== 支线任务（地图探索） =====
-  {
-    id: 'side_001', name: '城市漫步者', type: 'side', order: 1,
-    desc: '访问童实野市所有地点各一次。',
-    story: '了解这座城市的每一个角落，也许能发现隐藏在日常中的线索。',
-    condition: { type: 'visit_all_locations', value: 1 },
-    reward: { duelPoints: 200, stats: { intelligence: 5 } }
-  },
-  {
-    id: 'side_002', name: '卡店常客', type: 'side', order: 2,
-    desc: '在卡店购买卡包10次。',
-    story: '卡店老板似乎认识很多人。多去几次，也许能听到一些有趣的传闻。',
-    condition: { type: 'visit_location', target: 'cardshop', value: 10 },
-    reward: { duelPoints: 150, cards: ['m012'] }
-  },
-  {
-    id: 'side_003', name: '公园的秘密', type: 'side', order: 3,
-    desc: '在中央公园休息5次。',
-    story: '中央公园的长椅上，总是能遇到各种各样的人。也许某个人会告诉你一些不为人知的故事。',
-    condition: { type: 'visit_location', target: 'park', value: 5 },
-    reward: { duelPoints: 100, stats: { soul: 5 } }
+    "id": "main_003",
+    "name": "王者的资质",
+    "type": "main",
+    "order": 3,
+    "desc": "赢得一场中级以上卡店比赛。",
+    "story": "要成为决斗王，就必须在正式比赛中证明自己。中级比赛的冠军，是你迈向顶点的第一步。",
+    "reward": {
+      "duelPoints": 1800,
+      "cards": [
+        "e009"
+      ],
+      "stats": {
+        "power": 10
+      }
+    },
+    "conditions": [
+      {
+        "type": "tournament_win",
+        "target": "中级",
+        "value": 1
+      }
+    ]
   },
   {
-    id: 'side_004', name: '海马集团', type: 'side', order: 4,
-    desc: '访问海马公司5次，与海马濑人好感度达到30。',
-    story: '海马集团掌握着这个时代最先进的技术。也许他们的研究中，有关于时空的线索。',
-    condition: { type: 'affinity', target: 'kaiba', value: 30 },
-    reward: { duelPoints: 300, stats: { intelligence: 10 } }
+    "id": "main_004",
+    "name": "命运的相遇",
+    "type": "main",
+    "order": 4,
+    "desc": "与武藤游戏的好感度达到60。",
+    "story": "武藤游戏身上有着与你相似的时空波动。也许他知道些什么...深入了解这个少年吧。",
+    "reward": {
+      "duelPoints": 500,
+      "stats": {
+        "soul": 15,
+        "luck": 10
+      }
+    },
+    "conditions": [
+      {
+        "type": "affinity",
+        "target": "yugi",
+        "value": 60
+      }
+    ]
   },
   {
-    id: 'side_005', name: '友情的羁绊', type: 'side', order: 5,
-    desc: '与城之内克也好感度达到50。',
-    story: '城之内是个热血的决斗者，与他成为朋友，你会感受到真正的友情。',
-    condition: { type: 'affinity', target: 'jonouchi', value: 50 },
-    reward: { duelPoints: 200, cards: ['e003'], stats: { luck: 10 } }
-  },
-
-  // ===== 隐藏任务 =====
-  {
-    id: 'hidden_001', name: '时空的悖论', type: 'hidden', order: 1,
-    desc: '在20岁前牌力达到3000。',
-    story: '你改变了太多的历史，时空开始出现不稳定的迹象...这究竟是好事还是坏事？',
-    condition: { type: 'power', value: 3000 },
-    unlockCondition: { type: 'age', value: 19 },
-    reward: { duelPoints: 1500, cardPoints: 80, title: '时空悖论者' }
-  },
-  {
-    id: 'hidden_002', name: '卡组的灵魂', type: 'hidden', order: 2,
-    desc: '拥有15张以上同一系列卡片，形成系列卡组。',
-    story: '当你与卡组的羁绊达到一定程度时，你会听到卡片的声音...它们在诉说着什么？',
-    condition: { type: 'archetype_deck', value: 1 },
-    unlockCondition: { type: 'collect_cards', value: 30 },
-    reward: { duelPoints: 800, stats: { soul: 20, proficiency: 10 } }
-  },
-  {
-    id: 'hidden_003', name: '不败传说', type: 'hidden', order: 3,
-    desc: '连续获得10场决斗胜利。',
-    story: '十连胜！你的名字开始在决斗者之间流传。有人说，你像是从未来来的传说...',
-    condition: { type: 'win_streak', value: 10 },
-    unlockCondition: { type: 'duel_wins', value: 5 },
-    reward: { duelPoints: 1200, title: '不败的决斗者' }
+    "id": "main_005",
+    "name": "过去与未来",
+    "type": "main",
+    "order": 5,
+    "desc": "年龄达到20岁，牌力达到2000。",
+    "story": "两年的时光转瞬即逝。你在这个时代留下了自己的足迹，但未来毁灭的真相依然笼罩在迷雾中...",
+    "reward": {
+      "duelPoints": 2000,
+      "cardPoints": 50,
+      "stats": {
+        "intelligence": 15
+      }
+    },
+    "conditions": [
+      {
+        "type": "age",
+        "value": 20
+      },
+      {
+        "type": "power",
+        "value": 2000
+      }
+    ]
   },
   {
-    id: 'hidden_004', name: '未来的记忆', type: 'hidden', order: 4,
-    desc: '收集所有类型的卡片（怪兽、魔法、陷阱、额外）各10张以上。',
-    story: '模糊的记忆碎片开始拼凑起来...未来毁灭的那一天，所有类型的卡片都在发光...',
-    condition: { type: 'all_card_types', value: 1 },
-    unlockCondition: { type: 'collect_cards', value: 40 },
-    reward: { duelPoints: 1000, cardPoints: 50, stats: { intelligence: 20 } }
+    "id": "main_006",
+    "name": "决斗王的挑战",
+    "type": "main",
+    "order": 6,
+    "desc": "在挑战中击败武藤游戏。",
+    "story": "是时候了。与传说中的决斗王进行一场宿命的对决。这场决斗的结果，也许会改变两个时代的命运。",
+    "reward": {
+      "duelPoints": 20000,
+      "cards": [
+        "m029"
+      ],
+      "title": "超越王者之人",
+      "cardPoints": 20,
+      "stats": {
+        "soul": 10
+      }
+    },
+    "conditions": [
+      {
+        "type": "defeat_character",
+        "target": "yugi",
+        "value": 1
+      }
+    ]
   },
+  {
+    "id": "main_007",
+    "name": "真相的边缘",
+    "type": "main",
+    "order": 7,
+    "desc": "收集5张神之卡或传说级卡片，牌力达到5000。",
+    "story": "你终于触碰到了真相的边缘。世界毁灭的原因，与这些传说中的卡片有着千丝万缕的联系...",
+    "condition": {
+      "type": "power",
+      "value": 5000
+    },
+    "reward": {
+      "duelPoints": 3000,
+      "cardPoints": 100,
+      "title": "时空观测者"
+    }
+  },
+  {
+    "id": "side_001",
+    "name": "城市漫步者",
+    "type": "side",
+    "order": 1,
+    "desc": "访问童实野市所有地点各一次。",
+    "story": "了解这座城市的每一个角落，也许能发现隐藏在日常中的线索。",
+    "reward": {
+      "duelPoints": 500,
+      "stats": {
+        "intelligence": 5
+      }
+    },
+    "conditions": [
+      {
+        "type": "visit_all_locations",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "side_002",
+    "name": "卡店常客",
+    "type": "side",
+    "order": 2,
+    "desc": "在卡店购买卡包10次。",
+    "story": "卡店老板似乎认识很多人。多去几次，也许能听到一些有趣的传闻。",
+    "condition": {
+      "type": "visit_location",
+      "target": "cardshop",
+      "value": 10
+    },
+    "reward": {
+      "duelPoints": 800,
+      "cards": [
+        "m012"
+      ]
+    }
+  },
+  {
+    "id": "side_003",
+    "name": "公园的秘密",
+    "type": "side",
+    "order": 3,
+    "desc": "在中央公园休息5次。",
+    "story": "中央公园的长椅上，总是能遇到各种各样的人。也许某个人会告诉你一些不为人知的故事。",
+    "reward": {
+      "duelPoints": 1000,
+      "stats": {
+        "soul": 5
+      }
+    },
+    "conditions": [
+      {
+        "type": "visit_location",
+        "target": "park",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "side_004",
+    "name": "海马集团",
+    "type": "side",
+    "order": 4,
+    "desc": "访问海马公司5次，与海马濑人好感度达到30。",
+    "story": "海马集团掌握着这个时代最先进的技术。也许他们的研究中，有关于时空的线索。",
+    "reward": {
+      "duelPoints": 0,
+      "stats": {
+        "intelligence": 5
+      },
+      "cardPoints": 20
+    },
+    "conditions": [
+      {
+        "type": "affinity",
+        "target": "kaiba",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "side_005",
+    "name": "友情的羁绊",
+    "type": "side",
+    "order": 5,
+    "desc": "与城之内克也好感度达到50。",
+    "story": "城之内是个热血的决斗者，与他成为朋友，你会感受到真正的友情。",
+    "reward": {
+      "duelPoints": 0,
+      "cards": [
+        "e028"
+      ],
+      "stats": {
+        "luck": 10
+      },
+      "cardPoints": 10
+    },
+    "conditions": [
+      {
+        "type": "affinity",
+        "target": "jonouchi",
+        "value": 50
+      }
+    ]
+  },
+  {
+    "id": "hidden_001",
+    "name": "时空的悖论",
+    "type": "hidden",
+    "order": 1,
+    "desc": "在20岁前牌力达到3000。",
+    "story": "你改变了太多的历史，时空开始出现不稳定的迹象...这究竟是好事还是坏事？",
+    "reward": {
+      "duelPoints": 0,
+      "cardPoints": 80,
+      "title": "时空悖论者"
+    },
+    "conditions": [
+      {
+        "type": "power",
+        "value": 3000
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "age",
+        "value": 20,
+        "operator": "<="
+      },
+      {
+        "type": "power",
+        "value": 1500
+      }
+    ]
+  },
+  {
+    "id": "hidden_002",
+    "name": "卡组的灵魂",
+    "type": "hidden",
+    "order": 2,
+    "desc": "拥有15张以上同一系列卡片，形成系列卡组。",
+    "story": "当你与卡组的羁绊达到一定程度时，你会听到卡片的声音...它们在诉说着什么？",
+    "reward": {
+      "duelPoints": 800,
+      "stats": {
+        "soul": 20,
+        "proficiency": 10
+      }
+    },
+    "conditions": [
+      {
+        "type": "archetype_deck",
+        "value": 1
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "collect_cards",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "hidden_003",
+    "name": "不败传说",
+    "type": "hidden",
+    "order": 3,
+    "desc": "连续获得100场决斗胜利。",
+    "story": "百胜王者！你的名字开始在决斗者之间流传。有人说，你像是从未来来的传说...",
+    "reward": {
+      "duelPoints": 1200,
+      "title": "不败的决斗者",
+      "stats": {
+        "proficiency": 10,
+        "luck": 10,
+        "soul": 10,
+        "power": 10,
+        "intelligence": 10
+      },
+      "cardPoints": 20
+    },
+    "conditions": [
+      {
+        "type": "win_streak",
+        "value": 100
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "duel_wins",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "hidden_004",
+    "name": "未来的记忆",
+    "type": "hidden",
+    "order": 4,
+    "desc": "收集所有类型的卡片（怪兽、魔法、陷阱、额外）各10张以上。",
+    "story": "模糊的记忆碎片开始拼凑起来...未来毁灭的那一天，所有类型的卡片都在发光...",
+    "reward": {
+      "duelPoints": 1000,
+      "cardPoints": 50,
+      "stats": {
+        "intelligence": 20
+      }
+    },
+    "conditions": [
+      {
+        "type": "all_card_types",
+        "value": 1
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "collect_cards",
+        "value": 40
+      }
+    ]
+  }
 ];
 
 // ===== 事件定义 =====
@@ -6967,10 +7358,77 @@ function checkAchievementCondition(a) {
 }
 
 // ===== 任务系统 =====
-// 获取任务进度（返回当前值和目标值）
-function getTaskProgress(task) {
-  const cond = task.condition;
+// 条件类型名称映射
+const conditionTypeNames = {
+  'visit_location': '访问指定地点',
+  'visit_all_locations': '访问所有地点',
+  'collect_cards': '收集卡片数量',
+  'main_deck_size': '主卡组数量',
+  'extra_deck_size': '额外卡组数量',
+  'duel_wins': '决斗胜利次数',
+  'duel_losses': '决斗失败次数',
+  'quick_duel': '快速决斗次数',
+  'master_duel': '大师决斗次数',
+  'tournament_win': '指定级别比赛胜利',
+  'tournament_participate': '比赛参加次数',
+  'affinity': '指定角色好感度',
+  'age': '年龄达到',
+  'week': '天数达到',
+  'specific_card': '获得指定卡片',
+  'card_rarity': '指定稀有度卡片数量',
+  'card_type': '指定类型卡片数量',
+  'card_archetype': '指定系列卡片数量',
+  'power': '牌力达到',
+  'complete_task': '完成指定任务',
+  'defeat_character': '击败指定角色次数',
+  'archetype_deck': '使用系列卡组',
+  'win_streak': '连胜次数',
+  'all_card_types': '拥有所有类型卡片',
+  'duel_points': '决斗点数量',
+  'card_points': '卡点数量',
+  'have_talent': '拥有指定天赋',
+  'have_title': '获得指定称号',
+  'unlock_achievement': '解锁指定成就'
+};
+
+// 获取任务的条件列表（兼容旧格式：单个condition自动转为数组）
+function getTaskConditions(task) {
+  if (task.conditions && Array.isArray(task.conditions)) {
+    return task.conditions;
+  }
+  if (task.condition) {
+    return [task.condition];
+  }
+  return [];
+}
+
+// 条件运算符名称映射
+const conditionOperatorNames = {
+  '>=': '大于等于',
+  '<=': '小于等于',
+  '>': '大于',
+  '<': '小于',
+  '==': '等于',
+  '!=': '不等于'
+};
+
+// 根据运算符比较两个值
+function compareCondition(current, operator, target) {
+  switch(operator) {
+    case '>': return current > target;
+    case '<': return current < target;
+    case '>=': return current >= target;
+    case '<=': return current <= target;
+    case '==': return current == target;
+    case '!=': return current != target;
+    default: return current >= target; // 默认大于等于
+  }
+}
+
+// 检查单个条件是否完成
+function checkSingleCondition(cond) {
   let current = 0, target = cond.value || 1;
+  const operator = cond.operator || '>='; // 默认大于等于
   switch(cond.type) {
     case 'visit_location':
       current = (gameState.locationVisits && gameState.locationVisits[cond.target]) || 0;
@@ -6988,8 +7446,14 @@ function getTaskProgress(task) {
     case 'main_deck_size':
       current = getMainDeckCount();
       break;
+    case 'extra_deck_size':
+      current = getExtraDeckCount();
+      break;
     case 'duel_wins':
       current = gameState.wins || 0;
+      break;
+    case 'duel_losses':
+      current = gameState.losses || 0;
       break;
     case 'quick_duel':
       current = (gameState.duelCount || 0) - (gameState.masterDuelCount || 0);
@@ -7012,17 +7476,28 @@ function getTaskProgress(task) {
     case 'age':
       current = gameState.age;
       break;
+    case 'week':
+      current = gameState.week;
+      break;
     case 'specific_card':
       current = gameState.collection.includes(cond.target) ? 1 : 0;
+      target = 1;
       break;
     case 'card_rarity':
       current = gameState.collection.filter(id => CARD_DB[id] && CARD_DB[id].rarity === cond.target).length;
+      break;
+    case 'card_type':
+      current = gameState.collection.filter(id => CARD_DB[id] && CARD_DB[id].type === cond.target).length;
+      break;
+    case 'card_archetype':
+      current = gameState.collection.filter(id => CARD_DB[id] && CARD_DB[id].archetype === cond.target).length;
       break;
     case 'power':
       current = getDuelPower();
       break;
     case 'complete_task':
       current = (gameState.completedTasks && gameState.completedTasks.includes(cond.target)) ? 1 : 0;
+      target = 1;
       break;
     case 'defeat_character':
       current = (gameState.defeatedCharacters && gameState.defeatedCharacters[cond.target]) || 0;
@@ -7030,6 +7505,7 @@ function getTaskProgress(task) {
     case 'archetype_deck': {
       const arch = getActiveArchetype();
       current = arch ? 1 : 0;
+      target = 1;
       break;
     }
     case 'win_streak':
@@ -7046,18 +7522,67 @@ function getTaskProgress(task) {
       target = 1;
       break;
     }
+    case 'duel_points':
+      current = gameState.duelPoints || 0;
+      break;
+    case 'card_points':
+      current = gameState.cardPoints || 0;
+      break;
+    case 'have_talent':
+      current = (gameState.talents && gameState.talents.includes(cond.target)) ? 1 : 0;
+      target = 1;
+      break;
+    case 'have_title':
+      current = (gameState.titles && gameState.titles.includes(cond.target)) ? 1 : 0;
+      target = 1;
+      break;
+    case 'unlock_achievement':
+      current = (gameState.achievements && gameState.achievements.includes(cond.target)) ? 1 : 0;
+      target = 1;
+      break;
     default:
       current = 0;
   }
-  return { current, target, complete: current >= target };
+  return { current, target, operator, complete: compareCondition(current, operator, target) };
 }
 
-// 检查隐藏任务是否解锁
+// 获取任务进度（支持多条件AND逻辑）
+function getTaskProgress(task) {
+  const conditions = getTaskConditions(task);
+  if (conditions.length === 0) {
+    return { current: 0, target: 1, complete: false };
+  }
+  if (conditions.length === 1) {
+    return checkSingleCondition(conditions[0]);
+  }
+  // 多条件：统计已完成的条件数
+  let completedCount = 0;
+  conditions.forEach(cond => {
+    if (checkSingleCondition(cond).complete) completedCount++;
+  });
+  return {
+    current: completedCount,
+    target: conditions.length,
+    complete: completedCount >= conditions.length,
+    multi: true,
+    details: conditions.map(c => ({ ...c, result: checkSingleCondition(c) }))
+  };
+}
+
+// 检查隐藏任务是否解锁（支持多条件）
 function isTaskUnlocked(task) {
-  if (task.type !== 'hidden' || !task.unlockCondition) return true;
-  const cond = task.unlockCondition;
-  const fakeTask = { condition: cond };
-  return getTaskProgress(fakeTask).complete;
+  if (task.type !== 'hidden') return true;
+  // 支持unlockConditions数组或单个unlockCondition
+  let conditions = [];
+  if (task.unlockConditions && Array.isArray(task.unlockConditions)) {
+    conditions = task.unlockConditions;
+  } else if (task.unlockCondition) {
+    conditions = [task.unlockCondition];
+  } else {
+    return true;
+  }
+  // 所有条件都满足才解锁
+  return conditions.every(cond => checkSingleCondition(cond).complete);
 }
 
 // 发放任务奖励
@@ -7199,6 +7724,21 @@ function renderTasks() {
       else if (isClaimable) { statusText = '🎉 可领取'; statusClass = 'claimable'; }
       else { statusText = `${progress.current}/${progress.target}`; }
 
+      // 多条件详情显示
+      let conditionsHtml = '';
+      if (progress.multi && progress.details && !isCompleted) {
+        conditionsHtml = '<div class="task-conditions" style="margin-top:8px;padding:8px;background:var(--bg-card);border-radius:6px;font-size:10px;">';
+        conditionsHtml += '<div style="font-weight:bold;color:var(--text-muted);margin-bottom:4px;">完成条件（全部满足）：</div>';
+        progress.details.forEach((d, i) => {
+          const condName = conditionTypeNames[d.type] || d.type;
+          const opName = conditionOperatorNames[d.operator] || '大于等于';
+          const targetText = d.target ? `（${opName} ${d.target}）` : '';
+          const ok = d.result.complete;
+          conditionsHtml += `<div style="padding:2px 0;color:${ok ? '#10b981' : 'var(--text-secondary)'};">${ok ? '✓' : '○'} ${condName}${targetText}：当前 ${d.result.current}</div>`;
+        });
+        conditionsHtml += '</div>';
+      }
+
       div.className = `task-item ${statusClass}`;
       div.innerHTML = `
         <div class="task-header">
@@ -7207,6 +7747,7 @@ function renderTasks() {
         </div>
         <div class="task-desc">${task.desc}</div>
         ${task.story ? `<div class="task-story">${task.story}</div>` : ''}
+        ${conditionsHtml}
         ${!isCompleted ? `<div class="task-progress-bar"><div class="task-progress-fill" style="width:${percent}%"></div></div>` : ''}
         <div class="task-reward">奖励：${rewardText.join('、') || '无'}</div>
         ${isClaimable ? `<button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="claimTask('${task.id}')">领取奖励</button>` : ''}
