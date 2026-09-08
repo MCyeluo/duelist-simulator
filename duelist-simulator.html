@@ -1358,6 +1358,8 @@ let CARD_DB = {
   m028: { id:'m028', name:'冲锋陷阵的队长', type:'monster', rarity:'SR', archetype:'战士', stats:{search:0,expand:4,disrupt:0,resist:6,suppress:2}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
   m029: { id:'m029', name:'效果遮蒙者', type:'monster', rarity:'UR', archetype:'泛用', stats:{search:0,expand:0,disrupt:8,resist:4,suppress:4}, sub:{power:8,soul:2,proficiency:0,intelligence:0} },
   m030: { id:'m030', name:'救援猫', type:'monster', rarity:'N', archetype:'救援', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  m031: { id:'m031', name:'青眼亚白龙', type:'monster', rarity:'SR', archetype:'青眼', stats:{search:2,expand:8,disrupt:0,resist:0,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  m032: { id:'m032', name:'黑魔术女孩', type:'monster', rarity:'SR', archetype:'黑魔导', stats:{search:0,expand:0,disrupt:5,resist:5,suppress:6}, sub:{power:5,soul:5,proficiency:0,intelligence:0} },
 
   // 额外卡组
   e001: { id:'e001', name:'青眼究极龙', type:'extra', rarity:'UR', archetype:'青眼', stats:{search:0,expand:0,disrupt:3,resist:3,suppress:9}, sub:{power:10,soul:10,proficiency:0,intelligence:0} },
@@ -1792,7 +1794,7 @@ const OPPONENTS = [
     "name": "卡店常客",
     "basePower": 1000,
     "variance": 300,
-    "difficulty": 3,
+    "difficulty": 2,
     "desc": "经常在卡店决斗的老手，经验丰富"
   },
   {
@@ -1800,7 +1802,7 @@ const OPPONENTS = [
     "name": "街头高手",
     "basePower": 1500,
     "variance": 300,
-    "difficulty": 4,
+    "difficulty": 3,
     "desc": "在街头决斗中成名的高手"
   },
   {
@@ -1808,7 +1810,7 @@ const OPPONENTS = [
     "name": "地下赌徒",
     "basePower": 1800,
     "variance": 180,
-    "difficulty": 4,
+    "difficulty": 3,
     "desc": "地下决斗场的常客，擅长赌卡决斗"
   },
   {
@@ -1816,7 +1818,7 @@ const OPPONENTS = [
     "name": "职业决斗者",
     "basePower": 2100,
     "variance": 800,
-    "difficulty": 5,
+    "difficulty": 3,
     "desc": "参加过职业比赛的决斗者"
   },
   {
@@ -1824,7 +1826,7 @@ const OPPONENTS = [
     "name": "顶级决斗者",
     "basePower": 4000,
     "variance": 1000,
-    "difficulty": 6,
+    "difficulty": 5,
     "desc": "决斗界的顶级强者，牌力深厚"
   },
   {
@@ -1832,7 +1834,7 @@ const OPPONENTS = [
     "name": "传说决斗者",
     "basePower": 8000,
     "variance": 2000,
-    "difficulty": 7,
+    "difficulty": 8,
     "desc": "传说中的决斗者，几乎无人能敌"
   }
 ];
@@ -1963,7 +1965,7 @@ const CHARACTERS = [
     "giftDesc": "暗游戏认可了你的实力，他把自己的王牌卡和决斗王的意志都传授给了你。",
     "canChallenge": true,
     "power": 28000,
-    "challengeReward": "m002",
+    "challengeReward": "e029",
     "challengeDesc": "与暗游戏的宿命对决，获胜可获得他的王牌卡。"
   },
   {
@@ -1989,8 +1991,8 @@ const CHARACTERS = [
     "giftDesc": "城之内把他的稀有卡和攒的卡点都送给你了，兄弟之间不用客气。",
     "canChallenge": true,
     "power": 20000,
-    "challengeReward": "m003",
-    "challengeDesc": "与城之内的友情决斗，获胜可获得真红眼黑龙。"
+    "challengeReward": "e030",
+    "challengeDesc": "与城之内的友情决斗，获胜可获得真红眼的羁绊象征。"
   },
   {
     "id": "kaiba",
@@ -2002,7 +2004,7 @@ const CHARACTERS = [
       {
         "unlockAffinity": 30,
         "type": "card",
-        "cardId": "m001",
+        "cardId": "e031",
         "desc": "海马把青眼的失败品扔给了你。"
       },
       {
@@ -2016,7 +2018,7 @@ const CHARACTERS = [
         "amount": 10
       }
     ],
-    "giftDesc": "海马用公司的最新技术帮你优化了卡组，还送了你一张青眼白龙。",
+    "giftDesc": "海马用公司的最新技术帮你优化了卡组，还送了你一张奇怪的青眼白龙。",
     "canChallenge": true,
     "power": 24000,
     "challengeReward": "m001",
@@ -2031,10 +2033,10 @@ const CHARACTERS = [
     "giftType": "duelPoints",
     "giftDuelPoints": 500,
     "giftDesc": "杏子把打工赚的钱都给你买卡包了，获得5000决斗点。",
-    "canChallenge": false,
+    "canChallenge": true,
     "power": 6000,
-    "challengeReward": null,
-    "challengeDesc": "",
+    "challengeReward": "m032",
+    "challengeDesc": "与杏子的友爱决斗，获胜可获得她的象征卡片。",
     "gifts": [
       {
         "unlockAffinity": 30,
@@ -2053,18 +2055,27 @@ const CHARACTERS = [
     "canChallenge": true,
     "power": 1800,
     "challengeReward": "m028",
-    "challengeDesc": "与本田的轻松决斗，获胜可获得他的收藏卡。"
+    "challengeDesc": "与本田的轻松决斗，获胜可获得他的收藏卡。",
+    "gifts": [
+      {
+        "unlockAffinity": 90,
+        "type": "card",
+        "desc": "得到了他家的祖传稀有卡。",
+        "cardId": "t013"
+      }
+    ],
+    "giftDesc": "为了纪念你们的友情，他把家里祖传的稀有卡送给了你。"
   },
   {
     "id": "bakura",
     "name": "獏良了",
-    "desc": "转学生，拥有千年智慧轮，暗人格是盗贼王貘良。",
+    "desc": "转学生，拥有千年智慧轮，暗人格是大邪神貘良。",
     "avatar": "獏",
     "giftCard": "m004",
     "canChallenge": true,
     "power": 18000,
-    "challengeReward": "m004",
-    "challengeDesc": "与暗貘良的黑暗决斗，获胜可获得他的亡灵卡。"
+    "challengeReward": "e009",
+    "challengeDesc": "与暗貘良的黑暗决斗，获胜可获得他意外得到的神秘卡。"
   },
   {
     "id": "otogi",
@@ -2073,7 +2084,7 @@ const CHARACTERS = [
     "avatar": "御",
     "giftCard": "m010",
     "canChallenge": true,
-    "power": 15000,
+    "power": 2000,
     "challengeReward": "m010",
     "challengeDesc": "与御伽的骰子决斗，获胜可获得他的骰子怪兽卡。"
   },
@@ -2096,8 +2107,8 @@ const CHARACTERS = [
     "giftCard": "m027",
     "canChallenge": true,
     "power": 16000,
-    "challengeReward": "m027",
-    "challengeDesc": "与羽蛾的昆虫决斗，获胜可获得他的昆虫女王。"
+    "challengeReward": "s030",
+    "challengeDesc": "与羽蛾的昆虫决斗，获胜可获得他的稀有卡。"
   },
   {
     "id": "dinosaur",
@@ -2107,8 +2118,17 @@ const CHARACTERS = [
     "giftCard": "e003",
     "canChallenge": true,
     "power": 14000,
-    "challengeReward": "e003",
-    "challengeDesc": "与龙崎的恐龙决斗，获胜可获得他的真红眼黑龙。"
+    "challengeReward": "m003",
+    "challengeDesc": "与龙崎的恐龙决斗，获胜可获得他的真红眼黑龙。",
+    "gifts": [
+      {
+        "unlockAffinity": 50,
+        "type": "card",
+        "cardId": "e028",
+        "desc": "得到了他的真红眼。"
+      }
+    ],
+    "giftDesc": "虽然不是输给那家伙的真红眼，不过我的真红眼也有了不少的变化。"
   }
 ];
 
@@ -2430,9 +2450,9 @@ const ACHIEVEMENTS = [
   {
     "id": "rich",
     "name": "卡之富翁",
-    "desc": "牌库总数达到100张",
+    "desc": "牌库不同卡片总数达到100张",
     "condition": {
-      "type": "collection_count",
+      "type": "unique_cards_count",
       "value": 100
     },
     "bonus": {
@@ -2527,7 +2547,9 @@ const ACHIEVEMENTS = [
     "desc": "成为全国冠军！",
     "condition": {
       "type": "won_tournament",
-      "value": 1
+      "value": 1,
+      "threshold": 0,
+      "target": "Country"
     },
     "bonus": {
       "proficiency": 10,
@@ -3554,7 +3576,7 @@ function randomTalents() {
 
   // 从普通天赋+已解锁的隐藏天赋+已解锁的特殊天赋中随机抽取6个不重复的
   const unlockedHidden = getUnlockedHiddenTalents();
-  const unlockedSpecial = gameState.unlockedTalents || [];
+  const unlockedSpecial = (gameState && gameState.unlockedTalents) || [];
   const availableTalents = TALENTS.filter(t => {
     if (t.hidden) return unlockedHidden.includes(t.id);
     if (t.unlockType && t.unlockType !== 'default') return unlockedSpecial.includes(t.id);
@@ -3703,6 +3725,11 @@ function switchView(name) {
 }
 
 function switchSubView(name) {
+  // 决斗进行中锁定页面，不允许切换
+  if (currentDuel && !currentDuel.finished && name !== 'duel') {
+    showToast('决斗进行中，无法切换页面！');
+    return;
+  }
   document.querySelectorAll('.content-area .view').forEach(v => v.classList.remove('active'));
   document.getElementById('subview-' + name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -4399,6 +4426,11 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   // 自动切换到决斗页面
   switchSubView('duel');
 
+  // 决斗开始，锁定导航
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.dataset.view !== 'duel') b.classList.add('locked');
+  });
+
   document.getElementById('duel-lobby').style.display = 'none';
   document.getElementById('duel-arena').style.display = 'block';
   document.getElementById('duel-player-name').textContent = '你';
@@ -4533,6 +4565,25 @@ function runDuelTurn() {
 }
 
 // ===== 战斗事件系统 =====
+// 战斗事件数据库（支持复合条件触发和可定义效果）
+const BATTLE_EVENTS = [
+  { id: 'be001', name: '关键检索', icon: '🔍', log: '你精准检索到了需要的关键卡！', weight: 10, conditions: [{ type: 'statMin', stat: 'search', value: 5 }], effect: { bonusType: 'stat', bonusStat: 'search', bonusMult: 0.8 } },
+  { id: 'be002', name: '完美展开', icon: '✨', log: '你的展开行云流水，场面瞬间建立！', weight: 8, conditions: [{ type: 'statMin', stat: 'expand', value: 8 }], effect: { bonusType: 'stat', bonusStat: 'expand', bonusMult: 1.0 } },
+  { id: 'be003', name: '有效干扰', icon: '⚡', log: '你精准打断了对方的关键操作！', weight: 8, conditions: [{ type: 'statMin', stat: 'disrupt', value: 6 }], effect: { damageType: 'stat', damageStat: 'disrupt', damageMult: 0.6 } },
+  { id: 'be004', name: '坚固防线', icon: '🛡️', log: '你的防线固若金汤，对方的攻击全部无效！', weight: 7, conditions: [{ type: 'statMin', stat: 'resist', value: 6 }], effect: { bonusType: 'stat', bonusStat: 'resist', bonusMult: 0.5 } },
+  { id: 'be005', name: '强力压制', icon: '🔥', log: '你发动了强力压制，对方场面被破坏！', weight: 7, conditions: [{ type: 'statMin', stat: 'suppress', value: 6 }], effect: { damageType: 'stat', damageStat: 'suppress', damageMult: 0.7 } },
+  { id: 'be006', name: '魂之觉醒', icon: '💫', log: '你与卡组的羁绊加深，魂之力量觉醒！', weight: 6, conditions: [{ type: 'statMin', stat: 'soul', value: 10 }], effect: { bonusType: 'fixed', bonusValue: 20, bonusMin: 0, bonusMax: 30 } },
+  { id: 'be007', name: '幸运抽卡', icon: '🍀', log: '你掏到了关键卡！运气真好！', weight: 6, conditions: [{ type: 'statMin', stat: 'luck', value: 8 }], effect: { bonusType: 'random', bonusMin: 10, bonusMax: 40 } },
+  { id: 'be008', name: '连锁爆发', icon: '💥', log: '你打出了精彩的连锁 combo！', weight: 5, conditions: [{ type: 'statMin', stat: 'proficiency', value: 8 }], effect: { bonusType: 'stat', bonusStat: 'expand', bonusMult: 1.2 } },
+  { id: 'be009', name: '情报优势', icon: '📡', log: '你预判了对方的行动，占据情报优势！', weight: 5, conditions: [{ type: 'statMin', stat: 'intelligence', value: 8 }], effect: { damageType: 'stat', damageStat: 'suppress', damageMult: 0.8 } },
+  { id: 'be010', name: '普通操作', icon: '🎴', log: '你完成了常规操作。', weight: 15, conditions: [], effect: { bonusType: 'fixed', bonusValue: 5 } },
+  // 隐藏事件（需要特定天赋或条件触发）
+  { id: 'be101', name: '背后灵指引', icon: '👻', log: '神秘的背后灵在关键时刻给了你指引！', weight: 3, conditions: [{ type: 'random', value: 0.3 }, { type: 'losing', value: true }], effect: { bonusType: 'fixed', bonusValue: 50, bonusMin: 20, bonusMax: 80 }, hidden: true },
+  { id: 'be102', name: '命运逆转', icon: '🌟', log: '命运的齿轮开始转动，你感受到了逆转的力量！', weight: 2, conditions: [{ type: 'random', value: 0.2 }, { type: 'powerDiffMin', value: 50 }], effect: { bonusType: 'fixed', bonusValue: 80, damageType: 'fixed', damageValue: 30 }, hidden: true },
+  { id: 'be103', name: '奇迹连锁', icon: '🎆', log: '不可能的连锁竟然成功了！这就是奇迹！', weight: 2, conditions: [{ type: 'random', value: 0.15 }, { type: 'turnMin', value: 5 }], effect: { bonusType: 'random', bonusMin: 50, bonusMax: 100 }, hidden: true },
+  { id: 'be104', name: '灵魂共鸣', icon: '💖', log: '你与卡组的灵魂产生了共鸣，力量喷涌而出！', weight: 2, conditions: [{ type: 'random', value: 0.2 }, { type: 'statMin', stat: 'soul', value: 15 }], effect: { bonusType: 'fixed', bonusValue: 60, bonusMin: 30, bonusMax: 90 }, hidden: true },
+];
+
 // 检查战斗事件的复合条件
 function checkBattleEventCondition(cond, stats, hiddenBonus) {
   switch(cond.type) {
@@ -4600,8 +4651,9 @@ function triggerBattleEvent(stats, callback) {
   
   if (Math.random() > triggerRate) { if (callback) callback(0, 0); return; }
 
-  // 从数据库中筛选满足所有复合条件的事件
+  // 从数据库中筛选满足所有复合条件的事件（隐藏事件只有拥有对应天赋时才可能触发）
   const validEvents = BATTLE_EVENTS.filter(e => {
+    if (e.hidden && hiddenBonus <= 0) return false;
     if (!e.conditions || e.conditions.length === 0) return true;
     return e.conditions.every(cond => checkBattleEventCondition(cond, stats, hiddenBonus));
   });
@@ -4739,12 +4791,16 @@ function finishDuel() {
   checkAchievements();
   updateAllDisplays();
   saveGame();
+  // 决斗结束，恢复导航
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
 }
 
 function exitDuel() {
   currentDuel = null;
   document.getElementById('duel-lobby').style.display = 'block';
   document.getElementById('duel-arena').style.display = 'none';
+  // 恢复导航
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
 }
 
 // ===== 卡组管理 =====
@@ -5039,8 +5095,7 @@ function interactCharacter(c) {
 
   // 角色挑战：使用角色牌力进行决斗
   if (c.canChallenge) {
-    // 将旧版power转换为新版牌力（除以15），或使用duelPower属性
-    const charPower = c.duelPower || Math.round((c.power || 1000) / 15);
+    const charPower = c.duelPower || c.power || 1000;
     options.push({
       name: `发起挑战（牌力 ${charPower}）`,
       action: () => {
@@ -5377,7 +5432,7 @@ function checkAchievementCondition(a) {
     }
     case 'received_gift': {
       const charId = cond.target || '';
-      return gameState.receivedGifts && gameState.receivedGifts.includes(charId);
+      return gameState.receivedGifts && gameState.receivedGifts[charId] && gameState.receivedGifts[charId].length > 0;
     }
     case 'tournament_wins': return gameState.tournamentWins.length >= (cond.value || 1);
     case 'won_tournament': {
