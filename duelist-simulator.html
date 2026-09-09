@@ -1490,11 +1490,11 @@ body::before {
         <div class="dev-badge" id="dev-badge" style="display:none;">DEV</div>
       </div>
       <div class="top-bar-stats">
-        <div class="top-stat search"><span>检索</span><span class="top-stat-value" id="top-search">0</span></div>
-        <div class="top-stat expand"><span>展开</span><span class="top-stat-value" id="top-expand">0</span></div>
-        <div class="top-stat disrupt"><span>干扰</span><span class="top-stat-value" id="top-disrupt">0</span></div>
-        <div class="top-stat resist"><span>抗性</span><span class="top-stat-value" id="top-resist">0</span></div>
-        <div class="top-stat suppress"><span>压制</span><span class="top-stat-value" id="top-suppress">0</span></div>
+        <div class="top-stat search" style="cursor:pointer;" onclick="openStatDetail('search')" title="点击查看详情"><span>检索</span><span class="top-stat-value" id="top-search">0</span></div>
+        <div class="top-stat expand" style="cursor:pointer;" onclick="openStatDetail('expand')" title="点击查看详情"><span>展开</span><span class="top-stat-value" id="top-expand">0</span></div>
+        <div class="top-stat disrupt" style="cursor:pointer;" onclick="openStatDetail('disrupt')" title="点击查看详情"><span>干扰</span><span class="top-stat-value" id="top-disrupt">0</span></div>
+        <div class="top-stat resist" style="cursor:pointer;" onclick="openStatDetail('resist')" title="点击查看详情"><span>抗性</span><span class="top-stat-value" id="top-resist">0</span></div>
+        <div class="top-stat suppress" style="cursor:pointer;" onclick="openStatDetail('suppress')" title="点击查看详情"><span>压制</span><span class="top-stat-value" id="top-suppress">0</span></div>
       </div>
       <div class="time-display">
         <span>第 <strong id="week-display">1</strong> 天</span>
@@ -1521,35 +1521,46 @@ body::before {
       <!-- 主页 -->
       <div id="subview-home" class="view active">
         <div class="panel" style="margin-bottom:12px;">
-          <div class="panel-title">牌力评估</div>
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>牌力评估</span>
+            <span style="font-size:10px;color:var(--text-muted);cursor:pointer;font-weight:normal;" onclick="togglePowerFormula()">📖 计算公式</span>
+          </div>
+          <div id="power-formula" style="display:none;padding:8px 12px;background:var(--bg-card);border-radius:6px;margin:0 8px 8px;font-size:10px;line-height:1.8;color:var(--text-secondary);">
+            <div style="font-weight:bold;color:#fbbf24;margin-bottom:4px;">牌力计算公式：</div>
+            <div>有效展开 = 展开 + 熟练度 × 0.5</div>
+            <div>有效干扰 = 干扰 + 熟练度 × 0.5</div>
+            <div>有效抗性 = 抗性 + 情报力 × 0.5</div>
+            <div>有效压制 = 压制 + 情报力 × 0.5</div>
+            <div style="margin-top:4px;color:#fbbf24;">牌力 = 检索×1.0 + 有效展开×1.2 + 有效干扰×1.0 + 有效抗性×0.8 + 有效压制×1.1 + 强度×2.0 + 魂度×0.5 + 掏度×1.5</div>
+          </div>
           <div style="text-align:center; padding:10px 0 6px;">
             <div style="font-size:32px; font-weight:bold; background:linear-gradient(90deg,#ffd700,#ff6b6b); -webkit-background-clip:text; -webkit-text-fill-color:transparent;" id="duel-power-display">0</div>
             <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">实时计算 · 基于当前属性和卡组</div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:0 8px 8px;">
-            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;cursor:pointer;" onclick="openStatDetail('power')" title="点击查看详情">
               <div style="font-size:9px;color:var(--text-muted);">强度</div>
               <div style="font-size:14px;font-weight:700;color:#f59e0b;" id="stat-power">0</div>
             </div>
-            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;cursor:pointer;" onclick="openStatDetail('soul')" title="点击查看详情">
               <div style="font-size:9px;color:var(--text-muted);">魂度</div>
               <div style="font-size:14px;font-weight:700;color:#ec4899;" id="stat-soul">0</div>
             </div>
-            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;cursor:pointer;" onclick="openStatDetail('luck')" title="点击查看详情">
               <div style="font-size:9px;color:var(--text-muted);">掏度</div>
               <div style="font-size:14px;font-weight:700;color:#10b981;" id="stat-luck">0</div>
             </div>
-            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;cursor:pointer;" onclick="openStatDetail('proficiency')" title="点击查看详情">
               <div style="font-size:9px;color:var(--text-muted);">熟练度</div>
               <div style="font-size:14px;font-weight:700;color:#3b82f6;" id="stat-proficiency">0</div>
             </div>
-            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;">
+            <div style="text-align:center;padding:4px 2px;background:var(--bg-card);border-radius:4px;cursor:pointer;" onclick="openStatDetail('intelligence')" title="点击查看详情">
               <div style="font-size:9px;color:var(--text-muted);">情报力</div>
               <div style="font-size:14px;font-weight:700;color:#8b5cf6;" id="stat-intelligence">0</div>
             </div>
           </div>
           <div style="font-size:9px; color:var(--text-muted); text-align:center; padding-bottom:6px;">
-            熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
+            点击属性查看详情 · 熟练度影响展开和干扰 · 情报力影响抗性和压制 · 主属性请在卡组页面查看
           </div>
         </div>
 
@@ -1631,7 +1642,7 @@ body::before {
             <!-- 由JS动态生成 -->
           </div>
           <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">
-            每级消耗 = 基础10卡点 × 当前等级，每级+1主属性
+            每级消耗固定卡点（可在开发工具中调整），每级+1主属性，主属性 = 天赋 + 成就 + 卡组 + 共鸣
           </div>
         </div>
 
@@ -1729,7 +1740,10 @@ body::before {
       <!-- 任务 -->
       <div id="subview-task" class="view">
         <div class="panel">
-          <div class="panel-title">任务系统 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（完成任务获得奖励，推进剧情）</span></div>
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>任务系统 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">（完成任务获得奖励，推进剧情）</span></span>
+            <button class="btn btn-secondary btn-sm" id="toggle-completed-tasks" style="padding:4px 10px;font-size:10px;">隐藏已完成</button>
+          </div>
           <div class="task-list" id="task-list"></div>
         </div>
       </div>
@@ -1860,10 +1874,10 @@ body::before {
       <div id="profile-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer;" title="点击更换头像（暂未开放）">🎮</div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span id="profile-name" style="font-size:18px;font-weight:bold;color:#fff;">无名决斗者</span>
-          <span id="profile-title" style="font-size:11px;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">新手决斗者</span>
+          <span id="profile-name" style="font-size:18px;font-weight:bold;color:#fff;cursor:pointer;" title="点击修改名字">无名决斗者</span>
+          <button class="btn btn-secondary btn-sm" onclick="openNameEdit()" style="padding:2px 8px;font-size:10px;">✏️ 改名</button>
+          <span id="profile-title" style="font-size:11px;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;cursor:pointer;" title="点击选择称号">新手决斗者</span>
         </div>
-        <div id="profile-signature" style="font-size:11px;color:var(--text-muted);margin-top:4px;cursor:pointer;font-style:italic;" title="点击编辑个性签名">这个人很懒，什么都没留下...</div>
       </div>
     </div>
 
@@ -2022,14 +2036,40 @@ body::before {
   </div>
 </div>
 
-<!-- 个性签名编辑弹窗 -->
-<div id="signature-edit-modal" class="modal-overlay" style="display:none;z-index:10003;">
+<!-- 称号选择弹窗 -->
+<div id="title-select-modal" class="modal-overlay" style="display:none;z-index:10004;">
+  <div class="card-detail-box" style="max-width:400px;max-height:70vh;overflow-y:auto;">
+    <div style="font-size:16px;font-weight:bold;color:#fbbf24;margin-bottom:12px;text-align:center;">🏆 选择称号</div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;text-align:center;">点击选择要显示的称号，已获得的称号可自由切换</div>
+    <div id="title-select-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeTitleSelect()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 名字编辑弹窗 -->
+<div id="name-edit-modal" class="modal-overlay" style="display:none;z-index:10005;">
   <div class="card-detail-box" style="max-width:360px;text-align:center;">
-    <div style="font-size:16px;font-weight:bold;color:#fbbf24;margin-bottom:12px;">✏️ 编辑个性签名</div>
-    <textarea id="signature-input" maxlength="50" rows="3" placeholder="输入你的个性签名（最多50字）" style="width:100%;padding:10px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;color:#fff;font-size:13px;outline:none;resize:none;margin-bottom:12px;"></textarea>
+    <div style="font-size:16px;font-weight:bold;color:#fbbf24;margin-bottom:12px;">✏️ 修改名字</div>
+    <input type="text" id="name-edit-input" maxlength="12" placeholder="输入新名字（最多12字）" style="width:100%;padding:12px;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;color:#fff;font-size:14px;text-align:center;outline:none;margin-bottom:16px;">
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-secondary" style="flex:1;" onclick="closeSignatureEdit()">取消</button>
-      <button class="btn btn-gold" style="flex:1;" onclick="saveSignature()">保存</button>
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeNameEdit()">取消</button>
+      <button class="btn btn-gold" style="flex:1;" onclick="saveNameEdit()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 属性详情弹窗 -->
+<div id="stat-detail-modal" class="modal-overlay" style="display:none;z-index:10006;">
+  <div class="card-detail-box" style="max-width:420px;max-height:75vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span id="stat-detail-title" style="font-size:16px;font-weight:bold;color:#fbbf24;">属性详情</span>
+      <button onclick="closeStatDetail()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <div id="stat-detail-content" style="font-size:12px;line-height:1.8;"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeStatDetail()">关闭</button>
     </div>
   </div>
 </div>
@@ -3954,15 +3994,24 @@ const EVENTS = {
       "name": "开卡包",
       "probability": 0.5,
       "title": "童实野卡牌店",
-      "text": "你花了一些决斗点买了一包卡，拆开后发现了一张好卡！",
+      "text": "你来到了童实野卡牌店，老板热情地向你推荐最新的卡包。单包300决斗点，十连抽3000决斗点（保底SR或以上）！",
       "effects": [],
       "log": "在卡牌店开包获得【{cardName}】",
       "options": [
         {
-          "name": "消耗300决斗点买卡",
+          "name": "单抽（300决斗点）",
           "effects": [
             {
               "type": "randomCardByRarity"
+            }
+          ]
+        },
+        {
+          "name": "十连抽（3000决斗点，保底SR）",
+          "showCondition": { "type": "duelPoints", "value": 3000 },
+          "effects": [
+            {
+              "type": "tenPackDraw"
             }
           ]
         },
@@ -3977,9 +4026,9 @@ const EVENTS = {
         }
       ],
       "cost": {
-        "duelPoints": 300
+        "duelPoints": 0
       },
-      "failText": "需要300决斗点开一次！"
+      "failText": "需要决斗点开包！"
     },
     {
       "id": "cardshop_duel",
@@ -5253,7 +5302,7 @@ function startGame() {
     tournamentParticipations: 0,
     defeatedCharacters: {},
     name: '无名决斗者',
-    signature: '这个人很懒，什么都没留下...',
+    activeTitle: '新手决斗者',
   };
   CHARACTERS.forEach(c => { gameState.affinity[c.id] = 0; });
 
@@ -5442,7 +5491,9 @@ function updateProfileModal() {
 
   // 基本信息
   document.getElementById('profile-name').textContent = gameState.name;
-  document.getElementById('profile-signature').textContent = gameState.signature;
+  document.getElementById('profile-name').onclick = openNameEdit;
+  document.getElementById('profile-title').textContent = gameState.activeTitle || '新手决斗者';
+  document.getElementById('profile-title').onclick = openTitleSelect;
   document.getElementById('profile-age').textContent = gameState.age + '岁';
   document.getElementById('profile-week').textContent = '第' + gameState.week + '天';
 
@@ -5507,24 +5558,187 @@ function updateProfileModal() {
   }
 }
 
-// ===== 个性签名系统 =====
-function openSignatureEdit() {
-  document.getElementById('signature-input').value = gameState.signature;
-  document.getElementById('signature-edit-modal').style.display = 'flex';
-  setTimeout(() => document.getElementById('signature-input').focus(), 100);
+// ===== 名字编辑系统 =====
+function openNameEdit() {
+  document.getElementById('name-edit-input').value = gameState.name;
+  document.getElementById('name-edit-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('name-edit-input').focus(), 100);
 }
 
-function closeSignatureEdit() {
-  document.getElementById('signature-edit-modal').style.display = 'none';
+function closeNameEdit() {
+  document.getElementById('name-edit-modal').style.display = 'none';
 }
 
-function saveSignature() {
-  const input = document.getElementById('signature-input').value.trim();
-  gameState.signature = input || '这个人很懒，什么都没留下...';
-  document.getElementById('profile-signature').textContent = gameState.signature;
-  document.getElementById('signature-edit-modal').style.display = 'none';
+function saveNameEdit() {
+  const input = document.getElementById('name-edit-input').value.trim();
+  if (input) {
+    gameState.name = input;
+  } else {
+    gameState.name = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+  }
+  document.getElementById('name-edit-modal').style.display = 'none';
+  updatePlayerDisplay();
+  updateProfileModal();
   saveGame();
-  showToast('个性签名已保存');
+  showToast(`名字已修改为：${gameState.name}`);
+}
+
+// ===== 称号选择系统 =====
+function openTitleSelect() {
+  const listEl = document.getElementById('title-select-list');
+  const allTitles = ['新手决斗者', ...(gameState.titles || [])];
+  // 去重
+  const uniqueTitles = [...new Set(allTitles)];
+
+  listEl.innerHTML = uniqueTitles.map(title => {
+    const isActive = gameState.activeTitle === title;
+    const isOwned = title === '新手决斗者' || (gameState.titles && gameState.titles.includes(title));
+    return `
+      <div style="padding:12px;background:var(--bg-card);border-radius:8px;border:2px solid ${isActive ? '#fbbf24' : 'var(--border-subtle)'};cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="selectTitle('${title}')">
+        <span style="font-size:13px;font-weight:${isActive ? 'bold' : 'normal'};color:${isActive ? '#fbbf24' : '#fff'};">${title}</span>
+        <span style="font-size:10px;color:${isActive ? '#fbbf24' : 'var(--text-muted)'};">${isActive ? '✓ 使用中' : (isOwned ? '已获得' : '未获得')}</span>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('title-select-modal').style.display = 'flex';
+}
+
+function closeTitleSelect() {
+  document.getElementById('title-select-modal').style.display = 'none';
+}
+
+function selectTitle(title) {
+  gameState.activeTitle = title;
+  closeTitleSelect();
+  updatePlayerDisplay();
+  updateProfileModal();
+  saveGame();
+  showToast(`已切换称号：${title}`);
+}
+
+// ===== 属性详情系统 =====
+const STAT_NAMES = {
+  search: '检索', expand: '展开', disrupt: '干扰', resist: '抗性', suppress: '压制',
+  power: '强度', soul: '魂度', luck: '掏度', proficiency: '熟练度', intelligence: '情报力'
+};
+
+const STAT_DESCRIPTIONS = {
+  search: '检索属性影响决斗中获取关键卡片的能力，检索越高越容易抽到需要的卡。',
+  expand: '展开属性影响决斗中的展开速度和场面构建能力，展开越高铺场越快。',
+  disrupt: '干扰属性影响对对手展开的破坏能力，干扰越高越容易打断对手节奏。',
+  resist: '抗性属性影响对对手干扰的抵抗能力，抗性越高越不容易被打断。',
+  suppress: '压制属性影响对对手场面的压制能力，压制越高对手越难展开。',
+  power: '强度是综合战斗力的基础，影响牌力增长和抗性强度。',
+  soul: '魂度影响决斗中幸运事件的触发概率和特殊效果。',
+  luck: '掏度影响抽卡运气，掏度越高越容易抽到好卡。',
+  proficiency: '熟练度影响展开和干扰能力，熟练度高更容易打出精彩连锁。',
+  intelligence: '情报力影响抗性和压制能力，情报力高能够更好地应对对手。'
+};
+
+function openStatDetail(statKey) {
+  if (!gameState) return;
+  const statName = STAT_NAMES[statKey] || statKey;
+  const description = STAT_DESCRIPTIONS[statKey] || '';
+
+  // 计算属性来源
+  let talentBonus = 0;
+  let achievementBonus = 0;
+  let deckBonus = 0;
+  let resonanceBonus = 0;
+  let eventBonus = 0;
+
+  // 天赋加成
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t.effects && t.effects[statKey]) {
+      talentBonus += t.effects[statKey];
+    }
+  });
+
+  // 成就加成
+  gameState.achievements.forEach(aid => {
+    const a = ACHIEVEMENTS.find(x => x.id === aid);
+    if (a && a.rewards && a.rewards.stats && a.rewards.stats[statKey]) {
+      achievementBonus += a.rewards.stats[statKey];
+    }
+  });
+
+  // 卡组加成（主属性）
+  if (['search', 'expand', 'disrupt', 'resist', 'suppress'].includes(statKey)) {
+    gameState.mainDeck.forEach(cardId => {
+      const c = CARD_DB[cardId];
+      if (c && c.stats && c.stats[statKey]) {
+        deckBonus += c.stats[statKey];
+      }
+    });
+    gameState.extraDeck.forEach(cardId => {
+      const c = CARD_DB[cardId];
+      if (c && c.stats && c.stats[statKey]) {
+        deckBonus += c.stats[statKey];
+      }
+    });
+    // 共鸣加成
+    if (gameState.resonanceBonus && gameState.resonanceBonus[statKey]) {
+      resonanceBonus = gameState.resonanceBonus[statKey];
+    }
+  }
+
+  // 事件/比赛永久加成（副属性）
+  if (gameState.bonusStats && gameState.bonusStats[statKey]) {
+    eventBonus = gameState.bonusStats[statKey];
+  }
+
+  const total = talentBonus + achievementBonus + deckBonus + resonanceBonus + eventBonus;
+
+  let html = `
+    <div style="margin-bottom:16px;padding:12px;background:var(--bg-card);border-radius:8px;">
+      <div style="font-size:20px;font-weight:bold;color:#fbbf24;margin-bottom:4px;">${statName}：${total}</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.6;">${description}</div>
+    </div>
+    <div style="font-weight:bold;color:var(--text-secondary);margin-bottom:8px;">属性来源：</div>
+  `;
+
+  const sources = [
+    { name: '天赋加成', value: talentBonus, color: '#8b5cf6' },
+    { name: '成就加成', value: achievementBonus, color: '#f59e0b' },
+    { name: '卡组加成', value: deckBonus, color: '#3b82f6' },
+    { name: '共鸣加成', value: resonanceBonus, color: '#10b981' },
+    { name: '事件/比赛加成', value: eventBonus, color: '#ec4899' }
+  ];
+
+  sources.forEach(s => {
+    if (s.value > 0 || ['search', 'expand', 'disrupt', 'resist', 'suppress'].includes(statKey)) {
+      html += `
+        <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--bg-card);border-radius:6px;margin-bottom:6px;">
+          <span style="color:var(--text-secondary);">${s.name}</span>
+          <span style="font-weight:bold;color:${s.color};">+${s.value}</span>
+        </div>
+      `;
+    }
+  });
+
+  html += `
+    <div style="display:flex;justify-content:space-between;padding:10px 12px;background:rgba(251,191,36,0.1);border-radius:6px;margin-top:12px;border:1px solid #fbbf24;">
+      <span style="font-weight:bold;color:#fbbf24;">总计</span>
+      <span style="font-weight:bold;color:#fbbf24;font-size:16px;">${total}</span>
+    </div>
+  `;
+
+  document.getElementById('stat-detail-title').textContent = `${statName} 属性详情`;
+  document.getElementById('stat-detail-content').innerHTML = html;
+  document.getElementById('stat-detail-modal').style.display = 'flex';
+}
+
+function closeStatDetail() {
+  document.getElementById('stat-detail-modal').style.display = 'none';
+}
+
+function togglePowerFormula() {
+  const el = document.getElementById('power-formula');
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
 }
 
 // ===== 更新玩家显示 =====
@@ -5533,10 +5747,10 @@ function updatePlayerDisplay() {
   const nameEl = document.getElementById('player-name-display');
   if (nameEl) nameEl.textContent = gameState.name;
 
-  // 称号显示（取第一个称号，没有则显示新手决斗者）
+  // 称号显示（使用activeTitle，默认新手决斗者）
   const titleEl = document.getElementById('player-title-display');
   if (titleEl) {
-    const title = (gameState.titles && gameState.titles.length > 0) ? gameState.titles[0] : '新手决斗者';
+    const title = gameState.activeTitle || '新手决斗者';
     titleEl.textContent = title;
   }
 }
@@ -5839,7 +6053,17 @@ function runDataDrivenEvent(loc) {
 
   // 有选项的事件
   if (selectedEvent.options && selectedEvent.options.length) {
-    const options = selectedEvent.options.map(op => {
+    // 过滤掉不满足显示条件的选项
+    const visibleOptions = selectedEvent.options.filter(op => {
+      if (!op.showCondition) return true;
+      const cond = op.showCondition;
+      if (cond.type === 'duelPoints') {
+        return (gameState.duelPoints || 0) >= (cond.value || 0);
+      }
+      return true;
+    });
+
+    const options = visibleOptions.map(op => {
       // 检查选项是否包含决斗效果，以及决斗条件是否满足
       const opEffects = op.effects || [];
       let hasDuel = false;
@@ -5852,16 +6076,30 @@ function runDataDrivenEvent(loc) {
           }
         }
       }
-      
+
+      // 检查选项是否需要扣除决斗点
+      let opCost = 0;
+      if (op.name && op.name.includes('300')) opCost = 300;
+      if (op.name && op.name.includes('3000')) opCost = 3000;
+      const canAfford = (gameState.duelPoints || 0) >= opCost;
+
       const displayName = hasDuel && !duelAvailable ? `${op.name}（卡组条件不足）` : op.name;
-      
+
       return {
         name: displayName,
-        disabled: hasDuel && !duelAvailable,
+        disabled: (hasDuel && !duelAvailable) || (opCost > 0 && !canAfford),
         action: () => {
           if (hasDuel && !duelAvailable) {
             showToast('卡组条件不足，无法进行决斗！');
             return;
+          }
+          if (opCost > 0 && !canAfford) {
+            showToast('决斗点不足！');
+            return;
+          }
+          // 扣除选项级别的决斗点
+          if (opCost > 0) {
+            gameState.duelPoints -= opCost;
           }
           const rewards = executeEffects(op.effects || [], selectedEvent, loc);
           // 选项级别的skipTime：该选项不占用回合时间
@@ -5929,6 +6167,35 @@ function executeEffects(effects, event, loc) {
           addCardToCollection(card.id);
           result.cardName = card.name;
           result.displayItems.push({ name: `获得 ${card.name}`, rarity: card.rarity });
+        }
+        break;
+      }
+      case 'tenPackDraw': {
+        // 十连抽：获得10张卡，保底至少1张SR或以上
+        const cards = [];
+        let hasSRorAbove = false;
+        for (let i = 0; i < 10; i++) {
+          let rarity;
+          if (i === 9 && !hasSRorAbove) {
+            // 最后一张保底SR或以上
+            rarity = choice(['SR','UR']);
+          } else {
+            rarity = choice(['N','N','N','R','R','SR','UR']); // 概率分布
+          }
+          const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+          if (pool.length) {
+            const card = choice(pool);
+            cards.push(card);
+            if (rarity === 'SR' || rarity === 'UR') hasSRorAbove = true;
+          }
+        }
+        // 依次加入收藏（会触发卡片获得弹窗）
+        cards.forEach(card => {
+          addCardToCollection(card.id);
+          result.displayItems.push({ name: `获得 ${card.name}`, rarity: card.rarity });
+        });
+        if (cards.length) {
+          result.cardName = cards[0].name;
         }
         break;
       }
@@ -6071,8 +6338,6 @@ function executeEffects(effects, event, loc) {
   if (!result.displayItems.length) result.displayItems.push({ name: '继续' });
   return result;
 }
-
-const STAT_NAMES = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
 
 // ===== 随机卡片获取 =====
 function getRandomCard(source) {
@@ -7665,10 +7930,18 @@ function claimTask(taskId) {
 }
 
 // 渲染任务页面
+let showCompletedTasks = true; // 是否显示已完成任务
+
 function renderTasks() {
   const container = document.getElementById('task-list');
   if (!container) return;
   container.innerHTML = '';
+
+  // 更新切换按钮文字
+  const toggleBtn = document.getElementById('toggle-completed-tasks');
+  if (toggleBtn) {
+    toggleBtn.textContent = showCompletedTasks ? '隐藏已完成' : '显示已完成';
+  }
 
   const typeNames = { guide: '引导任务', main: '主线任务', side: '支线任务', hidden: '隐藏任务' };
   const typeColors = { guide: '#3b82f6', main: '#f59e0b', side: '#10b981', hidden: '#8b5cf6' };
@@ -7692,7 +7965,8 @@ function renderTasks() {
       else active.push(task);
     });
 
-    const allTasks = [...claimable, ...active, ...completed];
+    // 根据是否显示已完成任务决定是否包含已完成任务
+    const allTasks = showCompletedTasks ? [...claimable, ...active, ...completed] : [...claimable, ...active];
     if (allTasks.length === 0) return;
 
     const section = document.createElement('div');
@@ -8202,15 +8476,13 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'card-detail-modal') closeCardDetail();
   if (e.target.id === 'card-obtain-modal') skipAllCardObtain();
   if (e.target.id === 'profile-modal') closeProfileModal();
-  if (e.target.id === 'signature-edit-modal') closeSignatureEdit();
+  if (e.target.id === 'title-select-modal') closeTitleSelect();
+  if (e.target.id === 'name-edit-modal') closeNameEdit();
+  if (e.target.id === 'stat-detail-modal') closeStatDetail();
 });
 
-// 个性签名点击编辑
+// 名字输入回车确认
 document.addEventListener('DOMContentLoaded', () => {
-  const sigEl = document.getElementById('profile-signature');
-  if (sigEl) {
-    sigEl.addEventListener('click', openSignatureEdit);
-  }
   // 名字输入回车确认
   const nameInput = document.getElementById('player-name-input');
   if (nameInput) {
@@ -8218,11 +8490,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') confirmNameInput();
     });
   }
-  // 签名输入回车保存
-  const sigInput = document.getElementById('signature-input');
-  if (sigInput) {
-    sigInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') saveSignature();
+  // 名字编辑输入回车保存
+  const nameEditInput = document.getElementById('name-edit-input');
+  if (nameEditInput) {
+    nameEditInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') saveNameEdit();
+    });
+  }
+  // 任务折叠切换按钮
+  const toggleTasksBtn = document.getElementById('toggle-completed-tasks');
+  if (toggleTasksBtn) {
+    toggleTasksBtn.addEventListener('click', () => {
+      showCompletedTasks = !showCompletedTasks;
+      renderTasks();
     });
   }
 });
