@@ -1,4 +1,4 @@
-0<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1675,25 +1675,8 @@ body::before {
         <div id="duel-lobby">
           <div class="panel">
             <div class="panel-title">选择决斗模式</div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div class="tournament-item">
-                <div class="tournament-header">
-                  <div class="tournament-name">快速决斗</div>
-                  <div class="tournament-tier">入门</div>
-                </div>
-                <div class="tournament-desc">主卡组20-30张即可参加，规则简化，适合新手练习。赌卡 stakes 较低。</div>
-                <div class="tournament-rewards">奖励：随机N~R卡 ×1</div>
-                <button class="btn btn-primary" style="width:100%;" onclick="startDuel('quick')">开始快速决斗</button>
-              </div>
-              <div class="tournament-item">
-                <div class="tournament-header">
-                  <div class="tournament-name">大师决斗</div>
-                  <div class="tournament-tier">正式</div>
-                </div>
-                <div class="tournament-desc">需要主卡组40-60张，额外卡组最多15张。完整规则，高风险高回报。</div>
-                <div class="tournament-rewards">奖励：随机R~UR卡 ×1 · 对手指定卡赌卡</div>
-                <button class="btn btn-gold" style="width:100%;" onclick="startDuel('master')">开始大师决斗</button>
-              </div>
+            <div id="duel-mode-list" style="display:flex; flex-direction:column; gap:10px;">
+              <!-- 由JS动态生成 -->
             </div>
           </div>
         </div>
@@ -1896,6 +1879,33 @@ body::before {
         <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
           <div style="color:var(--text-muted);">牌力</div>
           <div style="font-weight:bold;background:linear-gradient(90deg,#ffd700,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:14px;" id="profile-power">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 精灵力系统 -->
+    <div id="profile-spirit-section" style="margin-bottom:16px;display:none;">
+      <div class="panel-title" style="margin-bottom:8px;">精灵力</div>
+      <div style="padding:12px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1));border-radius:8px;border:1px solid rgba(139,92,246,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">✨</span>
+            <span id="profile-spirit-level" style="font-size:16px;font-weight:bold;color:#a78bfa;">0星</span>
+          </div>
+          <span id="profile-spirit-bonus" style="font-size:11px;color:#10b981;">战斗牌力 +0%</span>
+        </div>
+        <div style="margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:2px;">
+            <span>精灵力经验</span>
+            <span id="profile-spirit-exp-text">0 / 100</span>
+          </div>
+          <div style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;">
+            <div id="profile-spirit-exp-bar" style="height:100%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);width:0%;transition:width 0.3s;"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);">
+          <span>觉醒碎片：<span id="profile-awakening-shards" style="color:#fbbf24;font-weight:bold;">0</span></span>
+          <span id="profile-spirit-next-hint">提升等级可增强牌力</span>
         </div>
       </div>
     </div>
@@ -2183,6 +2193,7 @@ let CARD_DB = {
   s028: { id:'s028', name:'心变', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:3,expand:0,disrupt:9,resist:3,suppress:8}, sub:{power:9,soul:3,proficiency:0,intelligence:0} },
   s029: { id:'s029', name:'被封印的黄金柜', type:'spell', rarity:'SR', archetype:'被封印的', stats:{search:8,expand:8,disrupt:0,resist:0,suppress:6}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
   s030: { id:'s030', name:'雷击', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:3,expand:4,disrupt:8,resist:5,suppress:8}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  s031: { id:'s031', name:'魔法都市 恩底弥翁', type:'spell', rarity:'SR', archetype:'恩底弥翁', stats:{search:0,expand:8,disrupt:2,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
 
   // 陷阱卡
   t001: { id:'t001', name:'激流葬', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
@@ -2534,6 +2545,79 @@ const TALENTS = [
     "bonus": {},
     "hidden": true,
     "unlockAchievement": "year_one"
+  },
+  {
+    "id": "duelist_city",
+    "name": "都市决斗者",
+    "rarity": "R",
+    "desc": "（参加决斗都市解锁）胜率增加5% 情报力+12",
+    "effects": {
+      "intelligence": 12
+    },
+    "bonus": {},
+    "hidden": true,
+    "winRateBonus": 5
+  },
+  {
+    "id": "citywork",
+    "name": "城市漫游者",
+    "rarity": "SR",
+    "desc": "你已经完成了所有拼图卡的收集，在紧张的大赛范围里享受你的假期吧！（解锁更多决斗都市的隐藏事件）",
+    "effects": {},
+    "bonus": {},
+    "hidden": true,
+    "winRateBonus": 5,
+    "eventBonus": 5,
+    "hiddenEventBonus": 5,
+    "unlockAchievement": "citywork"
+  },
+  {
+    "id": "yamiduellist",
+    "name": "黑暗决斗者",
+    "rarity": "SR",
+    "desc": "可以进行黑暗决斗。",
+    "effects": {
+      "luck": 20,
+      "suppress": 20
+    },
+    "bonus": {},
+    "hidden": true,
+    "unlockAchievement": "yamiduel"
+  },
+  {
+    "id": "qiannianpower",
+    "name": "千年之力",
+    "rarity": "SR",
+    "desc": "获得千年神器的力量，在游戏帮助下学会了自主开启黑暗决斗。",
+    "effects": {
+      "soul": 20,
+      "luck": 20,
+      "suppress": 0,
+      "power": 20
+    },
+    "bonus": {},
+    "hidden": true,
+    "unlockAchievement": "qiannian"
+  },
+  {
+    "id": "spiritpower",
+    "name": "精灵之力",
+    "rarity": "SR",
+    "desc": "熟练掌握精灵之力，你也算是小半个上级精灵啦。",
+    "effects": {
+      "search": 5,
+      "luck": 5,
+      "soul": 20,
+      "power": 5,
+      "suppress": 5,
+      "resist": 5,
+      "disrupt": 5,
+      "expand": 5
+    },
+    "bonus": {},
+    "hidden": true,
+    "winRateBonus": 5,
+    "eventBonus": 5
   }
 ];
 
@@ -2542,92 +2626,420 @@ const OPPONENTS = [
   {
     "id": "op001",
     "name": "新手决斗者",
+    "category": "normal",
+    "specialTag": "duellist",
     "basePower": 500,
     "variance": 80,
     "difficulty": 1,
-    "desc": "刚接触决斗的新手，牌力较弱"
+    "desc": "刚接触决斗的新手，牌力较弱",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op002",
     "name": "校园决斗者",
+    "category": "normal",
+    "specialTag": "duellist",
     "basePower": 800,
     "variance": 200,
     "difficulty": 2,
-    "desc": "学校里的决斗爱好者，有一定基础"
+    "desc": "学校里的决斗爱好者，有一定基础",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op003",
     "name": "卡店常客",
+    "category": "normal",
+    "specialTag": "",
     "basePower": 1000,
     "variance": 300,
     "difficulty": 2,
-    "desc": "经常在卡店决斗的老手，经验丰富"
+    "desc": "经常在卡店决斗的老手，经验丰富",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op004",
     "name": "街头高手",
+    "category": "normal",
+    "specialTag": "duellist",
     "basePower": 1500,
     "variance": 300,
     "difficulty": 3,
-    "desc": "在街头决斗中成名的高手"
+    "desc": "在街头决斗中成名的高手",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op005",
     "name": "地下赌徒",
+    "category": "normal",
+    "specialTag": "gambler",
     "basePower": 1800,
     "variance": 180,
     "difficulty": 3,
-    "desc": "地下决斗场的常客，擅长赌卡决斗"
+    "desc": "地下决斗场的常客，擅长赌卡决斗",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op006",
     "name": "职业决斗者",
+    "category": "normal",
+    "specialTag": "gambler",
     "basePower": 2100,
     "variance": 800,
     "difficulty": 3,
-    "desc": "参加过职业比赛的决斗者"
+    "desc": "参加过职业比赛的决斗者",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op007",
     "name": "顶级决斗者",
+    "category": "normal",
+    "specialTag": "gambler",
     "basePower": 4000,
     "variance": 1000,
     "difficulty": 5,
-    "desc": "决斗界的顶级强者，牌力深厚"
+    "desc": "决斗界的顶级强者，牌力深厚",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
   },
   {
     "id": "op008",
     "name": "传说决斗者",
+    "category": "normal",
+    "specialTag": "legend",
     "basePower": 8000,
     "variance": 2000,
     "difficulty": 8,
-    "desc": "传说中的决斗者，几乎无人能敌"
+    "desc": "传说中的决斗者，几乎无人能敌",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
+  },
+  {
+    "id": "op101",
+    "name": "神秘黑衣人",
+    "category": "event",
+    "specialTag": "mysterious",
+    "basePower": 2500,
+    "variance": 200,
+    "difficulty": 3,
+    "desc": "突然出现的神秘决斗者，身份不明",
+    "stats": {
+      "search": 30,
+      "expand": 20,
+      "disrupt": 10,
+      "resist": 10,
+      "suppress": 20
+    },
+    "deckArchetype": "暗黑",
+    "rewards": {
+      "cardPoints": 20
+    },
+    "enabled": true
+  },
+  {
+    "id": "op102",
+    "name": "古鲁斯成员",
+    "category": "event",
+    "specialTag": "ghouls",
+    "basePower": 3000,
+    "variance": 400,
+    "difficulty": 4,
+    "desc": "稀有卡猎捕集团古鲁斯的成员",
+    "stats": {
+      "search": 50,
+      "expand": 20,
+      "resist": 20,
+      "suppress": 50
+    },
+    "deckArchetype": "被封印的",
+    "rewards": {
+      "cardPoints": 30
+    },
+    "enabled": true
+  },
+  {
+    "id": "op201",
+    "name": "店赛首轮对手",
+    "category": "tournament",
+    "specialTag": "local_round1",
+    "basePower": 800,
+    "variance": 100,
+    "difficulty": 1,
+    "desc": "卡店周赛首轮对手",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
+  },
+  {
+    "id": "op202",
+    "name": "店赛决赛对手",
+    "category": "tournament",
+    "specialTag": "local_final",
+    "basePower": 1000,
+    "variance": 200,
+    "difficulty": 2,
+    "desc": "卡店周赛决赛对手",
+    "stats": {},
+    "deckArchetype": "",
+    "rewards": {},
+    "enabled": true
+  },
+  {
+    "id": "op103",
+    "name": "参赛选手",
+    "basePower": 2000,
+    "variance": 100,
+    "difficulty": 2,
+    "desc": "参加比赛的普通选手",
+    "category": "event",
+    "specialTag": "duellist",
+    "stats": {
+      "search": 10,
+      "expand": 10,
+      "disrupt": 10,
+      "resist": 10,
+      "suppress": 10
+    },
+    "rewards": {
+      "cardPoints": 10
+    },
+    "enabled": true,
+    "deckArchetype": "泛用"
+  },
+  {
+    "id": "ts001",
+    "name": "被操控的人偶",
+    "category": "teshu",
+    "categoryLabel": "特殊类型",
+    "specialTag": "yc001",
+    "basePower": 3500,
+    "variance": 0,
+    "difficulty": 2,
+    "desc": "被神秘黑暗力量操控的人偶，散发着强大的气息。",
+    "stats": {
+      "search": 30,
+      "expand": 30,
+      "disrupt": 20,
+      "resist": 30,
+      "suppress": 30
+    },
+    "deckArchetype": "史莱姆",
+    "rewards": {
+      "cardPoints": 0,
+      "duelPoints": 1000
+    },
+    "enabled": true
+  },
+  {
+    "id": "ts002",
+    "name": "被操控的城之内",
+    "basePower": 3800,
+    "variance": 200,
+    "difficulty": 2,
+    "desc": "面对被控制的城之内，你决定利用千年神器的力量强行介入决斗。",
+    "category": "teshu",
+    "specialTag": "yc004",
+    "stats": {
+      "search": 40,
+      "expand": 20,
+      "disrupt": 30,
+      "resist": 30,
+      "suppress": 50
+    },
+    "rewards": {
+      "cardPoints": 50,
+      "duelPoints": 3000
+    },
+    "enabled": true,
+    "deckArchetype": "真红眼"
+  },
+  {
+    "id": "op1789065379006",
+    "name": "试炼精灵",
+    "category": "精灵界",
+    "categoryLabel": "精灵界试炼",
+    "specialTag": "",
+    "basePower": 4500,
+    "variance": 200,
+    "difficulty": 5,
+    "desc": "在试炼之地的神秘卡片精灵，战胜它可以获得巨大的提升。",
+    "stats": {
+      "search": 70,
+      "expand": 90,
+      "disrupt": 70,
+      "resist": 30,
+      "suppress": 20
+    },
+    "deckArchetype": "恩底弥翁",
+    "rewards": {
+      "cardPoints": 50,
+      "cardId": "s031"
+    },
+    "enabled": true
   }
 ];
 
 // ===== 决斗配置（可由开发工具编辑）=====
 const DUEL_CONFIG = {
-  "quickMaxTurns": 30,
-  "masterMaxTurns": 60,
-  "playerBasePower": 100,
-  "quickModeBonus": 1.2,
-  "masterModeBonus": 1.4,
-  "quickOpponentMin": 0,
-  "quickOpponentMax": 3,
-  "masterOpponentMin": 3,
-  "masterOpponentMax": 6,
+  "modes": {
+    "quick": {
+      "name": "快速决斗",
+      "enabled": true,
+      "maxTurns": 30,
+      "playerBasePower": 100,
+      "modeBonus": 1.2,
+      "opponentMinDifficulty": 0,
+      "opponentMaxDifficulty": 3,
+      "opponentCategory": "normal",
+      "mainDeckMin": 20,
+      "mainDeckMax": 30,
+      "extraDeckMin": 0,
+      "extraDeckMax": 8,
+      "gambleEnabled": true,
+      "winDuelPoints": 200,
+      "loseDuelPoints": 50,
+      "winCardPoints": 0,
+      "loseCardPoints": 0,
+      "winStats": {
+        "power": 3,
+        "proficiency": 3
+      },
+      "loseStats": {
+        "power": 0
+      },
+      "battleEventBaseRate": 0.3,
+      "archetypeEventBonus": 0.15
+    },
+    "master": {
+      "name": "大师决斗",
+      "enabled": true,
+      "maxTurns": 60,
+      "playerBasePower": 100,
+      "modeBonus": 1.4,
+      "opponentMinDifficulty": 3,
+      "opponentMaxDifficulty": 4,
+      "opponentCategory": "normal",
+      "mainDeckMin": 40,
+      "mainDeckMax": 60,
+      "extraDeckMin": 0,
+      "extraDeckMax": 15,
+      "gambleEnabled": true,
+      "winDuelPoints": 800,
+      "loseDuelPoints": 200,
+      "winCardPoints": 0,
+      "loseCardPoints": 0,
+      "winStats": {
+        "power": 5,
+        "intelligence": 5,
+        "proficiency": 5
+      },
+      "loseStats": {
+        "power": 0,
+        "proficiency": 0,
+        "intelligence": 0
+      },
+      "battleEventBaseRate": 0.4,
+      "archetypeEventBonus": 0.3
+    },
+    "custom1": {
+      "name": "都市决斗",
+      "enabled": false,
+      "maxTurns": 30,
+      "playerBasePower": 1000,
+      "modeBonus": 1.2,
+      "opponentMinDifficulty": 2,
+      "opponentMaxDifficulty": 4,
+      "opponentCategory": "event",
+      "mainDeckMin": 40,
+      "mainDeckMax": 60,
+      "extraDeckMin": 0,
+      "extraDeckMax": 15,
+      "gambleEnabled": true,
+      "winDuelPoints": 300,
+      "loseDuelPoints": 100,
+      "winCardPoints": 5,
+      "loseCardPoints": 0,
+      "winStats": {
+        "power": 10,
+        "proficiency": 10,
+        "intelligence": 10
+      },
+      "loseStats": {
+        "power": 5,
+        "soul": 5
+      },
+      "battleEventBaseRate": 0.6,
+      "archetypeEventBonus": 0.2
+    },
+    "dark": {
+      "name": "黑暗决斗",
+      "enabled": false,
+      "maxTurns": 20,
+      "playerBasePower": 1000,
+      "modeBonus": 1.5,
+      "opponentMinDifficulty": 2,
+      "opponentMaxDifficulty": 5,
+      "opponentCategory": "special",
+      "mainDeckMin": 40,
+      "mainDeckMax": 60,
+      "extraDeckMin": 0,
+      "extraDeckMax": 15,
+      "gambleEnabled": false,
+      "winDuelPoints": 0,
+      "loseDuelPoints": 0,
+      "winCardPoints": 0,
+      "loseCardPoints": 0,
+      "winStats": {},
+      "loseStats": {},
+      "loseDays": 365,
+      "gameOverAge": 25,
+      "battleEventBaseRate": 0.6,
+      "archetypeEventBonus": 0.5,
+      "winDays": 70
+    }
+  }
+};
+
+// ===== 核心数据配置（全局设置 + 精灵力系统）=====
+const GAME_CONFIG = {
   "npcGrowthStartDay": 365,
-  "npcGrowthInterval": 56,
+  "npcGrowthInterval": 70,
   "npcGrowthRate": 0.125,
-  "winDuelPointsQuick": 200,
-  "winDuelPointsMaster": 800,
-  "battleEventBaseRate": 0.3,
-  "archetypeEventBonus": 0.15,
   "dismantlePointsN": 1,
   "dismantlePointsR": 2,
   "dismantlePointsSR": 3,
   "dismantlePointsUR": 5,
-  "resonanceCostPerLevel": 2
+  "resonanceCostPerLevel": 2,
+  "spiritSystem": {
+    "maxLevel": 12,
+    "baseExpPerLevel": 100,
+    "expGrowthRate": 1.5,
+    "powerBonusPerLevel": 0.1,
+    "unlockLocationLevel": 4,
+    "unlockLocationId": "spirit_world"
+  }
 };
 
 // ===== 地点定义 =====
@@ -2638,7 +3050,8 @@ const LOCATIONS = [
     "desc": "武藤家经营的卡牌店，双六爷爷偶尔会送你一些旧卡。",
     "tags": [
       "捡卡",
-      "角色"
+      "角色",
+      "事件"
     ]
   },
   {
@@ -2703,6 +3116,29 @@ const LOCATIONS = [
       "事件",
       "休息"
     ]
+  },
+  {
+    "id": "duel_city",
+    "name": "混战的决斗都市",
+    "desc": "决定第一届决斗王的决斗大赛将在这里展开，你的出现又会给它带来什么风暴呢？",
+    "tags": [
+      "决斗",
+      "事件",
+      "任务"
+    ],
+    "hidden": true
+  },
+  {
+    "id": "spirit_world",
+    "name": "精灵界",
+    "desc": "精灵力达到4星后解锁的神秘世界，这里居住着各种卡片精灵，修炼可以提升精灵力，战斗可以获得稀有卡和觉醒碎片。",
+    "tags": [
+      "精灵力",
+      "修炼",
+      "战斗",
+      "稀有卡"
+    ],
+    "hidden": true
   }
 ];
 
@@ -2906,6 +3342,7 @@ const TOURNAMENTS = [
     "tier": "入门",
     "desc": "童实野卡牌店每周举办的小型比赛，参与门槛低。",
     "duelMode": "quick",
+    "entryCost": 0,
     "requirement": {
       "mainDeck": 20
     },
@@ -2928,7 +3365,13 @@ const TOURNAMENTS = [
       "power": 0,
       "proficiency": 2
     },
-    "difficulty": 1
+    "difficulty": 1,
+    "conditions": [
+      {
+        "type": "power",
+        "value": 100
+      }
+    ]
   },
   {
     "id": "city",
@@ -2936,6 +3379,7 @@ const TOURNAMENTS = [
     "tier": "中级",
     "desc": "全市规模的决斗大赛，高手云集。",
     "duelMode": "master",
+    "entryCost": 500,
     "requirement": {
       "mainDeck": 40,
       "extraDeck": 0,
@@ -2967,7 +3411,13 @@ const TOURNAMENTS = [
       "intelligence": 4,
       "luck": 2
     },
-    "difficulty": 3
+    "difficulty": 3,
+    "conditions": [
+      {
+        "type": "main_deck_size",
+        "value": 30
+      }
+    ]
   },
   {
     "id": "regional",
@@ -2975,6 +3425,7 @@ const TOURNAMENTS = [
     "tier": "高级",
     "desc": "通往全国大赛的预选赛，竞争激烈。",
     "duelMode": "master",
+    "entryCost": 1000,
     "requirement": {
       "mainDeck": 40,
       "extraDeck": 15,
@@ -3009,7 +3460,14 @@ const TOURNAMENTS = [
       "intelligence": 5,
       "luck": 5
     },
-    "difficulty": 5
+    "difficulty": 5,
+    "conditions": [
+      {
+        "type": "tournament_win",
+        "value": 1,
+        "target": "city"
+      }
+    ]
   },
   {
     "id": "kc",
@@ -3024,19 +3482,19 @@ const TOURNAMENTS = [
     },
     "rounds": 6,
     "opponentNames": [
-      "海马杯首轮对手",
-      "海马杯三十二强对手",
-      "海马杯十六强对手",
-      "海马杯八强对手",
-      "海马杯半决赛对手",
-      "海马杯决赛对手"
+      "昆虫羽蛾",
+      "恐龙龙崎",
+      "光暗之假面",
+      "迷宫双子",
+      "海马圭平",
+      "海马濑人"
     ],
     "opponentBasePower": 8000,
     "opponentPowerGrowth": 0.3,
     "rewardRarities": [
       "UR"
     ],
-    "rewardCardCount": 3,
+    "rewardCardCount": 5,
     "duelPointsWin": 20000,
     "duelPointsLose": 2000,
     "rewards": "随机UR卡×3 + 20000决斗点",
@@ -3051,13 +3509,19 @@ const TOURNAMENTS = [
       "proficiency": 10,
       "intelligence": 10
     },
-    "difficulty": 8
+    "difficulty": 8,
+    "conditions": [
+      {
+        "type": "power",
+        "value": 5000
+      }
+    ]
   },
   {
     "id": "battlecity",
     "name": "决斗都市",
     "tier": "传说",
-    "desc": "童实野市全境的决斗盛宴，稀有卡猎手们的终极舞台。",
+    "desc": "（完整体）童实野市全境的决斗盛宴，传奇决斗者的终极舞台。",
     "duelMode": "master",
     "requirement": {
       "mainDeck": 40,
@@ -3066,19 +3530,19 @@ const TOURNAMENTS = [
     },
     "rounds": 6,
     "opponentNames": [
-      "决斗都市首轮对手",
-      "决斗都市三十二强对手",
-      "决斗都市十六强对手",
-      "决斗都市八强对手",
-      "决斗都市半决赛对手",
-      "决斗都市决赛对手"
+      "暗貘良",
+      "利希德",
+      "伊西斯",
+      "城之内克也",
+      "暗马利克",
+      "暗游戏"
     ],
     "opponentBasePower": 15000,
     "opponentPowerGrowth": 1.2,
     "rewardRarities": [
       "UR"
     ],
-    "rewardCardCount": 3,
+    "rewardCardCount": 10,
     "duelPointsWin": 50000,
     "duelPointsLose": 5000,
     "rewards": "随机UR卡×3 + 50000决斗点 + 传说称号",
@@ -3094,7 +3558,13 @@ const TOURNAMENTS = [
       "proficiency": 4,
       "intelligence": 4
     },
-    "difficulty": 12
+    "difficulty": 12,
+    "conditions": [
+      {
+        "type": "power",
+        "value": 9999
+      }
+    ]
   },
   {
     "id": "Country",
@@ -3103,8 +3573,9 @@ const TOURNAMENTS = [
     "duelMode": "master",
     "desc": "与全国各地的决斗者们，角逐冠军的荣耀吧！",
     "requirement": {
-      "mainDeck": 20,
-      "winCount": 20
+      "mainDeck": 40,
+      "winCount": 20,
+      "extraDeck": 0
     },
     "rounds": 3,
     "opponentNames": [
@@ -3118,7 +3589,7 @@ const TOURNAMENTS = [
     "rewardRarities": [
       "UR"
     ],
-    "rewardCardCount": 2,
+    "rewardCardCount": 8,
     "duelPointsWin": 15000,
     "duelPointsLose": 5000,
     "rewards": "随机UR卡×1 + 成就：全国冠军",
@@ -3128,7 +3599,14 @@ const TOURNAMENTS = [
       "luck": 4,
       "soul": 4
     },
-    "difficulty": 7
+    "difficulty": 7,
+    "conditions": [
+      {
+        "type": "tournament_win",
+        "value": 1,
+        "target": "regional"
+      }
+    ]
   }
 ];
 
@@ -3138,203 +3616,332 @@ const ACHIEVEMENTS = [
     "id": "first_card",
     "name": "第一张卡",
     "desc": "获得你的第一张卡片",
-    "condition": {
-      "type": "collection_count",
-      "value": 1
-    },
     "bonus": {
       "all": 1
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "collection_count",
+        "value": 1
+      }
+    ]
   },
   {
     "id": "deck_complete",
     "name": "卡组完成",
     "desc": "主卡组达到40张",
-    "condition": {
-      "type": "maindeck_count",
-      "value": 40
-    },
     "bonus": {
       "power": 5,
       "all": 0
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "maindeck_count",
+        "value": 40
+      }
+    ]
   },
   {
     "id": "first_win",
     "name": "首胜",
     "desc": "赢得第一场决斗",
-    "condition": {
-      "type": "wins",
-      "value": 1
-    },
     "bonus": {
       "expand": 3
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "wins",
+        "value": 1
+      }
+    ]
   },
   {
     "id": "win_10",
     "name": "十连胜者",
     "desc": "累计赢得10场决斗",
-    "condition": {
-      "type": "wins",
-      "value": 10
-    },
     "bonus": {
       "suppress": 5,
       "proficiency": 5,
       "intelligence": 0
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "wins",
+        "value": 10
+      }
+    ]
   },
   {
     "id": "win_50",
     "name": "决斗老手",
     "desc": "累计赢得50场决斗",
-    "condition": {
-      "type": "wins",
-      "value": 50
-    },
     "bonus": {
       "disrupt": 0,
       "intelligence": 5,
       "proficiency": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "wins",
+        "value": 50
+      }
+    ]
   },
   {
     "id": "ur_collector",
     "name": "稀有收藏家",
     "desc": "牌库拥有5张UR稀有度卡片",
-    "condition": {
-      "type": "ur_count",
-      "value": 5
-    },
     "bonus": {
       "search": 5,
       "intelligence": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "ur_count",
+        "value": 5
+      }
+    ]
   },
   {
     "id": "rich",
     "name": "卡之富翁",
     "desc": "牌库不同卡片总数达到100张",
-    "condition": {
-      "type": "unique_cards_count",
-      "value": 100
-    },
     "bonus": {
       "resist": 0,
       "all": 5,
       "intelligence": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "unique_cards_count",
+        "value": 100
+      }
+    ]
   },
   {
     "id": "social",
     "name": "交际花",
     "desc": "与5名角色好感度达到50以上",
-    "condition": {
-      "type": "affinity_count",
-      "value": 5,
-      "threshold": 50
-    },
     "bonus": {
       "luck": 0,
       "intelligence": 5,
       "soul": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "affinity_count",
+        "value": 5,
+        "threshold": 50
+      }
+    ]
   },
   {
     "id": "tournament_champ",
     "name": "比赛冠军",
     "desc": "赢得任意一场正式比赛",
-    "condition": {
-      "type": "tournament_wins",
-      "value": 1
-    },
     "bonus": {
       "power": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "tournament_wins",
+        "value": 1
+      }
+    ]
   },
   {
     "id": "blue_eyes",
     "name": "传说之龙",
     "desc": "获得青眼白龙",
-    "condition": {
-      "type": "has_card",
-      "cardId": "m001"
-    },
     "bonus": {
       "soul": 5,
       "suppress": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "has_card",
+        "cardId": "m001",
+        "target": "m001"
+      }
+    ]
   },
   {
     "id": "dark_magician",
     "name": "黑魔术之道",
     "desc": "获得黑魔术师",
-    "condition": {
-      "type": "has_card",
-      "cardId": "m002"
-    },
     "bonus": {
       "search": 5,
       "soul": 5
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "has_card",
+        "cardId": "m002",
+        "target": "m002"
+      }
+    ]
   },
   {
     "id": "year_one",
     "name": "一年牌佬",
     "desc": "在童实野市度过满一年（365天）",
-    "condition": {
-      "type": "weeks",
-      "value": 365
-    },
     "bonus": {
       "all": 10
     },
-    "unlocked": false
+    "unlocked": false,
+    "conditions": [
+      {
+        "type": "weeks",
+        "value": 365
+      }
+    ]
   },
   {
     "id": "duel_king",
     "name": "决斗王",
     "desc": "战胜武藤游戏！",
-    "condition": {
-      "type": "won_tournament",
-      "value": 1,
-      "target": "武藤游戏"
-    },
     "bonus": {
       "all": 10,
       "intelligence": 0,
       "luck": 10,
       "soul": 10
-    }
+    },
+    "conditions": [
+      {
+        "type": "won_tournament",
+        "value": 1,
+        "target": "battlecity",
+        "threshold": 0
+      }
+    ]
   },
   {
     "id": "CountryKing",
     "name": "全国冠军",
     "desc": "成为全国冠军！",
-    "condition": {
-      "type": "won_tournament",
-      "value": 1,
-      "threshold": 0,
-      "target": "Country"
-    },
     "bonus": {
       "proficiency": 10,
       "intelligence": 10,
       "luck": 10,
       "soul": 10
-    }
+    },
+    "conditions": [
+      {
+        "type": "won_tournament",
+        "value": 1,
+        "threshold": 0,
+        "target": "Country"
+      }
+    ]
+  },
+  {
+    "id": "duelcity",
+    "name": "决斗都市",
+    "desc": "为了见证到最后，收集所有拼图卡吧！",
+    "bonus": {
+      "proficiency": 5,
+      "intelligence": 5
+    },
+    "conditions": []
+  },
+  {
+    "id": "citywork",
+    "name": "城市漫游者",
+    "desc": "拼图卡的收集告一段落，看看游戏他们进展怎么样了。",
+    "bonus": {
+      "all": 10
+    },
+    "conditions": []
+  },
+  {
+    "id": "yamiduel",
+    "name": "黑暗决斗者",
+    "desc": "在游戏获得天空龙并离开后，你在空地发现了千年神器的碎片。",
+    "bonus": {
+      "all": 10
+    },
+    "conditions": []
+  },
+  {
+    "id": "qiannian",
+    "name": "千年神器",
+    "desc": "游戏为了感谢你的支持，将人偶身上的千年神器碎片交给了你。",
+    "bonus": {
+      "all": 10
+    },
+    "conditions": []
+  },
+  {
+    "id": "goone",
+    "name": "过路人",
+    "desc": "或许一切都是最好的安排。。",
+    "bonus": {
+      "intelligence": 20
+    },
+    "rewardDuelPoints": 3000,
+    "conditions": []
+  },
+  {
+    "id": "noone",
+    "name": "不可动摇的羁绊",
+    "desc": "或许你已经不再是孤身一人。",
+    "bonus": {
+      "all": 10,
+      "luck": 5,
+      "power": 20,
+      "resist": 5,
+      "disrupt": 10,
+      "soul": 20
+    },
+    "conditions": [],
+    "rewardEvent": "",
+    "rewardCard": "e030"
+  },
+  {
+    "id": "888",
+    "name": "决斗都市八强",
+    "desc": "成功晋级八强，登上决斗飞艇！",
+    "bonus": {
+      "proficiency": 20,
+      "all": 5,
+      "power": 20
+    },
+    "conditions": []
+  },
+  {
+    "id": "elvespower",
+    "name": "精灵之力",
+    "desc": "一阵历练后精灵力成功达到了四星，达到了初步探索精灵界的门槛。",
+    "bonus": {},
+    "conditions": [
+      {
+        "type": "spirit_level",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "Endymion",
+    "name": "恩底弥翁圣地",
+    "desc": "完成恩底弥翁圣地的试炼",
+    "bonus": {
+      "search": 20,
+      "expand": 20,
+      "resist": 20,
+      "intelligence": 10
+    },
+    "conditions": []
   }
 ];
 
@@ -3347,17 +3954,19 @@ const TASKS = [
     "order": 1,
     "desc": "前往龟游戏屋，开启你的决斗者之旅。",
     "story": "时空模拟器将你送到了过去的童实野市。你需要先找到一个落脚点，龟游戏屋似乎是个不错的选择。",
-    "condition": {
-      "type": "visit_location",
-      "target": "kame",
-      "value": 1
-    },
     "reward": {
       "duelPoints": 50,
       "stats": {
         "intelligence": 2
       }
-    }
+    },
+    "conditions": [
+      {
+        "type": "visit_location",
+        "target": "kame",
+        "value": 1
+      }
+    ]
   },
   {
     "id": "guide_002",
@@ -3425,17 +4034,19 @@ const TASKS = [
     "order": 5,
     "desc": "与武藤游戏的好感度达到20。",
     "story": "在这个城市，人脉也是实力的一部分。与传说中的决斗者武藤游戏建立联系吧。",
-    "condition": {
-      "type": "affinity",
-      "target": "yugi",
-      "value": 20
-    },
     "reward": {
       "duelPoints": 100,
       "stats": {
         "soul": 5
       }
-    }
+    },
+    "conditions": [
+      {
+        "type": "affinity",
+        "target": "yugi",
+        "value": 20
+      }
+    ]
   },
   {
     "id": "guide_006",
@@ -3658,15 +4269,17 @@ const TASKS = [
     "order": 7,
     "desc": "收集5张神之卡或传说级卡片，牌力达到5000。",
     "story": "你终于触碰到了真相的边缘。世界毁灭的原因，与这些传说中的卡片有着千丝万缕的联系...",
-    "condition": {
-      "type": "power",
-      "value": 5000
-    },
     "reward": {
       "duelPoints": 3000,
       "cardPoints": 100,
       "title": "时空观测者"
-    }
+    },
+    "conditions": [
+      {
+        "type": "power",
+        "value": 5000
+      }
+    ]
   },
   {
     "id": "side_001",
@@ -3695,17 +4308,19 @@ const TASKS = [
     "order": 2,
     "desc": "在卡店购买卡包10次。",
     "story": "卡店老板似乎认识很多人。多去几次，也许能听到一些有趣的传闻。",
-    "condition": {
-      "type": "visit_location",
-      "target": "cardshop",
-      "value": 10
-    },
     "reward": {
       "duelPoints": 800,
       "cards": [
         "m012"
       ]
-    }
+    },
+    "conditions": [
+      {
+        "type": "visit_location",
+        "target": "cardshop",
+        "value": 10
+      }
+    ]
   },
   {
     "id": "side_003",
@@ -3890,6 +4505,298 @@ const TASKS = [
         "value": 40
       }
     ]
+  },
+  {
+    "id": "star_001",
+    "name": "决斗都市启动",
+    "type": "hidden",
+    "order": 1,
+    "desc": "积累访问5次龟游戏屋，和游戏 城之内好感达到50以上",
+    "story": "听说海马公司最近举办了决斗都市比赛，快去和游戏他们聊聊吧！",
+    "reward": {
+      "cardPoints": 20,
+      "stats": {
+        "intelligence": 10
+      },
+      "talent": "duelist_city",
+      "achievement": "duelcity",
+      "duelMode": "custom1"
+    },
+    "conditions": [
+      {
+        "type": "unlock_achievement",
+        "value": 1,
+        "target": "year_one",
+        "operator": "=="
+      },
+      {
+        "type": "visit_location",
+        "value": 5,
+        "target": "kame"
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "power",
+        "value": 2000
+      }
+    ]
+  },
+  {
+    "id": "star_002",
+    "name": "收集拼图卡",
+    "type": "hidden",
+    "order": 2,
+    "desc": "在决斗都市收集拼图卡",
+    "story": "为了和游戏他们一起登上飞艇，你也开始寻找对手决斗来获取拼图卡。",
+    "reward": {
+      "cardPoints": 20,
+      "stats": {
+        "power": 10,
+        "luck": 5,
+        "soul": 5,
+        "proficiency": 10,
+        "intelligence": 10
+      },
+      "duelPoints": 1000,
+      "talent": "citywork",
+      "achievement": "citywork",
+      "duelMode": "dark"
+    },
+    "conditions": [
+      {
+        "type": "visit_location",
+        "value": 8,
+        "target": "duel_city"
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "complete_task",
+        "value": 1,
+        "target": "star_001"
+      }
+    ]
+  },
+  {
+    "id": "star_003",
+    "name": "决斗的另一面",
+    "type": "hidden",
+    "order": 1,
+    "desc": "继续探索吧",
+    "story": "获得千年神器的力量之后，你发现这个世界的水远比历史上的要深。",
+    "reward": {
+      "duelPoints": 5000,
+      "cardPoints": 50,
+      "stats": {
+        "power": 10
+      },
+      "spiritPower": 100
+    },
+    "conditions": [
+      {
+        "type": "unlock_achievement",
+        "value": 1,
+        "target": "yamiduel"
+      },
+      {
+        "type": "unlock_achievement",
+        "value": 1,
+        "target": "qiannian"
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "complete_task",
+        "value": 1,
+        "target": "star_002"
+      }
+    ],
+    "conditionLogic": "or"
+  },
+  {
+    "id": "star_004",
+    "name": "城之内之死？",
+    "type": "hidden",
+    "order": 4,
+    "desc": "面对如此困境，你的选择是？",
+    "story": "被控制的城之内，友情是否能够超越黑暗游戏的力量呢？你的选择又是。。",
+    "reward": {
+      "spiritPower": 300,
+      "awakeningShards": 50,
+      "cardPoints": 50,
+      "duelPoints": 3000
+    },
+    "conditions": [
+      {
+        "type": "unlock_achievement",
+        "value": 1,
+        "target": "noone"
+      },
+      {
+        "type": "unlock_achievement",
+        "value": 1,
+        "target": "goone"
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "complete_task",
+        "value": 1,
+        "target": "star_003"
+      },
+      {
+        "type": "affinity",
+        "value": 80,
+        "target": "yogi"
+      },
+      {
+        "type": "affinity",
+        "value": 80,
+        "target": "jonouchi"
+      }
+    ],
+    "conditionLogic": "or"
+  },
+  {
+    "id": "star_005",
+    "name": "登上决斗飞艇",
+    "type": "hidden",
+    "order": 5,
+    "desc": "成功晋级八强赛！",
+    "story": "早早集齐拼图卡以后，你在修行后和游戏一行人一起登上了代表八强的决斗飞艇。",
+    "reward": {
+      "spiritPower": 500,
+      "achievement": "888"
+    },
+    "conditions": [
+      {
+        "type": "power",
+        "value": 5000
+      }
+    ],
+    "unlockConditions": [
+      {
+        "type": "complete_task",
+        "value": 1,
+        "target": "star_004"
+      }
+    ]
+  },
+  {
+    "id": "spirit_guide_001",
+    "name": "精灵界的呼唤",
+    "type": "guide",
+    "order": 101,
+    "desc": "精灵力达到4星，感受到来自精灵界的神秘呼唤。",
+    "story": "随着精灵力的提升，你感受到了一股来自另一个维度的呼唤。那里似乎有一个与卡牌精灵息息相关的世界...",
+    "reward": {
+      "duelPoints": 0,
+      "spiritPower": 100,
+      "cardPoints": 20
+    },
+    "conditions": [
+      {
+        "type": "spirit_level",
+        "value": 4
+      }
+    ]
+  },
+  {
+    "id": "spirit_guide_002",
+    "name": "初入精灵界",
+    "type": "guide",
+    "order": 102,
+    "desc": "首次进入精灵界，探索这个神秘的空间。",
+    "story": "在精灵力的指引下，你来到了精灵界。这里的时间流速与外界不同，到处都是充满能量的精灵界...",
+    "reward": {
+      "duelPoints": 300,
+      "awakeningShards": 10,
+      "spiritPower": 200
+    },
+    "conditions": [
+      {
+        "type": "visit_location",
+        "target": "spirit_world",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "spirit_guide_003",
+    "name": "精灵的修炼",
+    "type": "guide",
+    "order": 103,
+    "desc": "在精灵界进行修炼，将精灵力提升到5星。",
+    "story": "精灵界的能量浓度远高于外界。在这里修炼，精灵力的提升速度会大大加快。感受精灵力在体内流动吧！",
+    "reward": {
+      "duelPoints": 0,
+      "cardPoints": 50,
+      "spiritPower": 300
+    },
+    "conditions": [
+      {
+        "type": "spirit_level",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "spirit_guide_004",
+    "name": "精灵界的试炼",
+    "type": "guide",
+    "order": 104,
+    "desc": "在精灵界接受战斗试炼，证明自己的实力。",
+    "story": "精灵界的领主注意到了你。他提出了一个试炼：在精灵界的战斗中证明自己的实力。通过试炼后，你将获得更强大的力量...",
+    "reward": {
+      "duelPoints": 0,
+      "cards": [
+        "0"
+      ],
+      "awakeningShards": 20,
+      "cardPoints": 60,
+      "spiritPower": 500,
+      "achievement": "Endymion"
+    },
+    "conditions": [
+      {
+        "type": "complete_task",
+        "target": "spirit_guide_003",
+        "value": 1
+      },
+      {
+        "type": "defeat_character",
+        "value": 1,
+        "target": "op1789065379006"
+      }
+    ]
+  },
+  {
+    "id": "spirit_guide_005",
+    "name": "精灵的友谊",
+    "type": "guide",
+    "order": 105,
+    "desc": "帮助精灵界的居民，获得精灵的信任和友谊，精灵力达到6星。",
+    "story": "在精灵界的日子里，你帮助了许多遇到困难的精灵。它们开始信任你，愿意与你分享精灵界的秘密。精灵力也在友谊中得到了升华...",
+    "reward": {
+      "duelPoints": 0,
+      "cards": [
+        "0"
+      ],
+      "awakeningShards": 30,
+      "stats": {
+        "soul": 10,
+        "luck": 10
+      },
+      "cardPoints": 80,
+      "spiritPower": 1000
+    },
+    "conditions": [
+      {
+        "type": "spirit_level",
+        "value": 6
+      }
+    ]
   }
 ];
 
@@ -3986,6 +4893,28 @@ const EVENTS = {
         }
       ],
       "log": "在龟游戏屋经历了命运的邂逅，解锁了特殊天赋【命运的邂逅】（新存档可用）"
+    },
+    {
+      "id": "kame_star",
+      "name": "决斗都市 起",
+      "probability": 1,
+      "title": "龟游戏屋",
+      "text": "与他们了解了一下详细情况后，你决定不去过多干预这段历史",
+      "effects": [],
+      "log": "参加了决斗都市大赛",
+      "oneTime": true,
+      "options": [
+        {
+          "name": "你感觉寻找的真相或许可以在这里面窥得一二",
+          "effects": [
+            {
+              "type": "unlockLocation",
+              "locationId": "duel_city"
+            }
+          ]
+        }
+      ],
+      "requiredTalent": "duelist_city"
     }
   ],
   "cardshop": [
@@ -4003,15 +4932,26 @@ const EVENTS = {
           "effects": [
             {
               "type": "randomCardByRarity"
+            },
+            {
+              "type": "loseDuelPoints",
+              "amount": 300
             }
           ]
         },
         {
           "name": "十连抽（3000决斗点，保底SR）",
-          "showCondition": { "type": "duelPoints", "value": 3000 },
+          "showCondition": {
+            "type": "duelPoints",
+            "value": 3000
+          },
           "effects": [
             {
               "type": "tenPackDraw"
+            },
+            {
+              "type": "loseDuelPoints",
+              "amount": 3000
             }
           ]
         },
@@ -4074,6 +5014,47 @@ const EVENTS = {
       ],
       "log": "在卡牌店遇到城之内克也",
       "cooldown": 1
+    },
+    {
+      "id": "cardshop_packup",
+      "name": "蕾亚卡包",
+      "probability": 0.4,
+      "title": "童实野卡牌店",
+      "text": "应对决斗都市的举办，卡店推出了更容易开出稀有的卡包！（5000决斗点一次）",
+      "effects": [],
+      "log": "闪光抽卡！",
+      "options": [
+        {
+          "name": "来一些吧，物超所值！",
+          "effects": [
+            {
+              "type": "loseDuelPoints",
+              "amount": 5000
+            },
+            {
+              "type": "randomCardByRarity",
+              "rarity": "UR"
+            },
+            {
+              "type": "randomCardByRarity",
+              "rarity": "SR"
+            },
+            {
+              "type": "randomCardByRarity",
+              "rarity": "SR"
+            }
+          ]
+        },
+        {
+          "name": "下次吧。。",
+          "effects": [
+            {
+              "type": "text"
+            }
+          ]
+        }
+      ],
+      "failText": "没钱抽什么卡！"
     }
   ],
   "beach": [
@@ -4137,6 +5118,41 @@ const EVENTS = {
         }
       ],
       "log": "在海边散步放松，整理了思绪"
+    },
+    {
+      "id": "yc003",
+      "name": "码头激战",
+      "probability": 0.5,
+      "title": "海边码头",
+      "text": "暗马利克利用千年锡杖精神控制城之内，在码头逼迫游戏与被操控的城之内展开生死黑暗决斗，赌注为双方灵魂。",
+      "effects": [],
+      "log": "城之内中了马利克的计谋被迫与游戏展开黑暗决斗",
+      "oneTime": true,
+      "requiredTalent": "citywork",
+      "options": [
+        {
+          "name": "不要小瞧我们之间的羁绊啊！（与被控制的城之内进行黑暗决斗 牌力4000+ 奖励：神秘卡牌）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "ts002",
+              "mode": "dark"
+            }
+          ]
+        },
+        {
+          "name": "黑暗决斗太危险了，你选择上前给游戏加油。",
+          "effects": [
+            {
+              "type": "unlockAchievement",
+              "achievementId": "goone"
+            },
+            {
+              "type": "cardPoints"
+            }
+          ]
+        }
+      ]
     }
   ],
   "school": [
@@ -4537,10 +5553,295 @@ const EVENTS = {
       "log": "在公园意外获得【{cardName}】",
       "oneTime": true
     }
+  ],
+  "duel_city": [
+    {
+      "id": "find",
+      "name": "都市闲逛",
+      "probability": 0.3,
+      "title": "决斗都市",
+      "text": "在决斗都市闲逛时，发现了别人遗失的拼图卡。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "power",
+          "amount": 15
+        }
+      ],
+      "log": "闲逛时找到了拼图卡",
+      "cooldown": 2,
+      "requiredTalent": "duelist_city"
+    },
+    {
+      "id": "adventure",
+      "name": "都市奇遇",
+      "probability": 0.1,
+      "title": "决斗都市",
+      "text": "在桥洞底下休息时发现了一叠卡包！",
+      "effects": [
+        {
+          "type": "tenPackDraw"
+        }
+      ],
+      "log": "十连抽获得【{cardName}】",
+      "oneTime": true,
+      "requiredTalent": "duelist_city"
+    },
+    {
+      "id": "rest",
+      "name": "都市休息",
+      "probability": 0.3,
+      "title": "决斗都市",
+      "text": "在都市的咖啡厅休息了一下午，思路更清晰了。",
+      "effects": [
+        {
+          "type": "bonusStat",
+          "stat": "proficiency",
+          "amount": 20
+        }
+      ],
+      "log": "休息了一下整理思绪",
+      "requiredTalent": "duelist_city"
+    },
+    {
+      "id": "duel",
+      "name": "都市战斗",
+      "probability": 0.5,
+      "title": "决斗都市",
+      "text": "一位挑战者向你发起赌卡决斗！",
+      "effects": [],
+      "log": "参与赌卡决斗 强度+5",
+      "options": [
+        {
+          "name": "既然如此，只有战斗了！",
+          "effects": [
+            {
+              "type": "duel",
+              "mode": "custom1",
+              "gamble": true
+            },
+            {
+              "type": "bonusStat",
+              "stat": "power",
+              "amount": 5
+            }
+          ]
+        }
+      ],
+      "requiredTalent": "duelist_city"
+    },
+    {
+      "id": "yc001",
+      "name": "河边激战",
+      "probability": 0.5,
+      "title": "决斗都市",
+      "text": "你看见游戏一行人正在和一个奇怪的人对峙。",
+      "effects": [],
+      "log": "得到了千年神器碎片（开启精灵力功能）",
+      "oneTime": true,
+      "requiredTalent": "citywork",
+      "options": [
+        {
+          "name": "上前帮忙（黑暗决斗失败会失去生命能量！）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "ts001",
+              "mode": "dark"
+            },
+            {
+              "type": "unlockAchievement",
+              "achievementId": "qiannian"
+            }
+          ]
+        },
+        {
+          "name": "暗中观察（你决定谨慎为上先远远观望）",
+          "effects": [
+            {
+              "type": "unlockAchievement",
+              "talentId": "yamiduellist",
+              "achievementId": "yamiduel"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yc002",
+      "name": "游戏馈赠",
+      "probability": 0.5,
+      "title": "决斗都市",
+      "text": "游戏为了感谢你的帮助，给予你卡点报酬。",
+      "effects": [
+        {
+          "type": "cardPoints",
+          "amount": 50
+        }
+      ],
+      "log": "获得50卡点",
+      "oneTime": true,
+      "requiredTalent": "qiannianpower"
+    }
+  ],
+  "spirit_world": [
+    {
+      "id": "spirit_training",
+      "name": "精灵修炼",
+      "probability": 0.5,
+      "title": "精灵界 · 修炼之地",
+      "text": "你来到精灵界的修炼之地，周围的卡片精灵正在进行各种修炼。你选择与它们一起修炼，感受精灵之力的流动。",
+      "effects": [
+        {
+          "type": "spiritPower",
+          "amount": 50
+        },
+        {
+          "type": "awakeningShards",
+          "amount": 5
+        }
+      ],
+      "log": "在精灵界修炼，精灵力+50，觉醒碎片+5",
+      "cooldown": 1
+    },
+    {
+      "id": "spirit_battle",
+      "name": "精灵战斗",
+      "probability": 0.3,
+      "title": "精灵界 · 战斗竞技场",
+      "text": "你在精灵界的战斗竞技场遇到了一只强大的精灵，它向你发起了挑战！经过激烈的战斗，你成功击败了它。",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "SR"
+        },
+        {
+          "type": "awakeningShards",
+          "amount": 10
+        }
+      ],
+      "log": "在精灵界战斗胜利，获得稀有卡和觉醒碎片+10",
+      "cooldown": 2
+    },
+    {
+      "id": "spirit_help",
+      "name": "帮助精灵",
+      "probability": 0.2,
+      "title": "精灵界 · 精灵的请求",
+      "text": "一只小精灵焦急地向你求助，它的朋友被困在了荆棘丛中。你帮助它救出了朋友，小精灵们非常感激，将一部分精灵之力传给了你。",
+      "effects": [
+        {
+          "type": "spiritPower",
+          "amount": 80
+        }
+      ],
+      "log": "帮助了精灵界的小精灵，精灵力+80",
+      "cooldown": 3
+    },
+    {
+      "id": "spirit_rare_find",
+      "name": "稀有发现",
+      "probability": 0.15,
+      "title": "精灵界 · 神秘宝箱",
+      "text": "你在精灵界的深处发现了一个散发着神秘光芒的宝箱，打开后里面竟然是一张珍贵的卡片和大量觉醒碎片！",
+      "effects": [
+        {
+          "type": "randomCardByRarity",
+          "rarity": "UR"
+        },
+        {
+          "type": "awakeningShards",
+          "amount": 20
+        }
+      ],
+      "log": "在精灵界发现神秘宝箱，获得UR卡和觉醒碎片+20",
+      "oneTime": false,
+      "cooldown": 5
+    }
+  ],
+  "spirit": [
+    {
+      "id": "spirit_boss",
+      "name": "圣地试炼",
+      "probability": 0.5,
+      "title": "精灵界",
+      "text": "循着一位精灵领主的线索，你来到了精灵界圣地之一的恩底弥翁圣地进行挑战。（推荐牌力5000+）",
+      "effects": [
+        {
+          "type": "characterDuel",
+          "mode": "master",
+          "charId": "op1789065379006"
+        }
+      ],
+      "log": "为了突破自我，你来到精灵圣地进行挑战。",
+      "oneTime": true,
+      "requiredTalent": "spiritpower"
+    }
   ]
 };
 
 /* === GAME_DATA_END === 以上数据可由 dev-tool.html 直接编辑 === */
+// ===== 决斗配置辅助函数 =====
+function getDuelModeConfig(mode) {
+  if (DUEL_CONFIG.modes && DUEL_CONFIG.modes[mode]) {
+    return DUEL_CONFIG.modes[mode];
+  }
+  return {
+    name: mode === 'quick' ? '快速决斗' : '大师决斗',
+    enabled: true,
+    maxTurns: mode === 'quick' ? 30 : 60,
+    playerBasePower: 100,
+    modeBonus: mode === 'quick' ? 1.2 : 1.4,
+    opponentMinDifficulty: mode === 'quick' ? 0 : 3,
+    opponentMaxDifficulty: mode === 'quick' ? 3 : 6,
+    opponentCategory: 'normal',
+    mainDeckMin: mode === 'quick' ? 20 : 40,
+    mainDeckMax: 60,
+    extraDeckMin: 0,
+    extraDeckMax: 15,
+    gambleEnabled: true,
+    winDuelPoints: mode === 'quick' ? 200 : 800,
+    loseDuelPoints: mode === 'quick' ? 50 : 200,
+    winCardPoints: 0,
+    loseCardPoints: 0,
+    winStats: {},
+    loseStats: {},
+    battleEventBaseRate: 0.3,
+    archetypeEventBonus: 0.15
+  };
+}
+function getOpponentsByCategory(category) {
+  return OPPONENTS.filter(op => op.enabled !== false && op.category === category);
+}
+function getOpponentsBySpecialTag(tag) {
+  return OPPONENTS.filter(op => op.enabled !== false && op.specialTag === tag);
+}
+function getOpponentById(id) {
+  return OPPONENTS.find(op => op.id === id);
+}
+function getRandomOpponent(mode) {
+  const config = getDuelModeConfig(mode);
+  let pool = getOpponentsByCategory(config.opponentCategory || 'normal');
+  pool = pool.filter(op => {
+    const diff = op.difficulty || 1;
+    return diff >= (config.opponentMinDifficulty || 0) && diff <= (config.opponentMaxDifficulty || 10);
+  });
+  if (pool.length === 0) pool = OPPONENTS.filter(op => op.enabled !== false);
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function getAllDuelModes() {
+  if (DUEL_CONFIG.modes) {
+    return Object.entries(DUEL_CONFIG.modes)
+      .filter(([key, config]) => config.enabled !== false)
+      .map(([key, config]) => ({ id: key, ...config }));
+  }
+  return [
+    { id: 'quick', name: '快速决斗' },
+    { id: 'master', name: '大师决斗' }
+  ];
+}
+
 // ===== 游戏状态 =====
 let gameState = null;
 
@@ -5286,6 +6587,14 @@ function startGame() {
     cardPoints: 0,
     masterDuelCount: 0,
     resonanceBonus: { search:0, expand:0, disrupt:0, resist:0, suppress:0 },
+    unlockedLocations: [],
+    unlockedTournaments: [],
+    unlockedDuelModes: ['quick', 'master'],
+    // 精灵力系统
+    spiritPower: 0,           // 精灵力经验值
+    spiritLevel: 0,           // 精灵力等级（0-12星）
+    awakeningShards: 0,       // 觉醒碎片
+    spiritSystemUnlocked: false, // 精灵力系统是否解锁
     tournamentCheatFailCount: 0,
     bonusStats: {},
     triggeredEvents: [],
@@ -5331,6 +6640,22 @@ function startGame() {
     // 初始年龄
     if (t.startAge) {
       gameState.age = t.startAge;
+    }
+    // 天赋解锁成就
+    if (t.unlockAchievement) {
+      if (!gameState.achievements) gameState.achievements = [];
+      if (!gameState.achievements.includes(t.unlockAchievement)) {
+        gameState.achievements.push(t.unlockAchievement);
+        const ach = ACHIEVEMENTS.find(a => a.id === t.unlockAchievement);
+        addEventLog(`天赋【${t.name}】：解锁成就【${ach ? ach.name : t.unlockAchievement}】`);
+        // 检查成就解锁的隐藏天赋
+        if (ach && ach.unlockTalent) {
+          if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+          if (!gameState.unlockedTalents.includes(ach.unlockTalent)) {
+            gameState.unlockedTalents.push(ach.unlockTalent);
+          }
+        }
+      }
     }
   });
 
@@ -5527,6 +6852,27 @@ function updateProfileModal() {
   document.getElementById('profile-duel-points').textContent = gameState.duelPoints || 0;
   document.getElementById('profile-card-points').textContent = gameState.cardPoints || 0;
   document.getElementById('profile-collection').textContent = gameState.collection.length;
+
+  // 精灵力系统
+  const spiritSection = document.getElementById('profile-spirit-section');
+  if (gameState.spiritSystemUnlocked) {
+    spiritSection.style.display = 'block';
+    const config = GAME_CONFIG.spiritSystem || {};
+    const maxLevel = config.maxLevel || 12;
+    const level = gameState.spiritLevel || 0;
+    const exp = gameState.spiritPower || 0;
+    const required = level < maxLevel ? getSpiritExpRequired(level) : 0;
+    const bonusPercent = Math.floor(getSpiritPowerBonus() * 100);
+
+    document.getElementById('profile-spirit-level').textContent = level + '星';
+    document.getElementById('profile-spirit-bonus').textContent = '战斗牌力 +' + bonusPercent + '%';
+    document.getElementById('profile-spirit-exp-text').textContent = level < maxLevel ? (exp + ' / ' + required) : '已满级';
+    document.getElementById('profile-spirit-exp-bar').style.width = level < maxLevel ? Math.min(100, exp / required * 100) + '%' : '100%';
+    document.getElementById('profile-awakening-shards').textContent = gameState.awakeningShards || 0;
+    document.getElementById('profile-spirit-next-hint').textContent = level < maxLevel ? ('下一星：+' + Math.floor((level + 1) * (config.powerBonusPerLevel || 0.1) * 100) + '%牌力') : '已达最高星级';
+  } else {
+    spiritSection.style.display = 'none';
+  }
 
   // 卡组概况
   document.getElementById('profile-main-deck').textContent = gameState.mainDeck.length + '/60';
@@ -5807,6 +7153,7 @@ function switchSubView(name) {
     renderTalentGrid();
   }
   if (name === 'ranking') renderRanking();
+  if (name === 'duel') renderDuelModes();
 }
 
 // 刷新当前活动页面（用于操作后实时更新）
@@ -5817,6 +7164,7 @@ function refreshCurrentView() {
   if (currentSubView === 'task') renderTasks();
   if (currentSubView === 'achievement') renderAchievements();
   if (currentSubView === 'ranking') renderRanking();
+  if (currentSubView === 'duel') renderDuelModes();
 }
 
 // ===== 显示更新 =====
@@ -5877,11 +7225,15 @@ function updateAllDisplays() {
 function renderLocations() {
   const grid = document.getElementById('locations-grid');
   grid.innerHTML = '';
+  if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
   LOCATIONS.forEach(loc => {
+    // 隐藏地点检查：如果地点设置了hidden且未解锁，则不显示
+    if (loc.hidden && !gameState.unlockedLocations.includes(loc.id)) return;
     const div = document.createElement('div');
     div.className = 'location-card';
+    const isNewlyUnlocked = gameState.unlockedLocations.includes(loc.id) && loc.hidden;
     div.innerHTML = `
-      <div class="location-name">${loc.name}</div>
+      <div class="location-name">${loc.name}${isNewlyUnlocked ? ' <span style="font-size:10px;color:#10b981;">(新解锁)</span>' : ''}</div>
       <div class="location-desc">${loc.desc}</div>
       <div class="location-tags">${loc.tags.map(t => `<span class="location-tag">${t}</span>`).join('')}</div>
     `;
@@ -5948,8 +7300,9 @@ function eventDuelConditionMet(e) {
 }
 
 function runDataDrivenEvent(loc) {
-  // 消耗7天（365天=1岁）
-  gameState.week += 7;
+  // 精灵界时间流速不同，只消耗1天；其他地点消耗7天（365天=1岁）
+  const daysPassed = loc.id === 'spirit_world' ? 1 : 7;
+  gameState.week += daysPassed;
   gameState.age = 18 + Math.floor(gameState.week / 365);
 
   // 检查年龄是否达到25岁（游戏结束）
@@ -5961,7 +7314,7 @@ function runDataDrivenEvent(loc) {
   const events = EVENTS[loc.id] || [];
   if (!events.length) {
     // 没有事件发生，不消耗时间
-    gameState.week -= 7;
+    gameState.week -= daysPassed;
     if (gameState.week < 1) gameState.week = 1;
     gameState.age = 18 + Math.floor(gameState.week / 365);
     showEventModal(loc.name, '这里似乎没什么特别的事情发生。', []);
@@ -5994,6 +7347,24 @@ function runDataDrivenEvent(loc) {
     if (e.characterOnly) {
       const aff = gameState.affinity[e.characterOnly] || 0;
       if (aff < 20) return false;
+    }
+    // 需要完成指定任务
+    if (e.requiredTask && (!gameState.completedTasks || !gameState.completedTasks.includes(e.requiredTask))) return false;
+    // 需要解锁指定成就
+    if (e.requiredAchievement && (!gameState.achievements || !gameState.achievements.includes(e.requiredAchievement))) return false;
+    // 需要拥有指定称号
+    if (e.requiredTitle && (!gameState.titles || !gameState.titles.includes(e.requiredTitle))) return false;
+    // 需要赢得指定比赛
+    if (e.requiredTournamentWin && (!gameState.tournamentWins || !gameState.tournamentWins.includes(e.requiredTournamentWin))) return false;
+    // 需要牌力达到指定值
+    if (e.requiredPower && getDuelPower() < e.requiredPower) return false;
+    // 需要主卡组数量达到指定值
+    if (e.requiredMainDeckSize && getMainDeckCount() < e.requiredMainDeckSize) return false;
+    // 多条件检查（conditions数组，全部满足才触发）
+    if (e.conditions && e.conditions.length) {
+      for (const cond of e.conditions) {
+        if (!checkSingleCondition(cond).complete) return false;
+      }
     }
     // 决斗条件检查：如果事件触发决斗但卡组条件不满足，跳过此事件
     if (!eventDuelConditionMet(e)) return false;
@@ -6029,7 +7400,7 @@ function runDataDrivenEvent(loc) {
   const hasSkipTime = hasNoOptions && (selectedEvent.skipTime ||
     (selectedEvent.effects || []).some(ef => ef.type === 'skipWeek'));
   if (hasSkipTime) {
-    gameState.week -= 7;
+    gameState.week -= daysPassed;
     if (gameState.week < 1) gameState.week = 1;
     gameState.age = 18 + Math.floor(gameState.week / 365);
   }
@@ -6038,7 +7409,7 @@ function runDataDrivenEvent(loc) {
   if (selectedEvent.cost && selectedEvent.cost.duelPoints) {
     if (gameState.duelPoints < selectedEvent.cost.duelPoints) {
       // 决斗点不足，无法参与，不消耗时间
-      gameState.week -= 7;
+      gameState.week -= daysPassed;
       if (gameState.week < 1) gameState.week = 1;
       gameState.age = 18 + Math.floor(gameState.week / 365);
       showEventModal(selectedEvent.title || loc.name, selectedEvent.failText || '你的决斗点不足。', []);
@@ -6104,7 +7475,7 @@ function runDataDrivenEvent(loc) {
           const rewards = executeEffects(op.effects || [], selectedEvent, loc);
           // 选项级别的skipTime：该选项不占用回合时间
           if (op.skipTime) {
-            gameState.week -= 7;
+            gameState.week -= daysPassed;
             if (gameState.week < 1) gameState.week = 1;
             gameState.age = 18 + Math.floor(gameState.week / 365);
           }
@@ -6246,6 +7617,42 @@ function executeEffects(effects, event, loc) {
         }
         break;
       }
+      case 'unlockAchievement': {
+        if (ef.achievementId) {
+          if (!gameState.achievements) gameState.achievements = [];
+          if (!gameState.achievements.includes(ef.achievementId)) {
+            gameState.achievements.push(ef.achievementId);
+            const ach = ACHIEVEMENTS.find(a => a.id === ef.achievementId);
+            result.displayItems.push({ name: `解锁成就【${ach ? ach.name : ef.achievementId}】` });
+            // 检查成就解锁的隐藏天赋
+            if (ach && ach.unlockTalent) {
+              if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+              if (!gameState.unlockedTalents.includes(ach.unlockTalent)) {
+                gameState.unlockedTalents.push(ach.unlockTalent);
+                const talent = TALENTS.find(t => t.id === ach.unlockTalent);
+                result.displayItems.push({ name: `解锁隐藏天赋【${talent ? talent.name : ach.unlockTalent}】` });
+              }
+            }
+          } else {
+            result.displayItems.push({ name: '成就已解锁' });
+          }
+        }
+        break;
+      }
+      case 'spiritPower': {
+        if (gameState.spiritSystemUnlocked && ef.amount > 0) {
+          addSpiritPower(ef.amount);
+          result.displayItems.push({ name: `精灵力 +${ef.amount}` });
+        }
+        break;
+      }
+      case 'awakeningShards': {
+        if (ef.amount > 0) {
+          addAwakeningShards(ef.amount);
+          result.displayItems.push({ name: `觉醒碎片 +${ef.amount}` });
+        }
+        break;
+      }
       case 'cardPoints': {
         gameState.cardPoints = (gameState.cardPoints || 0) + (ef.amount || 0);
         result.displayItems.push({ name: `获得${ef.amount}卡点` });
@@ -6258,13 +7665,13 @@ function executeEffects(effects, event, loc) {
           const op = OPPONENTS.find(o => o.id === ef.opponentId);
           if (op) {
             const opPower = Math.round(op.basePower + rand(0, op.variance));
-            customOpponent = { name: op.name, power: opPower, difficulty: op.difficulty };
+            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty };
           }
         } else if (ef.difficulty) {
           const op = OPPONENTS.find(o => o.difficulty === ef.difficulty) || OPPONENTS[Math.min(ef.difficulty - 1, OPPONENTS.length - 1)];
           if (op) {
             const opPower = Math.round(op.basePower + rand(0, op.variance));
-            customOpponent = { name: op.name, power: opPower, difficulty: op.difficulty };
+            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty };
           }
         }
         result.displayItems.push({ name: customOpponent ? `与 ${customOpponent.name} 决斗` : '开始决斗' });
@@ -6276,7 +7683,7 @@ function executeEffects(effects, event, loc) {
         if (char) {
           // 使用角色牌力（将旧版power转换为新版牌力：除以15）
           const charPower = char.duelPower || Math.round((char.power || 1000) / 15);
-          const customOpponent = { name: char.name, power: charPower, difficulty: 5 };
+          const customOpponent = { id: char.id, name: char.name, power: charPower, difficulty: 5 };
           result.displayItems.push({ name: `与 ${char.name} 决斗` });
           startDuel(ef.mode || 'quick', false, customOpponent);
         } else {
@@ -6328,6 +7735,60 @@ function executeEffects(effects, event, loc) {
       }
       case 'skipWeek': {
         // 已在 runDataDrivenEvent 中处理
+        break;
+      }
+      case 'unlockLocation': {
+        // 解锁指定地点
+        if (ef.locationId) {
+          if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+          if (!gameState.unlockedLocations.includes(ef.locationId)) {
+            gameState.unlockedLocations.push(ef.locationId);
+            const loc = LOCATIONS.find(l => l.id === ef.locationId);
+            result.displayItems.push({ name: `解锁新地点：${loc ? loc.name : ef.locationId}` });
+          }
+        }
+        break;
+      }
+      case 'unlockAllLocations': {
+        // 解锁所有地点
+        LOCATIONS.forEach(l => {
+          if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+          if (!gameState.unlockedLocations.includes(l.id)) {
+            gameState.unlockedLocations.push(l.id);
+          }
+        });
+        result.displayItems.push({ name: '解锁所有地点！' });
+        break;
+      }
+      case 'addTitle': {
+        // 获得称号
+        if (ef.title) {
+          if (!gameState.titles) gameState.titles = [];
+          if (!gameState.titles.includes(ef.title)) {
+            gameState.titles.push(ef.title);
+            result.displayItems.push({ name: `获得称号：${ef.title}` });
+          }
+        }
+        break;
+      }
+      case 'setActiveTitle': {
+        // 设置当前显示的称号
+        if (ef.title) {
+          gameState.activeTitle = ef.title;
+          result.displayItems.push({ name: `装备称号：${ef.title}` });
+        }
+        break;
+      }
+      case 'unlockTournament': {
+        // 解锁比赛
+        if (ef.tournamentId) {
+          if (!gameState.unlockedTournaments) gameState.unlockedTournaments = [];
+          if (!gameState.unlockedTournaments.includes(ef.tournamentId)) {
+            gameState.unlockedTournaments.push(ef.tournamentId);
+            const t = TOURNAMENTS.find(x => x.id === ef.tournamentId);
+            result.displayItems.push({ name: `解锁比赛：${t ? t.name : ef.tournamentId}` });
+          }
+        }
         break;
       }
       case 'text':
@@ -6463,28 +7924,79 @@ function showConfirmModal(title, text, confirmText, cancelText, onConfirm) {
 }
 
 // ===== 决斗系统 =====
+// ===== 决斗模式列表渲染 =====
+function renderDuelModes() {
+  const container = document.getElementById('duel-mode-list');
+  if (!container) return;
+  container.innerHTML = '';
+  const modes = getAllDuelModes();
+  const unlockedModes = gameState.unlockedDuelModes || ['quick', 'master'];
+  modes.forEach(mode => {
+    // 只显示已解锁的模式
+    if (!unlockedModes.includes(mode.id)) return;
+    const config = getDuelModeConfig(mode.id);
+    const mainCount = getMainDeckCount();
+    const extraCount = getExtraDeckCount();
+    const mainOk = mainCount >= (config.mainDeckMin || 20) && mainCount <= (config.mainDeckMax || 60);
+    const extraOk = extraCount >= (config.extraDeckMin || 0) && extraCount <= (config.extraDeckMax || 15);
+    const canStart = mainOk && extraOk;
+    const tierText = mode.id === 'quick' ? '入门' : (mode.id === 'master' ? '正式' : (mode.id === 'dark' ? '黑暗' : '自定义'));
+    const btnClass = mode.id === 'master' ? 'btn-gold' : (mode.id === 'dark' ? 'btn-danger' : 'btn-primary');
+
+    // 特殊奖励信息
+    let rewardText = `奖励：随机卡 ×1${config.gambleEnabled ? ' · 支持赌卡' : ''}`;
+    if (config.winDays || config.loseDays) {
+      rewardText = `胜利：+${config.winDays || 0}天寿命 · 失败：-${config.loseDays || 0}天寿命`;
+    }
+
+    const div = document.createElement('div');
+    div.className = 'tournament-item';
+    if (mode.id === 'dark') div.style.borderColor = '#8b0000';
+    div.innerHTML = `
+      <div class="tournament-header">
+        <div class="tournament-name" style="${mode.id === 'dark' ? 'color:#8b0000;' : ''}">${config.name || mode.id}</div>
+        <div class="tournament-tier">${tierText}</div>
+      </div>
+      <div class="tournament-desc">主卡组${config.mainDeckMin || 20}-${config.mainDeckMax || 60}张，额外卡组${config.extraDeckMax || 15}张以内。最多${config.maxTurns || 30}回合。</div>
+      <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+        要求：主卡组${config.mainDeckMin || 20}张 ${mainOk ? '✓' : '✗'}
+        ${config.extraDeckMin > 0 ? `额外${config.extraDeckMin}张 ${extraOk ? '✓' : '✗'}` : ''}
+        ${config.winDuelPoints ? `· 胜利奖励 ${config.winDuelPoints}决斗点` : ''}
+      </div>
+      <div class="tournament-rewards" style="${mode.id === 'dark' ? 'color:#8b0000;' : ''}">${rewardText}</div>
+      <button class="btn ${canStart ? btnClass : 'btn-secondary'}" style="width:100%;" ${canStart ? '' : 'disabled'} onclick="startDuel('${mode.id}')">
+        ${canStart ? `开始${config.name || mode.id}` : '卡组条件不足'}
+      </button>
+    `;
+    container.appendChild(div);
+  });
+}
+
 function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   const mainCount = getMainDeckCount();
   const extraCount = getExtraDeckCount();
+  const modeConfig = getDuelModeConfig(mode);
 
   // 计算卡组上限（天赋可调整）
-  const maxMain = 60 + getTalentBonus('maxMainDeck', 0);
-  const maxExtra = 15 + getTalentBonus('maxExtraDeck', 0);
+  const maxMain = (modeConfig.mainDeckMax || 60) + getTalentBonus('maxMainDeck', 0);
+  const maxExtra = (modeConfig.extraDeckMax || 15) + getTalentBonus('maxExtraDeck', 0);
+  const minMain = modeConfig.mainDeckMin || (mode === 'quick' ? 20 : 40);
+  const minExtra = modeConfig.extraDeckMin || 0;
 
-  if (mode === 'quick' && mainCount < 20) {
-    showToast('主卡组至少需要20张才能进行快速决斗！');
+  if (mainCount < minMain) {
+    showToast(`主卡组至少需要${minMain}张才能进行${modeConfig.name || mode}！`);
     return;
   }
-  if (mode === 'quick' && mainCount > maxMain) {
+  if (mainCount > maxMain) {
     showToast(`主卡组最多${maxMain}张！`);
     return;
   }
-  if (mode === 'master' && mainCount < 40) {
-    showToast('大师决斗需要主卡组至少40张！');
+  if (extraCount < minExtra) {
+    showToast(`额外卡组至少需要${minExtra}张！`);
     return;
   }
-  if (mode === 'master' && mainCount > maxMain) {
-    showToast(`主卡组最多${maxMain}张！`);
+  if (extraCount > maxExtra) {
+    showToast(`额外卡组最多${maxExtra}张！`);
     return;
   }
   if (extraCount > maxExtra) {
@@ -6514,37 +8026,40 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   if (customOpponent) {
     // 使用自定义对手（比赛/角色挑战）
     opponent = { 
+      id: customOpponent.id,
       name: customOpponent.name, 
       power: customOpponent.power, 
       difficulty: customOpponent.difficulty || 3 
     };
   } else {
-    // 从OPPONENTS数据库生成随机对手（使用配置中的范围）
-    const oppMin = mode === 'master' ? DUEL_CONFIG.masterOpponentMin : DUEL_CONFIG.quickOpponentMin;
-    const oppMax = mode === 'master' ? Math.min(DUEL_CONFIG.masterOpponentMax, OPPONENTS.length - 1) : Math.min(DUEL_CONFIG.quickOpponentMax, OPPONENTS.length - 1);
-    const diffIdx = rand(oppMin, oppMax);
-    const opponentTemplate = OPPONENTS[diffIdx];
+    // 从OPPONENTS数据库生成随机对手（使用决斗模式配置中的分类和难度范围）
+    const opponentTemplate = getRandomOpponent(mode);
+
+    if (!opponentTemplate) {
+      showToast('没有可用的对手');
+      return;
+    }
 
     // NPC牌力随时间增长（使用DUEL_CONFIG配置）
     let weekBonus = 1;
-    if (gameState.week > DUEL_CONFIG.npcGrowthStartDay) {
-      weekBonus = 1 + Math.floor((gameState.week - DUEL_CONFIG.npcGrowthStartDay) / DUEL_CONFIG.npcGrowthInterval) * DUEL_CONFIG.npcGrowthRate;
+    if (gameState.week > GAME_CONFIG.npcGrowthStartDay) {
+      weekBonus = 1 + Math.floor((gameState.week - GAME_CONFIG.npcGrowthStartDay) / GAME_CONFIG.npcGrowthInterval) * GAME_CONFIG.npcGrowthRate;
     }
     // 决斗模式对手牌力倍率
-    const modeBonus = mode === 'master' ? DUEL_CONFIG.masterModeBonus : DUEL_CONFIG.quickModeBonus;
+    const modeBonus = modeConfig.modeBonus || 1.0;
 
     const opponentPower = Math.round((opponentTemplate.basePower + rand(0, opponentTemplate.variance)) * weekBonus * modeBonus);
-    opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty };
+    opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty, id: opponentTemplate.id };
   }
 
   // 计算玩家初始牌力（生命值）= 基础牌力 + 综合属性加成
   const stats = getTotalStats();
   const winRateBonus = getTalentBonus('winRateBonus', 0);
-  const basePlayerPower = DUEL_CONFIG.playerBasePower + 
+  const basePlayerPower = (modeConfig.playerBasePower || 100) + 
     Math.round((stats.search || 0) * 1.5 + (stats.expand || 0) * 1.5 + 
     (stats.disrupt || 0) * 1.5 + (stats.resist || 0) * 1.5 + 
     (stats.suppress || 0) * 1.5 + (stats.power || 0) * 2.0);
-  const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100));
+  const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100) * (1 + getSpiritPowerBonus()));
 
   currentDuel = {
     mode,
@@ -6686,7 +8201,8 @@ function runDuelTurn() {
         finishDuel();
       } else {
         // 检查最大回合数
-        const maxTurns = currentDuel.mode === 'master' ? DUEL_CONFIG.masterMaxTurns : DUEL_CONFIG.quickMaxTurns;
+        const modeConfig = getDuelModeConfig(currentDuel.mode);
+        const maxTurns = modeConfig.maxTurns || 30;
         if (currentDuel.turn > maxTurns) {
           if (currentDuel.playerPower > currentDuel.opponentPower) {
             addDuelLog(`回合数耗尽（${maxTurns}回合），你的剩余牌力更高，决斗胜利！`, 'win');
@@ -6839,11 +8355,34 @@ function finishDuel() {
   if (won) {
     gameState.wins++;
     gameState.winStreak = (gameState.winStreak || 0) + 1;
+    // 记录战胜对手次数（角色和对手统一记录）
+    if (currentDuel.opponent && currentDuel.opponent.id) {
+      if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
+      gameState.defeatedCharacters[currentDuel.opponent.id] = (gameState.defeatedCharacters[currentDuel.opponent.id] || 0) + 1;
+    }
+    const modeConfig = getDuelModeConfig(currentDuel.mode);
     if (!currentDuel.noReward) {
       const dpMult = getTalentMultiplier('duelPointMultiplier', 1);
-      gameState.duelPoints += Math.round((currentDuel.mode === 'master' ? 50 : 20) * dpMult);
+      const winDP = modeConfig.winDuelPoints || (currentDuel.mode === 'master' ? 800 : 200);
+      gameState.duelPoints += Math.round(winDP * dpMult);
+      // 胜利卡点奖励
+      const winCP = modeConfig.winCardPoints || 0;
+      if (winCP > 0) gameState.cardPoints = (gameState.cardPoints || 0) + winCP;
+      // 胜利属性加成
+      if (modeConfig.winStats) {
+        Object.entries(modeConfig.winStats).forEach(([stat, val]) => {
+          if (!gameState.bonusStats) gameState.bonusStats = {};
+          gameState.bonusStats[stat] = (gameState.bonusStats[stat] || 0) + val;
+        });
+      }
     }
     addDuelLog('你赢了！', 'win');
+
+    // 黑暗决斗胜利：增加寿命
+    if (modeConfig.winDays && !currentDuel.noReward) {
+      gameState.week = (gameState.week || 1) + modeConfig.winDays;
+      addDuelLog(`黑暗决斗胜利！获得 ${modeConfig.winDays} 天寿命`, 'win');
+    }
 
     let rewardText = '';
     if (!currentDuel.noReward) {
@@ -6865,19 +8404,50 @@ function finishDuel() {
       rewardText = '比赛决斗胜利！';
     }
 
+    const winDP = modeConfig.winDuelPoints || (currentDuel.mode === 'master' ? 800 : 200);
     resultArea.innerHTML = `
       <div class="duel-result win">
         <div class="duel-result-title">胜 利</div>
         <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">${rewardText}</div>
-        ${!currentDuel.noReward ? `<div style="font-size:12px; color:var(--accent-gold);">决斗点 +${currentDuel.mode === 'master' ? 50 : 20}</div>` : ''}
+        ${!currentDuel.noReward ? `<div style="font-size:12px; color:var(--accent-gold);">决斗点 +${winDP}</div>` : ''}
       </div>
     `;
   } else {
     gameState.losses++;
     gameState.winStreak = 0;
+    const modeConfig = getDuelModeConfig(currentDuel.mode);
+    // 失败惩罚
+    if (!currentDuel.noReward) {
+      const loseDP = modeConfig.loseDuelPoints || 0;
+      if (loseDP > 0) gameState.duelPoints = Math.max(0, gameState.duelPoints - loseDP);
+      const loseCP = modeConfig.loseCardPoints || 0;
+      if (loseCP > 0) gameState.cardPoints = Math.max(0, (gameState.cardPoints || 0) - loseCP);
+      if (modeConfig.loseStats) {
+        Object.entries(modeConfig.loseStats).forEach(([stat, val]) => {
+          if (!gameState.bonusStats) gameState.bonusStats = {};
+          gameState.bonusStats[stat] = Math.max(0, (gameState.bonusStats[stat] || 0) - val);
+        });
+      }
+    }
     addDuelLog('你输了...', 'lose');
 
+    // 黑暗决斗失败：减少寿命
+    let darkDuelGameOver = false;
+    if (modeConfig.loseDays && !currentDuel.noReward) {
+      gameState.week = Math.max(1, (gameState.week || 1) - modeConfig.loseDays);
+      addDuelLog(`黑暗决斗失败！失去 ${modeConfig.loseDays} 天寿命`, 'lose');
+      // 检查年龄是否达到游戏结束年龄
+      const currentAge = 18 + Math.floor((gameState.week || 1) / 365);
+      const gameOverAge = modeConfig.gameOverAge || 25;
+      if (currentAge >= gameOverAge) {
+        darkDuelGameOver = true;
+      }
+    }
+
     let loseText = '不要气馁，再接再厉！';
+    if (darkDuelGameOver) {
+      loseText = '你的寿命已经耗尽...黑暗的力量吞噬了你。';
+    }
     if (currentDuel.gamble) {
       // 赌卡失败：从卡组中随机失去一张牌
       const deckCards = [...gameState.mainDeck, ...gameState.extraDeck].filter(id => CARD_DB[id]);
@@ -6916,8 +8486,15 @@ function finishDuel() {
 
   resultArea.style.display = 'block';
   
-  // 如果有回调函数，显示"继续"按钮并在点击时调用回调
-  if (currentDuel.onFinish) {
+  // 如果黑暗决斗失败导致寿命耗尽，显示结束游戏按钮
+  if (darkDuelGameOver) {
+    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-gold" style="width:100%;" id="duel-gameover-btn">接受命运</button>';
+    document.getElementById('duel-gameover-btn').onclick = () => {
+      exitDuel();
+      showGameOver('dark_duel');
+    };
+  } else if (currentDuel.onFinish) {
+    // 如果有回调函数，显示"继续"按钮并在点击时调用回调
     document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" id="duel-continue-btn">继续</button>';
     document.getElementById('duel-continue-btn').onclick = () => {
       const cb = currentDuel.onFinish;
@@ -6971,7 +8548,7 @@ function renderDeckView() {
         grid.innerHTML = '';
         Object.keys(statNames).forEach(stat => {
           const level = (gameState.resonanceBonus && gameState.resonanceBonus[stat]) || 0;
-          const cost = DUEL_CONFIG.resonanceCostPerLevel || 2;
+          const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
           const canAfford = (gameState.cardPoints || 0) >= cost;
           const div = document.createElement('div');
           div.className = 'stat-box ' + stat;
@@ -6990,7 +8567,7 @@ function renderDeckView() {
           btn.onclick = () => {
             const stat = btn.dataset.resonanceStat;
             const level = (gameState.resonanceBonus && gameState.resonanceBonus[stat]) || 0;
-            const cost = DUEL_CONFIG.resonanceCostPerLevel || 2;
+            const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
             if ((gameState.cardPoints || 0) < cost) { showToast('卡点不足'); return; }
             gameState.cardPoints -= cost;
             if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
@@ -7247,7 +8824,7 @@ function interactCharacter(c) {
       action: () => {
         showEventModal(c.name, `${c.challengeDesc || ''}\n\n对手牌力：${charPower}`, null, [
           { name: '开始决斗', action: () => {
-            const opponent = { name: c.name, power: charPower, difficulty: 5 };
+            const opponent = { id: c.id, name: c.name, power: charPower, difficulty: 5 };
             startDuel('master', false, opponent, (result) => {
               if (result.won) {
                 if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
@@ -7283,19 +8860,39 @@ function interactCharacter(c) {
 function renderTournaments() {
   const list = document.getElementById('tournament-list');
   list.innerHTML = '';
+  if (!gameState.unlockedTournaments) gameState.unlockedTournaments = [];
   TOURNAMENTS.forEach(t => {
+    // 隐藏比赛检查：如果比赛设置了hidden且未解锁，则不显示
+    if (t.hidden && !gameState.unlockedTournaments.includes(t.id)) return;
+
     const mainOk = getMainDeckCount() >= (t.requirement.mainDeck || 0);
     const extraOk = getExtraDeckCount() >= (t.requirement.extraDeck || 0);
     const winOk = gameState.wins >= (t.requirement.winCount || 0);
-    const canJoin = mainOk && extraOk && winOk;
+    const entryCost = t.entryCost || 0;
+    const costOk = (gameState.duelPoints || 0) >= entryCost;
+
+    // 检查多条件参赛要求
+    let conditionsOk = true;
+    let conditionsDetail = [];
+    if (t.conditions && t.conditions.length) {
+      t.conditions.forEach(cond => {
+        const result = checkSingleCondition(cond);
+        if (!result.complete) conditionsOk = false;
+        const condName = conditionTypeNames[cond.type] || cond.type;
+        conditionsDetail.push(`${condName}: ${result.current}/${result.target} ${result.complete ? '✓' : '✗'}`);
+      });
+    }
+
+    const canJoin = mainOk && extraOk && winOk && costOk && conditionsOk;
     const duelModeText = t.duelMode === 'quick' ? '快速决斗' : '大师决斗';
     const modeColor = t.duelMode === 'quick' ? 'var(--accent-green-light)' : 'var(--accent-gold)';
+    const isNewlyUnlocked = gameState.unlockedTournaments.includes(t.id) && t.hidden;
 
     const div = document.createElement('div');
     div.className = 'tournament-item';
     div.innerHTML = `
       <div class="tournament-header">
-        <div class="tournament-name">${t.name}</div>
+        <div class="tournament-name">${t.name}${isNewlyUnlocked ? ' <span style="font-size:10px;color:#10b981;">(新解锁)</span>' : ''}</div>
         <div class="tournament-tier">${t.tier}</div>
       </div>
       <div class="tournament-desc">${t.desc}</div>
@@ -7303,12 +8900,18 @@ function renderTournaments() {
         <span style="color:${modeColor};">【${duelModeText}】</span>
         · ${t.rounds || 3}轮制
         · 对手牌力 ${t.opponentBasePower || (t.difficulty * 40)}起
+        ${entryCost > 0 ? `· 参赛费 ${entryCost}决斗点 ${costOk ? '✓' : '✗'}` : '· 免费参与'}
       </div>
       <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
         要求：主卡组${t.requirement.mainDeck || 0}张 ${mainOk ? '✓' : '✗'}
         ${t.requirement.extraDeck ? `额外${t.requirement.extraDeck}张 ${extraOk ? '✓' : '✗'}` : ''}
         ${t.requirement.winCount ? `胜场${t.requirement.winCount} ${winOk ? '✓' : '✗'}` : ''}
       </div>
+      ${conditionsDetail.length ? `
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px; padding:6px; background:var(--bg-card); border-radius:4px;">
+          附加条件：<br>${conditionsDetail.join('<br>')}
+        </div>
+      ` : ''}
       <div class="tournament-rewards">奖励：${t.rewards}</div>
       <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">
         奖励稀有度：${(t.rewardRarities || ['N','R']).join('/')} · ${t.rewardCardCount || 1}张
@@ -7333,8 +8936,8 @@ function joinTournament(tournamentId) {
     const detectRate = baseRate + failCount * increaseRate;
     if (Math.random() * 100 < detectRate) {
       // 被发现，直接结束存档
-      showEventModal('作弊被发现！', `你在【${t.name}】中使用洗牌技巧时被裁判当场抓获！\n\n比赛资格被取消，所有成绩作废，你的决斗生涯就此终结...\n\n（被发现概率：${detectRate}%）`, [
-        { text: '结束游戏', action: () => { showGameOver('cheating'); } }
+      showEventModal('作弊被发现！', `你在【${t.name}】中使用洗牌技巧时被裁判当场抓获！\n\n比赛资格被取消，所有成绩作废，你的决斗生涯就此终结...\n\n（被发现概率：${detectRate}%）`, null, [
+        { name: '结束游戏', action: () => { showGameOver('cheating'); } }
       ]);
       return;
     }
@@ -7356,6 +8959,28 @@ function joinTournament(tournamentId) {
       showToast(`需要至少${t.requirement.winCount}场胜利才能参加！`);
       return;
     }
+  }
+
+  // 检查多条件参赛要求
+  if (t.conditions && t.conditions.length) {
+    for (const cond of t.conditions) {
+      if (!checkSingleCondition(cond).complete) {
+        const condName = conditionTypeNames[cond.type] || cond.type;
+        showToast(`参赛条件不满足：${condName}`);
+        return;
+      }
+    }
+  }
+
+  // 扣除参赛消耗
+  const entryCost = t.entryCost || 0;
+  if (entryCost > 0) {
+    if ((gameState.duelPoints || 0) < entryCost) {
+      showToast(`决斗点不足，需要${entryCost}决斗点参赛费！`);
+      return;
+    }
+    gameState.duelPoints -= entryCost;
+    showToast(`已扣除${entryCost}决斗点参赛费`);
   }
 
   // 比赛状态
@@ -7381,7 +9006,7 @@ function runTournamentRound(state) {
   const opponentName = state.opponentNames[roundIdx] || `第${state.currentRound}轮对手`;
   // 每轮对手牌力递增
   const opponentPower = Math.round(state.basePower * (1 + state.powerGrowth * roundIdx) + rand(-10, 10));
-  const opponent = { name: opponentName, power: opponentPower, difficulty: state.tournament.difficulty };
+  const opponent = { id: `${state.tournament.id}_round${state.currentRound}`, name: opponentName, power: opponentPower, difficulty: state.tournament.difficulty };
 
   const roundNames = ['初赛', '半决赛', '决赛', '八强赛', '四强赛'];
   const roundName = roundNames[roundIdx] || `第${state.currentRound}轮`;
@@ -7533,7 +9158,27 @@ function showGameOver(reason) {
 
 // ===== 成就系统 =====
 function checkAchievementCondition(a) {
-  const cond = a.condition;
+  // 支持conditions数组（新格式）或单个condition对象（旧格式）
+  let conditions = [];
+  if (a.conditions && Array.isArray(a.conditions)) {
+    conditions = a.conditions;
+  } else if (a.condition) {
+    conditions = [a.condition];
+  }
+  // 无条件：无法自动解锁（只能通过其他方式手动解锁）
+  if (conditions.length === 0) return false;
+  // 条件逻辑：AND（默认）或 OR
+  const logic = a.conditionLogic || 'and';
+  if (logic === 'or') {
+    // OR逻辑：任一条件满足即解锁
+    return conditions.some(cond => checkSingleAchievementCondition(cond));
+  }
+  // AND逻辑：所有条件都满足才解锁
+  return conditions.every(cond => checkSingleAchievementCondition(cond));
+}
+
+// 检查单个成就条件
+function checkSingleAchievementCondition(cond) {
   if (!cond) return false;
   // 兼容函数式 condition
   if (typeof cond === 'function') return cond();
@@ -7606,6 +9251,9 @@ function checkAchievementCondition(a) {
     }
     case 'weeks': return gameState.week >= (cond.value || 1);
     case 'age': return gameState.age >= (cond.value || 1);
+    case 'spirit_level': return (gameState.spiritLevel || 0) >= (cond.value || 1);
+    case 'spirit_power': return (gameState.spiritPower || 0) >= (cond.value || 1);
+    case 'awakening_shards': return (gameState.awakeningShards || 0) >= (cond.value || 1);
     case 'duel_power_threshold': return getDuelPower() >= (cond.value || 100);
     case 'power_threshold': case 'soul_threshold': case 'luck_threshold':
     case 'proficiency_threshold': case 'intelligence_threshold': case 'all_main_stats_threshold': {
@@ -7645,7 +9293,7 @@ const conditionTypeNames = {
   'card_archetype': '指定系列卡片数量',
   'power': '牌力达到',
   'complete_task': '完成指定任务',
-  'defeat_character': '击败指定角色次数',
+  'defeat_character': '战胜指定对手/角色次数',
   'archetype_deck': '使用系列卡组',
   'win_streak': '连胜次数',
   'all_card_types': '拥有所有类型卡片',
@@ -7793,6 +9441,15 @@ function checkSingleCondition(cond) {
     case 'card_points':
       current = gameState.cardPoints || 0;
       break;
+    case 'spirit_level':
+      current = gameState.spiritLevel || 0;
+      break;
+    case 'spirit_power':
+      current = gameState.spiritPower || 0;
+      break;
+    case 'awakening_shards':
+      current = gameState.awakeningShards || 0;
+      break;
     case 'have_talent':
       current = (gameState.talents && gameState.talents.includes(cond.target)) ? 1 : 0;
       target = 1;
@@ -7814,22 +9471,29 @@ function checkSingleCondition(cond) {
 // 获取任务进度（支持多条件AND逻辑）
 function getTaskProgress(task) {
   const conditions = getTaskConditions(task);
+  // 无条件：无法自动解锁（只能通过其他方式手动解锁）
   if (conditions.length === 0) {
     return { current: 0, target: 1, complete: false };
   }
   if (conditions.length === 1) {
     return checkSingleCondition(conditions[0]);
   }
+  // 条件逻辑：AND（默认）或 OR
+  const logic = task.conditionLogic || 'and';
   // 多条件：统计已完成的条件数
   let completedCount = 0;
   conditions.forEach(cond => {
     if (checkSingleCondition(cond).complete) completedCount++;
   });
+  const isComplete = logic === 'or'
+    ? completedCount >= 1  // OR逻辑：任一条件满足即完成
+    : completedCount >= conditions.length;  // AND逻辑：所有条件都满足才完成
   return {
     current: completedCount,
-    target: conditions.length,
-    complete: completedCount >= conditions.length,
+    target: logic === 'or' ? 1 : conditions.length,
+    complete: isComplete,
     multi: true,
+    logic: logic,
     details: conditions.map(c => ({ ...c, result: checkSingleCondition(c) }))
   };
 }
@@ -7846,7 +9510,13 @@ function isTaskUnlocked(task) {
   } else {
     return true;
   }
-  // 所有条件都满足才解锁
+  // 无条件：无法自动解锁
+  if (conditions.length === 0) return false;
+  // 条件逻辑：AND（默认）或 OR
+  const logic = task.unlockConditionLogic || 'and';
+  if (logic === 'or') {
+    return conditions.some(cond => checkSingleCondition(cond).complete);
+  }
   return conditions.every(cond => checkSingleCondition(cond).complete);
 }
 
@@ -7889,7 +9559,103 @@ function grantTaskReward(task) {
     const t = TALENTS.find(x => x.id === r.talent);
     rewards.push(`天赋【${t ? t.name : r.talent}】`);
   }
+  if (r.achievement) {
+    if (!gameState.achievements) gameState.achievements = [];
+    if (!gameState.achievements.includes(r.achievement)) gameState.achievements.push(r.achievement);
+    const a = ACHIEVEMENTS.find(x => x.id === r.achievement);
+    rewards.push(`成就【${a ? a.name : r.achievement}】`);
+    // 检查成就解锁的隐藏天赋
+    if (a && a.unlockTalent) {
+      if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+      if (!gameState.unlockedTalents.includes(a.unlockTalent)) gameState.unlockedTalents.push(a.unlockTalent);
+    }
+  }
+  if (r.duelMode) {
+    if (!gameState.unlockedDuelModes) gameState.unlockedDuelModes = ['quick', 'master'];
+    if (!gameState.unlockedDuelModes.includes(r.duelMode)) gameState.unlockedDuelModes.push(r.duelMode);
+    const modeConfig = getDuelModeConfig(r.duelMode);
+    rewards.push(`解锁决斗模式【${modeConfig.name || r.duelMode}】`);
+    // 解锁黑暗决斗时同时解锁精灵力系统
+    if (r.duelMode === 'dark') {
+      unlockSpiritSystem();
+      rewards.push('解锁精灵力系统');
+    }
+  }
+  if (r.spiritPower && gameState.spiritSystemUnlocked) {
+    addSpiritPower(r.spiritPower);
+    rewards.push(`精灵力+${r.spiritPower}`);
+  }
+  if (r.awakeningShards) {
+    addAwakeningShards(r.awakeningShards);
+    rewards.push(`觉醒碎片+${r.awakeningShards}`);
+  }
   return rewards.join('、');
+}
+
+// ===== 精灵力系统 =====
+// 获取指定等级所需的经验值
+function getSpiritExpRequired(level) {
+  const config = GAME_CONFIG.spiritSystem || {};
+  const base = config.baseExpPerLevel || 100;
+  const growth = config.expGrowthRate || 1.5;
+  return Math.floor(base * Math.pow(growth, level));
+}
+
+// 增加精灵力经验值并自动升级
+function addSpiritPower(amount) {
+  if (!gameState.spiritSystemUnlocked) return false;
+  const config = GAME_CONFIG.spiritSystem || {};
+  const maxLevel = config.maxLevel || 12;
+  gameState.spiritPower = (gameState.spiritPower || 0) + amount;
+  let leveledUp = false;
+  while (gameState.spiritLevel < maxLevel) {
+    const required = getSpiritExpRequired(gameState.spiritLevel);
+    if (gameState.spiritPower >= required) {
+      gameState.spiritPower -= required;
+      gameState.spiritLevel++;
+      leveledUp = true;
+      addEventLog(`精灵力提升至 ${gameState.spiritLevel} 星！战斗牌力 +${Math.floor(gameState.spiritLevel * (config.powerBonusPerLevel || 0.1) * 100)}%`);
+      // 检查是否解锁精灵界
+      if (gameState.spiritLevel === (config.unlockLocationLevel || 4)) {
+        const locId = config.unlockLocationId || 'spirit_world';
+        if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+        if (!gameState.unlockedLocations.includes(locId)) {
+          gameState.unlockedLocations.push(locId);
+          showToast('🎉 解锁新地点：精灵界！');
+          addEventLog('精灵力达到4星，解锁了神秘的精灵界');
+        }
+      }
+    } else {
+      break;
+    }
+  }
+  if (leveledUp) {
+    showToast(`精灵力升级！当前 ${gameState.spiritLevel} 星`);
+  }
+  return leveledUp;
+}
+
+// 增加觉醒碎片
+function addAwakeningShards(amount) {
+  gameState.awakeningShards = (gameState.awakeningShards || 0) + amount;
+}
+
+// 获取精灵力牌力加成百分比
+function getSpiritPowerBonus() {
+  if (!gameState.spiritSystemUnlocked) return 0;
+  const config = GAME_CONFIG.spiritSystem || {};
+  return (gameState.spiritLevel || 0) * (config.powerBonusPerLevel || 0.1);
+}
+
+// 解锁精灵力系统
+function unlockSpiritSystem() {
+  if (gameState.spiritSystemUnlocked) return;
+  gameState.spiritSystemUnlocked = true;
+  gameState.spiritPower = 0;
+  gameState.spiritLevel = 0;
+  gameState.awakeningShards = 0;
+  showToast('🎉 解锁：精灵力系统！');
+  addEventLog('黑暗决斗的力量唤醒了你体内的精灵之力');
 }
 
 // 检查所有任务
@@ -8359,10 +10125,10 @@ function showCardDetail(cardId) {
 
   // 分解获得卡点配置（从DUEL_CONFIG读取）
   const dismantlePoints = {
-    N: DUEL_CONFIG.dismantlePointsN || 1,
-    R: DUEL_CONFIG.dismantlePointsR || 2,
-    SR: DUEL_CONFIG.dismantlePointsSR || 3,
-    UR: DUEL_CONFIG.dismantlePointsUR || 5
+    N: GAME_CONFIG.dismantlePointsN || 1,
+    R: GAME_CONFIG.dismantlePointsR || 2,
+    SR: GAME_CONFIG.dismantlePointsSR || 3,
+    UR: GAME_CONFIG.dismantlePointsUR || 5
   };
 
   // 内部函数：重新计算当前状态并更新UI
