@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牌佬模拟器 v3.8 - 牌力计算器 & 对局模拟</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh;
+  color: #e0e0e0;
+  padding: 20px;
+}
+.container { max-width: 1200px; margin: 0 auto; }
+h1 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 4px;
+  background: linear-gradient(90deg, #ffd700, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.version { text-align: center; color: #8892b0; font-size: 12px; margin-bottom: 8px; }
+.subtitle { text-align: center; color: #8892b0; font-size: 14px; margin-bottom: 24px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+.tab-btn {
+  padding: 10px 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  color: #8892b0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  background: linear-gradient(90deg, #ffd700, #ff6b6b);
+  color: #1a1a2e;
+  border-color: transparent;
+  font-weight: 600;
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.formula-box {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #a8b2d1;
+}
+.formula-box strong { color: #ffd700; }
+.vs-container { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+.vs-divider { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px; }
+.vs-text { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #ffd700, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.stat-group { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
+.stat-group.player { border-color: rgba(68,114,196,0.4); }
+.stat-group.opponent { border-color: rgba(192,80,77,0.4); }
+.group-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.stat-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.stat-label { font-size: 13px; color: #a8b2d1; min-width: 50px; }
+.stat-input { width: 70px; padding: 4px 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #e0e0e0; font-size: 13px; text-align: center; }
+.stat-input:focus { outline: none; border-color: #ffd700; }
+.sub-stats { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); }
+.bonus-section { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); }
+.bonus-title { font-size: 12px; color: #ffd700; margin-bottom: 8px; }
+.checkbox-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 12px; color: #a8b2d1; }
+.checkbox-row input { width: 14px; height: 14px; }
+.power-display { margin-top: 16px; padding: 12px; background: rgba(255,215,0,0.1); border-radius: 8px; text-align: center; }
+.power-label { font-size: 12px; color: #8892b0; margin-bottom: 4px; }
+.power-value { font-size: 32px; font-weight: bold; color: #ffd700; }
+.result-box { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
+.result-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #ffd700; }
+.breakdown-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.breakdown-table th { text-align: left; padding: 8px; border-bottom: 2px solid rgba(255,215,0,0.3); color: #ffd700; }
+.breakdown-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.breakdown-table tr:hover { background: rgba(255,255,255,0.03); }
+.pos { color: #4ade80; }
+.neg { color: #f87171; }
+.sim-config { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.config-item { display: flex; flex-direction: column; gap: 4px; }
+.config-label { font-size: 12px; color: #8892b0; }
+.config-input { padding: 6px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #e0e0e0; font-size: 13px; }
+.buttons { display: flex; gap: 12px; margin-bottom: 20px; }
+.btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(90deg, #ffd700, #ff6b6b); color: #1a1a2e; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,215,0,0.3); }
+.btn-secondary { background: rgba(255,255,255,0.1); color: #e0e0e0; }
+.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.win-rate-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.rate-item { text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+.rate-value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+.rate-label { font-size: 12px; color: #8892b0; }
+.log-box { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 11px; line-height: 1.6; }
+.log-entry { margin-bottom: 2px; }
+.log-win { color: #4ade80; }
+.log-lose { color: #f87171; }
+.log-event { color: #ffd700; }
+.awaken-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.awaken-card { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.1); }
+.awaken-card-name { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.awaken-card-rarity { font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+.rarity-UR { background: rgba(245,158,11,0.2); color: #f59e0b; }
+.rarity-SR { background: rgba(139,92,246,0.2); color: #a78bfa; }
+.rarity-R { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.rarity-N { background: rgba(156,163,175,0.2); color: #9ca3af; }
+.awaken-stats { font-size: 12px; color: #a8b2d1; line-height: 1.6; }
+.awaken-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.compare-box { padding: 12px; border-radius: 8px; text-align: center; }
+.compare-before { background: rgba(255,255,255,0.05); }
+.compare-after { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); }
+.compare-label { font-size: 12px; color: #8892b0; margin-bottom: 4px; }
+.compare-value { font-size: 24px; font-weight: bold; }
+@media (max-width: 768px) {
+  .vs-container { grid-template-columns: 1fr; }
+  .vs-divider { padding-top: 0; padding: 8px 0; }
+  .win-rate-box { grid-template-columns: 1fr; }
+  .awaken-compare { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>牌佬模拟器 - 牌力计算器</h1>
+  <div class="version">v3.8 完整版 | 支持卡灵觉醒 / 精灵力 / 天赋 / 卡组共鸣</div>
+  <div class="subtitle">实时计算牌力、模拟对局、觉醒前后对比</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('calc')">📊 牌力计算</button>
+    <button class="tab-btn" onclick="switchTab('sim')">🎮 对局模拟</button>
+    <button class="tab-btn" onclick="switchTab('awaken')">✨ 卡灵觉醒</button>
+    <button class="tab-btn" onclick="switchTab('deck')">🃏 卡组构建</button>
+  </div>
+
+  <!-- 牌力计算标签页 -->
+  <div id="tab-calc" class="tab-content active">
+    <div class="formula-box">
+      <strong>计算公式：</strong>牌力 = 检索×1.0 + (展开+熟练度×0.5)×1.2 + (干扰+熟练度×0.5)×1.0 + (抗性+情报力×0.5)×0.8 + (压制+情报力×0.5)×1.1 + 强度×2.0 + 魂度×0.5 + 掏度×1.5<br>
+      <strong>加成系统：</strong>天赋加成、精灵力加成(每星+10%)、卡组共鸣加成、系列卡组加成(魂度/强度/掏度+5)、卡灵觉醒倍率<br>
+      <strong>说明：</strong>所有输入实时计算，勾选加成项自动应用。
+    </div>
+
+    <div class="vs-container">
+      <!-- 玩家属性 -->
+      <div class="stat-group player">
+        <div class="group-title">👤 玩家属性</div>
+        <div class="stat-row"><span class="stat-label">检索</span><input type="number" class="stat-input" id="p-search" value="10" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">展开</span><input type="number" class="stat-input" id="p-expand" value="10" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">干扰</span><input type="number" class="stat-input" id="p-disrupt" value="10" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">抗性</span><input type="number" class="stat-input" id="p-resist" value="10" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">压制</span><input type="number" class="stat-input" id="p-suppress" value="10" oninput="calcPower()"></div>
+        <div class="sub-stats">
+          <div class="stat-row"><span class="stat-label">强度</span><input type="number" class="stat-input" id="p-power" value="10" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">魂度</span><input type="number" class="stat-input" id="p-soul" value="10" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">掏度</span><input type="number" class="stat-input" id="p-luck" value="10" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">熟练度</span><input type="number" class="stat-input" id="p-prof" value="5" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">情报力</span><input type="number" class="stat-input" id="p-int" value="5" oninput="calcPower()"></div>
+        </div>
+        <div class="bonus-section">
+          <div class="bonus-title">⚡ 加成配置</div>
+          <div class="checkbox-row"><input type="checkbox" id="p-talent" onchange="calcPower()"><label for="p-talent">天赋加成（全属性+5）</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="p-archetype" onchange="calcPower()"><label for="p-archetype">系列卡组（强度/魂度/掏度+5）</label></div>
+          <div class="stat-row" style="margin-top:8px;">
+            <span class="stat-label">精灵力星级</span>
+            <input type="number" class="stat-input" id="p-spirit" value="0" min="0" max="12" oninput="calcPower()">
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">共鸣主属性</span>
+            <input type="number" class="stat-input" id="p-resonance" value="0" min="0" oninput="calcPower()">
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">觉醒倍率</span>
+            <input type="number" class="stat-input" id="p-awaken" value="1" min="1" step="0.5" oninput="calcPower()">
+          </div>
+        </div>
+        <div class="power-display">
+          <div class="power-label">玩家牌力</div>
+          <div class="power-value" id="p-power-total">0</div>
+        </div>
+      </div>
+
+      <!-- VS分隔 -->
+      <div class="vs-divider">
+        <div class="vs-text">VS</div>
+      </div>
+
+      <!-- 对手属性 -->
+      <div class="stat-group opponent">
+        <div class="group-title">👹 对手属性</div>
+        <div class="stat-row"><span class="stat-label">检索</span><input type="number" class="stat-input" id="o-search" value="8" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">展开</span><input type="number" class="stat-input" id="o-expand" value="8" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">干扰</span><input type="number" class="stat-input" id="o-disrupt" value="8" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">抗性</span><input type="number" class="stat-input" id="o-resist" value="8" oninput="calcPower()"></div>
+        <div class="stat-row"><span class="stat-label">压制</span><input type="number" class="stat-input" id="o-suppress" value="8" oninput="calcPower()"></div>
+        <div class="sub-stats">
+          <div class="stat-row"><span class="stat-label">强度</span><input type="number" class="stat-input" id="o-power" value="8" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">魂度</span><input type="number" class="stat-input" id="o-soul" value="5" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">掏度</span><input type="number" class="stat-input" id="o-luck" value="5" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">熟练度</span><input type="number" class="stat-input" id="o-prof" value="3" oninput="calcPower()"></div>
+          <div class="stat-row"><span class="stat-label">情报力</span><input type="number" class="stat-input" id="o-int" value="3" oninput="calcPower()"></div>
+        </div>
+        <div class="bonus-section">
+          <div class="bonus-title">⚡ 对手加成</div>
+          <div class="stat-row">
+            <span class="stat-label">精灵力星级</span>
+            <input type="number" class="stat-input" id="o-spirit" value="0" min="0" max="12" oninput="calcPower()">
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">觉醒倍率</span>
+            <input type="number" class="stat-input" id="o-awaken" value="1" min="1" step="0.5" oninput="calcPower()">
+          </div>
+        </div>
+        <div class="power-display">
+          <div class="power-label">对手牌力</div>
+          <div class="power-value" id="o-power-total">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-title">📊 牌力明细对比</div>
+      <table class="breakdown-table">
+        <thead><tr><th>属性项</th><th>玩家</th><th>对手</th><th>差值</th></tr></thead>
+        <tbody id="breakdown-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 对局模拟标签页 -->
+  <div id="tab-sim" class="tab-content">
+    <div class="formula-box">
+      <strong>对局规则：</strong>双方从基础牌力开始，每回合进行交互。检索+展开影响自己牌力增长，干扰降低对方展开效率，抗性减免对方干扰/压制，压制直接削减对方牌力。牌力先归零者败，回合耗尽则剩余牌力高者胜。<br>
+      <strong>战斗事件：</strong>魂度和掏度影响幸运事件触发概率，事件可额外增加牌力或削减对方牌力。精灵力每星+10%牌力，卡灵觉醒按倍率提升。
+    </div>
+
+    <div class="sim-config">
+      <div class="config-item">
+        <span class="config-label">模拟次数</span>
+        <input type="number" class="config-input" id="sim-count" value="100" min="1" max="1000">
+      </div>
+      <div class="config-item">
+        <span class="config-label">最大回合数</span>
+        <input type="number" class="config-input" id="sim-turns" value="30" min="5" max="100">
+      </div>
+      <div class="config-item">
+        <span class="config-label">决斗模式</span>
+        <select class="config-input" id="sim-mode">
+          <option value="quick">快速决斗（30回合）</option>
+          <option value="master">大师决斗（60回合）</option>
+          <option value="dark">黑暗决斗（寿命赌注）</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <span class="config-label">显示详细日志</span>
+        <select class="config-input" id="sim-log">
+          <option value="0">否（只显示统计）</option>
+          <option value="1">是（显示最后一局）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn btn-primary" onclick="runSimulation()">🎮 开始模拟</button>
+      <button class="btn btn-secondary" onclick="resetSim()">🔄 重置</button>
+    </div>
+
+    <div id="sim-result" style="display:none;">
+      <div class="result-box">
+        <div class="result-title">📈 模拟统计</div>
+        <div class="win-rate-box">
+          <div class="rate-item"><div class="rate-value pos" id="sim-winrate">0%</div><div class="rate-label">玩家胜率</div></div>
+          <div class="rate-item"><div class="rate-value" id="sim-avgturns">0</div><div class="rate-label">平均回合数</div></div>
+          <div class="rate-item"><div class="rate-value neg" id="sim-lossrate">0%</div><div class="rate-label">对手胜率</div></div>
+        </div>
+        <div id="sim-log-box" class="log-box" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 卡灵觉醒标签页 -->
+  <div id="tab-awaken" class="tab-content">
+    <div class="formula-box">
+      <strong>觉醒规则：</strong>仅限SR及以上品质卡牌可觉醒（「人人如龙」天赋解锁后所有卡牌可觉醒）。消耗觉醒碎片有概率使卡牌诞生卡灵，觉醒后属性按倍率提升。<br>
+      <strong>默认倍率：</strong>SR×5、UR×10、SP×100 | <strong>人人如龙：</strong>N×5、R×10、SR×20、UR×50、SP不变<br>
+      <strong>说明：</strong>输入卡牌基础属性，选择品质和天赋，实时计算觉醒前后牌力对比。
+    </div>
+
+    <div class="stat-group" style="margin-bottom:16px;">
+      <div class="group-title">🃏 卡牌属性配置</div>
+      <div class="sim-config">
+        <div class="config-item">
+          <span class="config-label">卡牌品质</span>
+          <select class="config-input" id="awaken-rarity" onchange="updateAwakenMult()">
+            <option value="N">N卡</option>
+            <option value="R">R卡</option>
+            <option value="SR" selected>SR卡</option>
+            <option value="UR">UR卡</option>
+            <option value="SP">SP特殊卡</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <span class="config-label">天赋</span>
+          <select class="config-input" id="awaken-talent" onchange="updateAwakenMult()">
+            <option value="normal">无（默认倍率）</option>
+            <option value="dragon">人人如龙（觉醒加成）</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <span class="config-label">觉醒倍率</span>
+          <input type="number" class="config-input" id="awaken-mult" value="5" readonly style="background:rgba(255,215,0,0.1);color:#ffd700;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:12px;">
+        <div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="stat-label">检索</span>
+          <input type="number" class="stat-input" id="aw-search" value="5" style="width:100%;" oninput="calcAwaken()">
+        </div>
+        <div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="stat-label">展开</span>
+          <input type="number" class="stat-input" id="aw-expand" value="5" style="width:100%;" oninput="calcAwaken()">
+        </div>
+        <div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="stat-label">干扰</span>
+          <input type="number" class="stat-input" id="aw-disrupt" value="5" style="width:100%;" oninput="calcAwaken()">
+        </div>
+        <div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="stat-label">抗性</span>
+          <input type="number" class="stat-input" id="aw-resist" value="5" style="width:100%;" oninput="calcAwaken()">
+        </div>
+        <div class="stat-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="stat-label">压制</span>
+          <input type="number" class="stat-input" id="aw-suppress" value="5" style="width:100%;" oninput="calcAwaken()">
+        </div>
+      </div>
+    </div>
+
+    <div class="awaken-compare">
+      <div class="compare-box compare-before">
+        <div class="compare-label">觉醒前牌力</div>
+        <div class="compare-value" id="awaken-before">0</div>
+        <div style="font-size:11px;color:#8892b0;margin-top:4px;">基础属性</div>
+      </div>
+      <div class="compare-box compare-after">
+        <div class="compare-label">觉醒后牌力</div>
+        <div class="compare-value" style="color:#ffd700;" id="awaken-after">0</div>
+        <div style="font-size:11px;color:#ffd700;margin-top:4px;" id="awaken-gain">+0 (+0%)</div>
+      </div>
+    </div>
+
+    <div class="result-box" style="margin-top:16px;">
+      <div class="result-title">📋 各品质觉醒参数对照表</div>
+      <table class="breakdown-table">
+        <thead><tr><th>品质</th><th>默认可觉醒</th><th>消耗碎片</th><th>成功率</th><th>默认倍率</th><th>人人如龙倍率</th></tr></thead>
+        <tbody>
+          <tr><td>N</td><td class="neg">❌ 需天赋</td><td>15</td><td>50%</td><td>2×</td><td class="pos">5×</td></tr>
+          <tr><td>R</td><td class="neg">❌ 需天赋</td><td>25</td><td>40%</td><td>3×</td><td class="pos">10×</td></tr>
+          <tr><td>SR</td><td class="pos">✅</td><td>50</td><td>30%</td><td>5×</td><td class="pos">20×</td></tr>
+          <tr><td>UR</td><td class="pos">✅</td><td>100</td><td>20%</td><td>10×</td><td class="pos">50×</td></tr>
+          <tr><td>SP</td><td class="pos">✅ 需成就</td><td>500</td><td>10%</td><td>100×</td><td>100×（不变）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 卡组构建标签页 -->
+  <div id="tab-deck" class="tab-content">
+    <div class="formula-box">
+      <strong>构建规则：</strong>输入各品质卡牌数量，自动计算卡组总牌力。主卡组20-60张，额外卡组最多15张。同名卡最多3张。<br>
+      <strong>属性假设：</strong>N卡平均主属性3、R卡5、SR卡8、UR卡12、额外卡10。可在下方调整单卡平均属性。<br>
+      <strong>加成：</strong>系列卡组（同系列15张以上）魂度/强度/掏度+5，卡灵觉醒按倍率提升。
+    </div>
+
+    <div class="vs-container" style="grid-template-columns:1fr 1fr;">
+      <div class="stat-group player">
+        <div class="group-title">🃏 主卡组配置</div>
+        <div class="stat-row"><span class="stat-label">N卡数量</span><input type="number" class="stat-input" id="deck-n" value="10" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row"><span class="stat-label">R卡数量</span><input type="number" class="stat-input" id="deck-r" value="15" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row"><span class="stat-label">SR卡数量</span><input type="number" class="stat-input" id="deck-sr" value="10" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row"><span class="stat-label">UR卡数量</span><input type="number" class="stat-input" id="deck-ur" value="5" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row" style="margin-top:8px;color:#ffd700;"><span class="stat-label">主卡组总数</span><span id="deck-main-total" style="font-weight:bold;">40</span></div>
+        <div class="stat-row" style="font-size:11px;color:#8892b0;"><span class="stat-label">限制</span><span>20-60张</span></div>
+      </div>
+      <div class="stat-group opponent">
+        <div class="group-title">✨ 额外卡组配置</div>
+        <div class="stat-row"><span class="stat-label">SR额外卡</span><input type="number" class="stat-input" id="extra-sr" value="5" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row"><span class="stat-label">UR额外卡</span><input type="number" class="stat-input" id="extra-ur" value="5" min="0" oninput="calcDeck()"></div>
+        <div class="stat-row" style="margin-top:8px;color:#ffd700;"><span class="stat-label">额外卡组总数</span><span id="deck-extra-total" style="font-weight:bold;">10</span></div>
+        <div class="stat-row" style="font-size:11px;color:#8892b0;"><span class="stat-label">限制</span><span>最多15张（×0.5计算）</span></div>
+      </div>
+    </div>
+
+    <div class="stat-group" style="margin-bottom:16px;">
+      <div class="group-title">⚙️ 单卡平均属性 & 加成</div>
+      <div class="sim-config">
+        <div class="config-item">
+          <span class="config-label">N卡主属性</span>
+          <input type="number" class="config-input" id="avg-n" value="3" oninput="calcDeck()">
+        </div>
+        <div class="config-item">
+          <span class="config-label">R卡主属性</span>
+          <input type="number" class="config-input" id="avg-r" value="5" oninput="calcDeck()">
+        </div>
+        <div class="config-item">
+          <span class="config-label">SR卡主属性</span>
+          <input type="number" class="config-input" id="avg-sr" value="8" oninput="calcDeck()">
+        </div>
+        <div class="config-item">
+          <span class="config-label">UR卡主属性</span>
+          <input type="number" class="config-input" id="avg-ur" value="12" oninput="calcDeck()">
+        </div>
+        <div class="config-item">
+          <span class="config-label">额外卡主属性</span>
+          <input type="number" class="config-input" id="avg-extra" value="10" oninput="calcDeck()">
+        </div>
+      </div>
+      <div class="bonus-section" style="margin-top:12px;">
+        <div class="checkbox-row"><input type="checkbox" id="deck-archetype" onchange="calcDeck()"><label for="deck-archetype">系列卡组加成（强度/魂度/掏度+5）</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="deck-awaken" onchange="calcDeck()"><label for="deck-awaken">SR以上全部觉醒（SR×5, UR×10）</label></div>
+        <div class="stat-row" style="margin-top:8px;">
+          <span class="stat-label">精灵力星级</span>
+          <input type="number" class="stat-input" id="deck-spirit" value="0" min="0" max="12" oninput="calcDeck()">
+        </div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="result-title">📊 卡组牌力计算结果</div>
+      <div class="win-rate-box">
+        <div class="rate-item"><div class="rate-value" id="deck-main-power">0</div><div class="rate-label">主卡组牌力</div></div>
+        <div class="rate-item"><div class="rate-value" id="deck-extra-power">0</div><div class="rate-label">额外卡组牌力</div></div>
+        <div class="rate-item"><div class="rate-value pos" id="deck-total-power">0</div><div class="rate-label">总牌力（含加成）</div></div>
+      </div>
+      <table class="breakdown-table" style="margin-top:16px;">
+        <thead><tr><th>卡牌类型</th><th>数量</th><th>单卡属性</th><th>小计牌力</th><th>占比</th></tr></thead>
+        <tbody id="deck-breakdown"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// 标签页切换
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  if (tab === 'calc') calcPower();
+  if (tab === 'awaken') calcAwaken();
+  if (tab === 'deck') calcDeck();
+}
+
+// 牌力计算
+function calcPower() {
+  const p = getStats('p');
+  const o = getStats('o');
+  
+  // 玩家加成
+  let pMult = 1;
+  if (document.getElementById('p-talent').checked) pMult += 0; // 天赋加在属性上
+  const pSpirit = parseInt(document.getElementById('p-spirit').value) || 0;
+  const pResonance = parseInt(document.getElementById('p-resonance').value) || 0;
+  const pAwaken = parseFloat(document.getElementById('p-awaken').value) || 1;
+  const pArchetype = document.getElementById('p-archetype').checked;
+  
+  // 应用天赋加成（全属性+5）
+  if (document.getElementById('p-talent').checked) {
+    ['search','expand','disrupt','resist','suppress','power','soul','luck'].forEach(k => p[k] += 5);
+  }
+  // 应用共鸣加成
+  p.search += pResonance;
+  p.expand += pResonance;
+  p.disrupt += pResonance;
+  p.resist += pResonance;
+  p.suppress += pResonance;
+  // 应用系列卡组加成
+  if (pArchetype) {
+    p.power += 5;
+    p.soul += 5;
+    p.luck += 5;
+  }
+  
+  const pBase = calcBasePower(p);
+  const pTotal = Math.round(pBase * (1 + pSpirit * 0.1) * pAwaken);
+  
+  // 对手加成
+  const oSpirit = parseInt(document.getElementById('o-spirit').value) || 0;
+  const oAwaken = parseFloat(document.getElementById('o-awaken').value) || 1;
+  const oBase = calcBasePower(o);
+  const oTotal = Math.round(oBase * (1 + oSpirit * 0.1) * oAwaken);
+  
+  document.getElementById('p-power-total').textContent = pTotal;
+  document.getElementById('o-power-total').textContent = oTotal;
+  
+  // 明细对比
+  const items = [
+    { name: '检索', p: p.search, o: o.search },
+    { name: '展开(含熟练度)', p: Math.round((p.expand + p.prof * 0.5) * 10) / 10, o: Math.round((o.expand + o.prof * 0.5) * 10) / 10 },
+    { name: '干扰(含熟练度)', p: p.disrupt + p.prof * 0.5, o: o.disrupt + o.prof * 0.5 },
+    { name: '抗性(含情报力)', p: (p.resist + p.int * 0.5) * 0.8, o: (o.resist + o.int * 0.5) * 0.8 },
+    { name: '压制(含情报力)', p: (p.suppress + p.int * 0.5) * 1.1, o: (o.suppress + o.int * 0.5) * 1.1 },
+    { name: '强度', p: p.power * 2, o: o.power * 2 },
+    { name: '魂度', p: p.soul * 0.5, o: o.soul * 0.5 },
+    { name: '掏度', p: p.luck * 1.5, o: o.luck * 1.5 },
+    { name: '基础牌力', p: pBase, o: oBase },
+    { name: '精灵力加成', p: pSpirit * 10 + '%', o: oSpirit * 10 + '%' },
+    { name: '最终牌力', p: pTotal, o: oTotal }
+  ];
+  
+  document.getElementById('breakdown-body').innerHTML = items.map(item => {
+    const diff = typeof item.p === 'number' ? item.p - item.o : '-';
+    const diffClass = diff > 0 ? 'pos' : diff < 0 ? 'neg' : '';
+    const diffText = typeof diff === 'number' ? (diff > 0 ? '+' : '') + Math.round(diff * 10) / 10 : diff;
+    return `<tr><td>${item.name}</td><td>${typeof item.p === 'number' ? Math.round(item.p * 10) / 10 : item.p}</td><td>${typeof item.o === 'number' ? Math.round(item.o * 10) / 10 : item.o}</td><td class="${diffClass}">${diffText}</td></tr>`;
+  }).join('');
+}
+
+function getStats(prefix) {
+  return {
+    search: parseInt(document.getElementById(prefix + '-search').value) || 0,
+    expand: parseInt(document.getElementById(prefix + '-expand').value) || 0,
+    disrupt: parseInt(document.getElementById(prefix + '-disrupt').value) || 0,
+    resist: parseInt(document.getElementById(prefix + '-resist').value) || 0,
+    suppress: parseInt(document.getElementById(prefix + '-suppress').value) || 0,
+    power: parseInt(document.getElementById(prefix + '-power').value) || 0,
+    soul: parseInt(document.getElementById(prefix + '-soul').value) || 0,
+    luck: parseInt(document.getElementById(prefix + '-luck').value) || 0,
+    prof: parseInt(document.getElementById(prefix + '-prof').value) || 0,
+    int: parseInt(document.getElementById(prefix + '-int').value) || 0
+  };
+}
+
+function calcBasePower(s) {
+  const effExpand = s.expand + s.prof * 0.5;
+  const effDisrupt = s.disrupt + s.prof * 0.5;
+  const effResist = s.resist + s.int * 0.5;
+  const effSuppress = s.suppress + s.int * 0.5;
+  return s.search * 1.0 + effExpand * 1.2 + effDisrupt * 1.0 + effResist * 0.8 + effSuppress * 1.1 + s.power * 2.0 + s.soul * 0.5 + s.luck * 1.5;
+}
+
+// 对局模拟
+function runSimulation() {
+  const count = parseInt(document.getElementById('sim-count').value) || 100;
+  const maxTurns = parseInt(document.getElementById('sim-turns').value) || 30;
+  const showLog = document.getElementById('sim-log').value === '1';
+  
+  const p = getStats('p');
+  const o = getStats('o');
+  const pSpirit = parseInt(document.getElementById('p-spirit').value) || 0;
+  const oSpirit = parseInt(document.getElementById('o-spirit').value) || 0;
+  const pAwaken = parseFloat(document.getElementById('p-awaken').value) || 1;
+  const oAwaken = parseFloat(document.getElementById('o-awaken').value) || 1;
+  
+  const pBase = calcBasePower(p) * (1 + pSpirit * 0.1) * pAwaken;
+  const oBase = calcBasePower(o) * (1 + oSpirit * 0.1) * oAwaken;
+  
+  let wins = 0;
+  let totalTurns = 0;
+  let lastLog = [];
+  
+  for (let i = 0; i < count; i++) {
+    const result = simulateDuel(p, o, pBase, oBase, maxTurns, showLog && i === count - 1);
+    if (result.won) wins++;
+    totalTurns += result.turns;
+    if (result.log) lastLog = result.log;
+  }
+  
+  document.getElementById('sim-result').style.display = 'block';
+  document.getElementById('sim-winrate').textContent = Math.round(wins / count * 100) + '%';
+  document.getElementById('sim-lossrate').textContent = Math.round((count - wins) / count * 100) + '%';
+  document.getElementById('sim-avgturns').textContent = Math.round(totalTurns / count * 10) / 10;
+  
+  if (showLog && lastLog.length > 0) {
+    const logBox = document.getElementById('sim-log-box');
+    logBox.style.display = 'block';
+    logBox.innerHTML = lastLog.join('');
+  } else {
+    document.getElementById('sim-log-box').style.display = 'none';
+  }
+}
+
+function simulateDuel(p, o, pBase, oBase, maxTurns, log) {
+  let pPower = pBase;
+  let oPower = oBase;
+  let turns = 0;
+  const logs = log ? [] : null;
+  
+  if (log) logs.push(`<div class="log-entry">=== 对局开始 | 玩家牌力:${Math.round(pPower)} VS 对手牌力:${Math.round(oPower)} ===</div>`);
+  
+  for (let t = 1; t <= maxTurns; t++) {
+    turns = t;
+    
+    // 玩家回合：检索+展开增长
+    const pGrowth = (p.search * 0.5 + (p.expand + p.prof * 0.5) * 0.8) * (0.8 + Math.random() * 0.4);
+    pPower += pGrowth;
+    
+    // 对手干扰
+    const oDisrupt = (o.disrupt + o.prof * 0.5) * (0.5 + Math.random() * 0.5);
+    const pResist = (p.resist + p.int * 0.5) * 0.3;
+    const effectiveDisrupt = Math.max(0, oDisrupt - pResist);
+    pPower -= effectiveDisrupt;
+    
+    if (log) logs.push(`<div class="log-entry">回合${t} 玩家: +${Math.round(pGrowth)} -${Math.round(effectiveDisrupt)} = ${Math.round(pPower)}</div>`);
+    
+    // 幸运事件
+    if (Math.random() < (p.soul + p.luck) * 0.005) {
+      const bonus = pBase * 0.05 * (0.5 + Math.random());
+      pPower += bonus;
+      if (log) logs.push(`<div class="log-entry log-event">✨ 玩家幸运事件! +${Math.round(bonus)}</div>`);
+    }
+    
+    if (pPower <= 0) {
+      if (log) logs.push(`<div class="log-entry log-lose">玩家牌力归零，失败!</div>`);
+      return { won: false, turns, log: logs };
+    }
+    
+    // 对手回合
+    const oGrowth = (o.search * 0.5 + (o.expand + o.prof * 0.5) * 0.8) * (0.8 + Math.random() * 0.4);
+    oPower += oGrowth;
+    
+    const pDisrupt = (p.disrupt + p.prof * 0.5) * (0.5 + Math.random() * 0.5);
+    const oResist = (o.resist + o.int * 0.5) * 0.3;
+    const oEffectiveDisrupt = Math.max(0, pDisrupt - oResist);
+    oPower -= oEffectiveDisrupt;
+    
+    // 玩家压制
+    const pSuppress = (p.suppress + p.int * 0.5) * 0.4 * (0.5 + Math.random());
+    oPower -= pSuppress;
+    
+    if (log) logs.push(`<div class="log-entry">回合${t} 对手: +${Math.round(oGrowth)} -${Math.round(oEffectiveDisrupt + pSuppress)} = ${Math.round(oPower)}</div>`);
+    
+    if (Math.random() < (o.soul + o.luck) * 0.005) {
+      const bonus = oBase * 0.05 * (0.5 + Math.random());
+      oPower += bonus;
+      if (log) logs.push(`<div class="log-entry log-event">✨ 对手幸运事件! +${Math.round(bonus)}</div>`);
+    }
+    
+    if (oPower <= 0) {
+      if (log) logs.push(`<div class="log-entry log-win">对手牌力归零，胜利!</div>`);
+      return { won: true, turns, log: logs };
+    }
+  }
+  
+  const won = pPower > oPower;
+  if (log) logs.push(`<div class="log-entry ${won ? 'log-win' : 'log-lose'}">=== 回合耗尽 | 玩家:${Math.round(pPower)} VS 对手:${Math.round(oPower)} | ${won ? '玩家胜利' : '对手胜利'} ===</div>`);
+  return { won, turns, log: logs };
+}
+
+function resetSim() {
+  document.getElementById('sim-result').style.display = 'none';
+}
+
+// 卡灵觉醒
+function updateAwakenMult() {
+  const rarity = document.getElementById('awaken-rarity').value;
+  const talent = document.getElementById('awaken-talent').value;
+  let mult = 1;
+  
+  if (talent === 'dragon') {
+    if (rarity === 'N') mult = 5;
+    else if (rarity === 'R') mult = 10;
+    else if (rarity === 'SR') mult = 20;
+    else if (rarity === 'UR') mult = 50;
+    else if (rarity === 'SP') mult = 100;
+  } else {
+    if (rarity === 'N') mult = 2;
+    else if (rarity === 'R') mult = 3;
+    else if (rarity === 'SR') mult = 5;
+    else if (rarity === 'UR') mult = 10;
+    else if (rarity === 'SP') mult = 100;
+  }
+  
+  document.getElementById('awaken-mult').value = mult;
+  calcAwaken();
+}
+
+function calcAwaken() {
+  const stats = {
+    search: parseInt(document.getElementById('aw-search').value) || 0,
+    expand: parseInt(document.getElementById('aw-expand').value) || 0,
+    disrupt: parseInt(document.getElementById('aw-disrupt').value) || 0,
+    resist: parseInt(document.getElementById('aw-resist').value) || 0,
+    suppress: parseInt(document.getElementById('aw-suppress').value) || 0,
+    power: 0, soul: 0, luck: 0, prof: 0, int: 0
+  };
+  
+  const base = calcBasePower(stats);
+  const mult = parseFloat(document.getElementById('awaken-mult').value) || 1;
+  const after = Math.round(base * mult);
+  const gain = after - base;
+  const gainPct = base > 0 ? Math.round(gain / base * 100) : 0;
+  
+  document.getElementById('awaken-before').textContent = Math.round(base);
+  document.getElementById('awaken-after').textContent = after;
+  document.getElementById('awaken-gain').textContent = `+${gain} (+${gainPct}%)`;
+}
+
+// 卡组构建
+function calcDeck() {
+  const n = parseInt(document.getElementById('deck-n').value) || 0;
+  const r = parseInt(document.getElementById('deck-r').value) || 0;
+  const sr = parseInt(document.getElementById('deck-sr').value) || 0;
+  const ur = parseInt(document.getElementById('deck-ur').value) || 0;
+  const eSr = parseInt(document.getElementById('extra-sr').value) || 0;
+  const eUr = parseInt(document.getElementById('extra-ur').value) || 0;
+  
+  const avgN = parseInt(document.getElementById('avg-n').value) || 0;
+  const avgR = parseInt(document.getElementById('avg-r').value) || 0;
+  const avgSr = parseInt(document.getElementById('avg-sr').value) || 0;
+  const avgUr = parseInt(document.getElementById('avg-ur').value) || 0;
+  const avgExtra = parseInt(document.getElementById('avg-extra').value) || 0;
+  
+  const mainTotal = n + r + sr + ur;
+  const extraTotal = eSr + eUr;
+  
+  document.getElementById('deck-main-total').textContent = mainTotal;
+  document.getElementById('deck-extra-total').textContent = extraTotal;
+  
+  const awaken = document.getElementById('deck-awaken').checked;
+  const srMult = awaken ? 5 : 1;
+  const urMult = awaken ? 10 : 1;
+  
+  // 主卡组牌力（每张卡主属性平均分配到5个主属性，按牌力公式约×1.02）
+  const nPower = n * avgN * 5 * 1.02;
+  const rPower = r * avgR * 5 * 1.02;
+  const srPower = sr * avgSr * 5 * 1.02 * srMult;
+  const urPower = ur * avgUr * 5 * 1.02 * urMult;
+  const mainPower = nPower + rPower + srPower + urPower;
+  
+  // 额外卡组牌力（×0.5）
+  const eSrPower = eSr * avgExtra * 5 * 1.02 * srMult * 0.5;
+  const eUrPower = eUr * avgExtra * 5 * 1.02 * urMult * 0.5;
+  const extraPower = eSrPower + eUrPower;
+  
+  // 加成
+  let totalPower = mainPower + extraPower;
+  const spirit = parseInt(document.getElementById('deck-spirit').value) || 0;
+  totalPower *= (1 + spirit * 0.1);
+  
+  if (document.getElementById('deck-archetype').checked) {
+    totalPower += 5 * 2 + 5 * 0.5 + 5 * 1.5; // 强度+魂度+掏度
+  }
+  
+  document.getElementById('deck-main-power').textContent = Math.round(mainPower);
+  document.getElementById('deck-extra-power').textContent = Math.round(extraPower);
+  document.getElementById('deck-total-power').textContent = Math.round(totalPower);
+  
+  // 明细
+  const breakdown = [
+    { name: 'N卡', count: n, avg: avgN, power: nPower },
+    { name: 'R卡', count: r, avg: avgR, power: rPower },
+    { name: 'SR卡', count: sr, avg: avgSr + (awaken ? '×5' : ''), power: srPower },
+    { name: 'UR卡', count: ur, avg: avgUr + (awaken ? '×10' : ''), power: urPower },
+    { name: 'SR额外', count: eSr, avg: avgExtra + '×0.5', power: eSrPower },
+    { name: 'UR额外', count: eUr, avg: avgExtra + '×0.5', power: eUrPower }
+  ];
+  
+  const totalRaw = mainPower + extraPower;
+  document.getElementById('deck-breakdown').innerHTML = breakdown.map(item => {
+    const pct = totalRaw > 0 ? Math.round(item.power / totalRaw * 100) : 0;
+    return `<tr><td>${item.name}</td><td>${item.count}</td><td>${item.avg}</td><td>${Math.round(item.power)}</td><td>${pct}%</td></tr>`;
+  }).join('');
+}
+
+// 初始化
+calcPower();
+updateAwakenMult();
+calcDeck();
+</script>
+</body>
+</html>
