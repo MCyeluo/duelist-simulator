@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>牌佬模拟器 v3.8 - 牌力计算器 & 对局模拟</title>
+<title>牌佬模拟器 v4.0 - 牌力计算器 & 对局模拟（差值结算制）</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -127,7 +127,7 @@ h1 {
 <body>
 <div class="container">
   <h1>牌佬模拟器 - 牌力计算器</h1>
-  <div class="version">v3.8 完整版 | 支持卡灵觉醒 / 精灵力 / 天赋 / 卡组共鸣</div>
+  <div class="version">v4.0 存档修复版 | 支持卡灵觉醒 / 精灵力 / 天赋 / 卡组共鸣</div>
   <div class="subtitle">实时计算牌力、模拟对局、觉醒前后对比</div>
 
   <div class="tabs">
@@ -234,8 +234,9 @@ h1 {
   <!-- 对局模拟标签页 -->
   <div id="tab-sim" class="tab-content">
     <div class="formula-box">
-      <strong>对局规则：</strong>双方从基础牌力开始，每回合进行交互。检索+展开影响自己牌力增长，干扰降低对方展开效率，抗性减免对方干扰/压制，压制直接削减对方牌力。牌力先归零者败，回合耗尽则剩余牌力高者胜。<br>
-      <strong>战斗事件：</strong>魂度和掏度影响幸运事件触发概率，事件可额外增加牌力或削减对方牌力。精灵力每星+10%牌力，卡灵觉醒按倍率提升。
+      <strong>对局规则（差值结算制）：</strong>每回合双方各自产生牌力值（检索+展开+熟练度+强度+掏度+魂度），展开判定分为完美×2.0/常规×1.0/失败×0.3。干扰小幅削弱对方检索和展开，压制大幅削弱对方展开，抗性降低干扰/压制效果。双方产生值之差转化为对方牌力削减，牌力先归零者败，同时归零时剩余牌力高者胜，回合耗尽则剩余牌力高者胜。<br>
+      <strong>对手AI：</strong>对手也有干扰/压制和战斗事件（概率约为玩家40%），行为模式分为均衡型/进攻型/控制型。同牌力下对手产生倍率为0.2~0.4，玩家保持约20%基础优势。<br>
+      <strong>战斗事件：</strong>魂度和掏度影响幸运事件触发概率和完美展开概率，事件可额外增加牌力或削减对方牌力。精灵力每星+10%牌力，卡灵觉醒按倍率提升。
     </div>
 
     <div class="sim-config">
@@ -254,6 +255,15 @@ h1 {
           <option value="master">大师决斗（60回合）</option>
           <option value="dark">黑暗决斗（寿命赌注）</option>
           <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <span class="config-label">对手行为模式</span>
+        <select class="config-input" id="sim-playstyle">
+          <option value="balance">均衡型</option>
+          <option value="expand">展开型（展开+20%，干扰压制-30%）</option>
+          <option value="disrupt">干扰型（展开-20%，干扰压制+30%）</option>
+          <option value="beat">防御型（展开-20%，干扰压制+10%，抗性+30%）</option>
         </select>
       </div>
       <div class="config-item">
@@ -549,6 +559,7 @@ function runSimulation() {
   const count = parseInt(document.getElementById('sim-count').value) || 100;
   const maxTurns = parseInt(document.getElementById('sim-turns').value) || 30;
   const showLog = document.getElementById('sim-log').value === '1';
+  const playStyle = document.getElementById('sim-playstyle').value || 'balance';
   
   const p = getStats('p');
   const o = getStats('o');
@@ -565,7 +576,7 @@ function runSimulation() {
   let lastLog = [];
   
   for (let i = 0; i < count; i++) {
-    const result = simulateDuel(p, o, pBase, oBase, maxTurns, showLog && i === count - 1);
+    const result = simulateDuel(p, o, pBase, oBase, maxTurns, playStyle, showLog && i === count - 1);
     if (result.won) wins++;
     totalTurns += result.turns;
     if (result.log) lastLog = result.log;
@@ -585,65 +596,139 @@ function runSimulation() {
   }
 }
 
-function simulateDuel(p, o, pBase, oBase, maxTurns, log) {
+function simulateDuel(p, o, pBase, oBase, maxTurns, playStyle, log) {
   let pPower = pBase;
   let oPower = oBase;
   let turns = 0;
   const logs = log ? [] : null;
   
-  if (log) logs.push(`<div class="log-entry">=== 对局开始 | 玩家牌力:${Math.round(pPower)} VS 对手牌力:${Math.round(oPower)} ===</div>`);
+  // 对手行为模式修正
+  let styleDisruptMult = 1.0, styleSuppressMult = 1.0, styleExpandMult = 1.0, styleResistMult = 1.0;
+  if (playStyle === 'expand') { styleExpandMult = 1.2; styleDisruptMult = 0.7; styleSuppressMult = 0.7; }
+  else if (playStyle === 'disrupt') { styleExpandMult = 0.8; styleDisruptMult = 1.3; styleSuppressMult = 1.3; }
+  else if (playStyle === 'beat') { styleExpandMult = 0.8; styleDisruptMult = 1.1; styleSuppressMult = 1.1; styleResistMult = 1.3; }
+  
+  // 对手属性（基于对手牌力反推）
+  const oppTotal = oBase / 3;
+  const oppDisrupt = oppTotal * 0.12 * styleDisruptMult;
+  const oppSuppress = oppTotal * 0.1 * styleSuppressMult;
+  const oppResist = oppTotal * 0.15 * styleResistMult;
+  const oppPower = oppTotal * 0.15;
+  const oppSearch = oppTotal * 0.2;
+  const oppExpand = oppTotal * 0.2;
+  
+  if (log) logs.push(`<div class="log-entry">=== 对局开始 | 玩家牌力:${Math.round(pPower)} VS 对手牌力:${Math.round(oPower)} | 对手模式:${playStyle} ===</div>`);
   
   for (let t = 1; t <= maxTurns; t++) {
     turns = t;
     
-    // 玩家回合：检索+展开增长
-    const pGrowth = (p.search * 0.5 + (p.expand + p.prof * 0.5) * 0.8) * (0.8 + Math.random() * 0.4);
-    pPower += pGrowth;
-    
-    // 对手干扰
-    const oDisrupt = (o.disrupt + o.prof * 0.5) * (0.5 + Math.random() * 0.5);
-    const pResist = (p.resist + p.int * 0.5) * 0.3;
-    const effectiveDisrupt = Math.max(0, oDisrupt - pResist);
-    pPower -= effectiveDisrupt;
-    
-    if (log) logs.push(`<div class="log-entry">回合${t} 玩家: +${Math.round(pGrowth)} -${Math.round(effectiveDisrupt)} = ${Math.round(pPower)}</div>`);
-    
-    // 幸运事件
-    if (Math.random() < (p.soul + p.luck) * 0.005) {
-      const bonus = pBase * 0.05 * (0.5 + Math.random());
-      pPower += bonus;
-      if (log) logs.push(`<div class="log-entry log-event">✨ 玩家幸运事件! +${Math.round(bonus)}</div>`);
+    // ===== 玩家回合：检索+展开产生本回合牌力（受对手干扰/压制影响）=====
+    // 对手干扰：小幅削弱玩家检索和展开
+    const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01);
+    let playerSearchMult = 1.0, playerExpandMult = 1.0;
+    if (oppDisruptSuccess) {
+      const playerResist = p.resist + p.int * 0.5;
+      const resistDenom = 1 + playerResist * 0.025 + p.power * 0.015;
+      const disruptFactor = Math.min(0.35, oppDisrupt * 0.012 / resistDenom);
+      playerSearchMult = 1 - disruptFactor * 0.5;
+      playerExpandMult = 1 - disruptFactor;
+      if (log) logs.push(`<div class="log-entry">回合${t} ⚡ 对方干扰！检索-${Math.round(disruptFactor*50)}% 展开-${Math.round(disruptFactor*100)}%</div>`);
     }
     
-    if (pPower <= 0) {
-      if (log) logs.push(`<div class="log-entry log-lose">玩家牌力归零，失败!</div>`);
-      return { won: false, turns, log: logs };
+    // 对手压制：大幅削弱玩家展开
+    const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01);
+    if (oppSuppressSuccess) {
+      const playerResist = p.resist + p.int * 0.5;
+      const suppressDenom = 1 + playerResist * 0.025 + p.power * 0.015;
+      const suppressFactor = Math.min(0.5, oppSuppress * 0.015 / suppressDenom);
+      playerExpandMult *= (1 - suppressFactor);
+      if (log) logs.push(`<div class="log-entry">回合${t} 🔥 对方压制！展开-${Math.round(suppressFactor*100)}%</div>`);
     }
     
-    // 对手回合
-    const oGrowth = (o.search * 0.5 + (o.expand + o.prof * 0.5) * 0.8) * (0.8 + Math.random() * 0.4);
-    oPower += oGrowth;
+    // 玩家产生值
+    let playerGen = (p.search * 0.6 * playerSearchMult +
+                     p.expand * 1.2 * playerExpandMult +
+                     p.prof * 0.4 +
+                     p.power * 0.6 +
+                     p.luck * 0.2 +
+                     p.soul * 0.15);
     
-    const pDisrupt = (p.disrupt + p.prof * 0.5) * (0.5 + Math.random() * 0.5);
-    const oResist = (o.resist + o.int * 0.5) * 0.3;
-    const oEffectiveDisrupt = Math.max(0, pDisrupt - oResist);
-    oPower -= oEffectiveDisrupt;
+    // 展开判定
+    const expandRoll = Math.random();
+    const expandGreat = expandRoll < 0.1 + p.expand * 0.008 + p.prof * 0.005 + p.luck * 0.005 + p.soul * 0.003;
+    const expandSuccess = expandRoll < 0.5 + p.expand * 0.015 + p.prof * 0.008 + p.luck * 0.004 + p.soul * 0.002;
+    if (expandGreat) { playerGen *= 2.0; if (log) logs.push(`<div class="log-entry log-event">回合${t} ✨ 玩家完美展开！</div>`); }
+    else if (!expandSuccess) { playerGen *= 0.3; if (log) logs.push(`<div class="log-entry">回合${t} 玩家展开受阻</div>`); }
+    
+    // 玩家战斗事件
+    if (Math.random() < 0.25 + p.soul * 0.008 + p.luck * 0.008) {
+      const eventBonus = pBase * 0.05 * (0.5 + Math.random());
+      playerGen += eventBonus;
+      if (log) logs.push(`<div class="log-entry log-event">回合${t} ✨ 玩家战斗事件! +${Math.round(eventBonus)}</div>`);
+    }
+    
+    // 对手战斗事件（约为玩家40%）
+    if (Math.random() < 0.1 + oppTotal * 0.003) {
+      const oppEventBonus = oppTotal * 0.15 * (0.5 + Math.random());
+      playerGen -= oppEventBonus * 0.3;
+      if (log) logs.push(`<div class="log-entry">回合${t} 👹 对方战斗事件! 产生值-${Math.round(oppEventBonus*0.3)}</div>`);
+    }
+    
+    // ===== 对手回合：产生牌力（受玩家干扰/压制影响）=====
+    let effectiveOppSearch = oppSearch;
+    let effectiveOppExpand = oppExpand;
+    
+    // 玩家干扰
+    const playerDisruptPower = p.disrupt * 1.0 + p.int * 0.4;
+    const playerDisruptSuccess = Math.random() < Math.min(0.95, 0.35 + p.disrupt * 0.015 + p.int * 0.008);
+    if (playerDisruptSuccess) {
+      const disruptDenom = 1 + oppResist * 0.025 + oppPower * 0.015;
+      const disruptFactor = Math.min(0.4, playerDisruptPower * 0.012 / disruptDenom);
+      effectiveOppSearch *= (1 - disruptFactor * 0.5);
+      effectiveOppExpand *= (1 - disruptFactor);
+      if (log) logs.push(`<div class="log-entry">回合${t} ⚡ 玩家干扰成功！对方检索-${Math.round(disruptFactor*50)}% 展开-${Math.round(disruptFactor*100)}%</div>`);
+    }
     
     // 玩家压制
-    const pSuppress = (p.suppress + p.int * 0.5) * 0.4 * (0.5 + Math.random());
-    oPower -= pSuppress;
-    
-    if (log) logs.push(`<div class="log-entry">回合${t} 对手: +${Math.round(oGrowth)} -${Math.round(oEffectiveDisrupt + pSuppress)} = ${Math.round(oPower)}</div>`);
-    
-    if (Math.random() < (o.soul + o.luck) * 0.005) {
-      const bonus = oBase * 0.05 * (0.5 + Math.random());
-      oPower += bonus;
-      if (log) logs.push(`<div class="log-entry log-event">✨ 对手幸运事件! +${Math.round(bonus)}</div>`);
+    const playerSuppressPower = p.suppress * 0.9 + p.int * 0.4;
+    const playerSuppressSuccess = Math.random() < Math.min(0.95, 0.25 + p.suppress * 0.015 + p.int * 0.008);
+    let suppressBonus = 0;
+    if (playerSuppressSuccess) {
+      const suppressDenom = 1 + oppResist * 0.025 + oppPower * 0.015;
+      const suppressFactor = Math.min(0.6, playerSuppressPower * 0.015 / suppressDenom);
+      effectiveOppExpand *= (1 - suppressFactor);
+      suppressBonus = playerSuppressPower * 0.1;
+      playerGen += suppressBonus;
+      if (log) logs.push(`<div class="log-entry">回合${t} 🔥 玩家压制成功！对方展开-${Math.round(suppressFactor*100)}% 结算+${Math.round(suppressBonus)}</div>`);
     }
     
-    if (oPower <= 0) {
-      if (log) logs.push(`<div class="log-entry log-win">对手牌力归零，胜利!</div>`);
+    // 对手产生值（同牌力下比玩家弱约20%）
+    let opponentGen = effectiveOppSearch * 0.6 + effectiveOppExpand * 1.2 + oppPower * 0.6;
+    opponentGen *= (0.2 + Math.random() * 0.2) * styleExpandMult;
+    
+    // ===== 差值结算 =====
+    const diff = playerGen - opponentGen;
+    if (diff > 0) {
+      oPower -= diff;
+      if (log) logs.push(`<div class="log-entry">回合${t} 结算: 玩家产生${Math.round(playerGen)} 对方产生${Math.round(opponentGen)} 差值${Math.round(diff)} 对方牌力-${Math.round(diff)} = ${Math.round(oPower)}</div>`);
+    } else if (diff < 0) {
+      pPower += diff; // diff为负，相当于扣血
+      if (log) logs.push(`<div class="log-entry">回合${t} 结算: 玩家产生${Math.round(playerGen)} 对方产生${Math.round(opponentGen)} 差值${Math.round(diff)} 玩家牌力${Math.round(diff)} = ${Math.round(pPower)}</div>`);
+    } else {
+      if (log) logs.push(`<div class="log-entry">回合${t} 结算: 双方均产生${Math.round(playerGen)}，势均力敌！</div>`);
+    }
+    
+    // 胜负判定
+    if (pPower <= 0 && oPower <= 0) {
+      const won = pPower >= oPower;
+      if (log) logs.push(`<div class="log-entry ${won ? 'log-win' : 'log-lose'}">双方同时归零...${won ? '你的剩余牌力更高，险胜！' : '对方剩余牌力更高，你惜败。'}</div>`);
+      return { won, turns, log: logs };
+    } else if (oPower <= 0) {
+      if (log) logs.push(`<div class="log-entry log-win">对方牌力归零！决斗胜利！</div>`);
       return { won: true, turns, log: logs };
+    } else if (pPower <= 0) {
+      if (log) logs.push(`<div class="log-entry log-lose">你的牌力归零...决斗失败。</div>`);
+      return { won: false, turns, log: logs };
     }
   }
   

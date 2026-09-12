@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牌佬模拟器 v4.0 - 新手指南</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #e0e0e0;
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .header {
+    text-align: center;
+    padding: 40px 20px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .header h1 {
+    font-size: 2.5em;
+    background: linear-gradient(90deg, #f39c12, #e74c3c, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .header p { color: #aaa; font-size: 1.1em; }
+  .toc {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .toc h2 { color: #f39c12; margin-bottom: 15px; font-size: 1.3em; }
+  .toc ol { padding-left: 25px; }
+  .toc li { margin: 8px 0; }
+  .toc a { color: #3498db; text-decoration: none; transition: color 0.2s; }
+  .toc a:hover { color: #f39c12; text-decoration: underline; }
+  .section {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 25px 30px;
+    margin-bottom: 25px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .section h2 {
+    color: #f39c12;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(243,156,18,0.3);
+  }
+  .section h3 {
+    color: #e74c3c;
+    font-size: 1.2em;
+    margin: 20px 0 10px;
+  }
+  .section p { margin: 10px 0; color: #ccc; }
+  .highlight {
+    background: rgba(243,156,18,0.15);
+    border-left: 4px solid #f39c12;
+    padding: 12px 18px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .highlight strong { color: #f39c12; }
+  .tip {
+    background: rgba(46,204,113,0.1);
+    border-left: 4px solid #2ecc71;
+    padding: 12px 18px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .tip strong { color: #2ecc71; }
+  .warning {
+    background: rgba(231,76,60,0.1);
+    border-left: 4px solid #e74c3c;
+    padding: 12px 18px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .warning strong { color: #e74c3c; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  th {
+    background: rgba(243,156,18,0.2);
+    color: #f39c12;
+    font-weight: 600;
+  }
+  tr:hover { background: rgba(255,255,255,0.03); }
+  .step-list { list-style: none; padding: 0; }
+  .step-list li {
+    position: relative;
+    padding: 15px 15px 15px 55px;
+    margin: 10px 0;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .step-list li::before {
+    content: attr(data-step);
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9em;
+  }
+  .step-list li strong { color: #f39c12; }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin: 0 3px;
+  }
+  .badge-n { background: #95a5a6; color: #fff; }
+  .badge-r { background: #3498db; color: #fff; }
+  .badge-sr { background: #9b59b6; color: #fff; }
+  .badge-ur { background: #f39c12; color: #fff; }
+  .badge-sp { background: linear-gradient(135deg, #e74c3c, #f39c12); color: #fff; }
+  .footer {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    font-size: 0.9em;
+  }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.8em; }
+    .section { padding: 20px 15px; }
+    table { font-size: 0.85em; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>🎴 牌佬模拟器</h1>
+  <p>新手指南 · 从零开始的决斗者之旅</p>
+</div>
+
+<div class="toc">
+  <h2>📖 目录</h2>
+  <ol>
+    <li><a href="#intro">游戏简介与目标</a></li>
+    <li><a href="#basic">基础操作与界面</a></li>
+    <li><a href="#phase1">第一阶段：新手期（0-365天）</a></li>
+    <li><a href="#phase2">第二阶段：成长期（1-2年）</a></li>
+    <li><a href="#phase3">第三阶段：决斗都市篇（2年+）</a></li>
+    <li><a href="#phase4">第四阶段：精灵界与黑暗领域</a></li>
+    <li><a href="#systems">核心系统详解</a></li>
+    <li><a href="#faq">常见问题与注意事项</a></li>
+    <li><a href="#checklist">通关检查清单</a></li>
+  </ol>
+</div>
+
+<div class="section" id="intro">
+  <h2>🎯 一、游戏简介与目标</h2>
+  <p>你来自未来被毁灭的新童实野市，利用<strong>时空模拟器</strong>回到过去的童实野市。你的目标是：</p>
+  <div class="highlight">
+    <p><strong>🎯 核心目标：</strong>以决斗王为目标，一边提升实力，一边寻找未来被毁灭的真相。</p>
+    <p><strong>⏰ 时间限制：</strong>时空模拟器只能模拟<strong>7年</strong>，角色25岁时游戏结束。</p>
+    <p><strong>📅 时间流速：</strong>每回合 = 7天，365天 = 1岁。</p>
+  </div>
+  <h3>游戏结局</h3>
+  <table>
+    <tr><th>结局类型</th><th>触发条件</th></tr>
+    <tr><td>🏆 正常通关</td><td>完成所有主线任务，揭开真相</td></tr>
+    <tr><td>💀 年龄结束</td><td>角色达到25岁（黑暗决斗失败后触发）</td></tr>
+    <tr><td>🎴 穷困潦倒</td><td>决斗点耗尽，无法继续决斗</td></tr>
+    <tr><td>🔥 作弊被抓</td><td>拥有「天才洗牌手」天赋，比赛中被发现作弊</td></tr>
+  </table>
+</div>
+
+<div class="section" id="basic">
+  <h2>🎮 二、基础操作与界面</h2>
+  <h3>主界面布局</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>左上角：</strong>角色头像、名字、称号、年龄、天数、牌力</li>
+    <li data-step="2"><strong>左侧：</strong>任务追踪面板，显示当前进行中的任务</li>
+    <li data-step="3"><strong>右侧：</strong>卡组概况，显示主卡组/额外卡组数量和主属性</li>
+    <li data-step="4"><strong>底部导航：</strong>主页、卡组、决斗、地点、角色、成就、天赋图鉴、设置</li>
+  </div>
+  <h3>核心操作</h3>
+  <table>
+    <tr><th>操作</th><th>说明</th></tr>
+    <tr><td>📍 前往地点</td><td>点击「地点」→ 选择地点 → 触发事件/决斗/捡卡（消耗7天）</td></tr>
+    <tr><td>⚔️ 进行决斗</td><td>点击「决斗」→ 选择模式 → 匹配对手 → 进行决斗</td></tr>
+    <tr><td>🃏 编辑卡组</td><td>点击「卡组」→ 从牌库选择卡片 → +1/-1调整数量</td></tr>
+    <tr><td>💬 角色互动</td><td>点击「角色」→ 选择角色 → 赠礼/挑战/查看好感度</td></tr>
+    <tr><td>📋 任务面板</td><td>主页左侧显示，完成条件后手动领取奖励</td></tr>
+  </table>
+  <div class="tip">
+    <p><strong>💡 小提示：</strong>决斗和比赛<strong>不消耗时间</strong>，只有前往地点触发事件才消耗7天。合理利用这一点，在时间充裕时多刷决斗提升实力！</p>
+  </div>
+</div>
+
+<div class="section" id="phase1">
+  <h2>🌱 三、第一阶段：新手期（0-365天）</h2>
+  <p><strong>阶段目标：</strong>完成引导任务，组建第一副卡组，解锁快速决斗和大师决斗。</p>
+  
+  <h3>📋 必做任务（引导任务链）</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>初入童实野：</strong>前往「龟游戏屋」1次 → 奖励50决斗点</li>
+    <li data-step="2"><strong>卡组的基础：</strong>收集10张卡片 → 奖励100决斗点+卡m010</li>
+    <li data-step="3"><strong>初次出击：</strong>主卡组达到20张，进行1次快速决斗 → 奖励150决斗点</li>
+    <li data-step="4"><strong>大师之路：</strong>主卡组40张+额外5张，完成1次大师决斗 → 奖励300决斗点+20卡点</li>
+    <li data-step="5"><strong>社交达人：</strong>与武藤游戏好感度达到20 → 奖励100决斗点</li>
+    <li data-step="6"><strong>初尝胜果：</strong>累计获得5场决斗胜利 → 奖励200决斗点+卡m015</li>
+    <li data-step="7"><strong>赛事参与：</strong>参加1次卡店比赛 → 奖励150决斗点</li>
+    <li data-step="8"><strong>引导完成：</strong>完成以上所有 → 奖励称号「时空旅人」+全属性+5</li>
+  </div>
+
+  <h3>🎯 这个阶段该做什么</h3>
+  <table>
+    <tr><th>优先级</th><th>行动</th><th>说明</th></tr>
+    <tr><td>⭐⭐⭐</td><td>多去「龟游戏屋」和「卡牌店」</td><td>捡卡+开卡包，快速积累卡片</td></tr>
+    <tr><td>⭐⭐⭐</td><td>主卡组凑够20张</td><td>解锁快速决斗，开始刷决斗点和胜利</td></tr>
+    <tr><td>⭐⭐</td><td>主卡组凑够40张+额外5张</td><td>解锁大师决斗，完成后解锁卡点系统</td></tr>
+    <tr><td>⭐⭐</td><td>参加入门级店赛</td><td>免费参与，赢了有奖励，还能完成引导任务</td></tr>
+    <tr><td>⭐</td><td>与武藤游戏互动赠礼</td><td>提升好感度，后续剧情需要</td></tr>
+  </table>
+
+  <div class="warning">
+    <p><strong>⚠️ 注意：</strong>这个阶段不要浪费时间去无关地点！每去一次地点消耗7天，优先完成引导任务。决斗和比赛不消耗时间，可以放心刷。</p>
+  </div>
+
+  <h3>🔓 本阶段解锁的系统</h3>
+  <div class="highlight">
+    <p>✅ 快速决斗（主卡组20张）</p>
+    <p>✅ 大师决斗（主卡组40张+额外5张）</p>
+    <p>✅ 卡点系统与卡组共鸣（完成1次大师决斗后）</p>
+    <p>✅ 称号系统（完成引导任务获得「时空旅人」）</p>
+  </div>
+</div>
+
+<div class="section" id="phase2">
+  <h2>⚡ 四、第二阶段：成长期（1-2年）</h2>
+  <p><strong>阶段目标：</strong>提升牌力到2000，完成成就「一年牌佬」，解锁决斗都市任务链。</p>
+
+  <h3>📋 关键里程碑</h3>
+  <table>
+    <tr><th>时间节点</th><th>目标</th><th>解锁内容</th></tr>
+    <tr><td>第365天</td><td>成就「一年牌佬」自动解锁</td><td>决斗都市任务star_001的条件之一</td></tr>
+    <tr><td>牌力1000</td><td>完成主线任务「时空的涟漪」</td><td>300决斗点+魂度+10</td></tr>
+    <tr><td>牌力1500</td><td>隐藏任务「时空的悖论」解锁</td><td>20岁前牌力3000可完成</td></tr>
+    <tr><td>牌力2000</td><td>隐藏任务「决斗都市启动」解锁</td><td>开启决斗都市任务链</td></tr>
+    <tr><td>收集5张UR</td><td>完成主线任务「传说的碎片」</td><td>1500决斗点+30卡点</td></tr>
+    <tr><td>赢得中级比赛</td><td>完成主线任务「王者的资质」</td><td>1800决斗点+卡e009</td></tr>
+  </table>
+
+  <h3>🎯 这个阶段该做什么</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>刷决斗提升牌力：</strong>多进行大师决斗，胜利获得决斗点和卡片，牌力随属性提升</li>
+    <li data-step="2"><strong>使用卡点强化卡组：</strong>分解多余卡片获得卡点，2卡点=1点主属性，优先加「展开」和「检索」</li>
+    <li data-step="3"><strong>参加中级/高级比赛：</strong>中级对手牌力500-800，高级1000+，奖励更丰厚</li>
+    <li data-step="4"><strong>收集UR卡：</strong>高级卡包/比赛奖励/赌卡决斗，凑够5张UR</li>
+    <li data-step="5"><strong>访问龟游戏屋5次：</strong>为决斗都市任务star_001做准备</li>
+    <li data-step="6"><strong>与游戏/城之内提升好感：</strong>后续剧情需要好感度80+</li>
+  </div>
+
+  <div class="tip">
+    <p><strong>💡 牌力提升技巧：</strong></p>
+    <p>1. 卡组中放入高属性UR卡（每张UR提供3个主属性，最高9点）</p>
+    <p>2. 用卡点强化「展开」和「检索」（展开系数1.2，压制1.1，收益最高）</p>
+    <p>3. 解锁成就获得属性加成（每个成就都有bonus）</p>
+    <p>4. 装备天赋提升属性（R/SR/UR天赋属性加成更高）</p>
+    <p>5. 15张以上同系列卡形成系列卡组，获得额外加成</p>
+  </div>
+
+  <h3>🔓 本阶段解锁的系统</h3>
+  <div class="highlight">
+    <p>✅ 卡点分解系统（N=1, R=2, SR=3, UR=5卡点）</p>
+    <p>✅ 卡组共鸣强化（2卡点=1主属性）</p>
+    <p>✅ 系列卡组标签（15张以上同系列）</p>
+    <p>✅ 隐藏任务系统（牌力/年龄达到条件自动显示）</p>
+    <p>✅ 决斗都市任务链（牌力2000+成就year_one）</p>
+  </div>
+</div>
+
+<div class="section" id="phase3">
+  <h2>🏙️ 五、第三阶段：决斗都市篇（2年+）</h2>
+  <p><strong>阶段目标：</strong>完成决斗都市任务链，解锁黑暗决斗、精灵力系统、黑暗领域。</p>
+
+  <h3>📋 决斗都市任务链（核心剧情）</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>决斗都市启动（star_001）：</strong>
+      <br>条件：成就「一年牌佬」+ 访问龟游戏屋5次
+      <br>奖励：天赋「都市决斗者」+ 成就「决斗都市」+ 决斗模式custom1
+    </li>
+    <li data-step="2"><strong>解锁决斗都市地点：</strong>
+      <br>获得天赋后，前往「龟游戏屋」触发事件「决斗都市 起」
+      <br>选择选项后解锁地点「混战的决斗都市」
+    </li>
+    <li data-step="3"><strong>收集拼图卡（star_002）：</strong>
+      <br>条件：访问决斗都市8次
+      <br>奖励：天赋「城市漫游者」+ 成就「城市漫游者」+ <strong>黑暗决斗模式</strong>
+    </li>
+    <li data-step="4"><strong>决斗的另一面（star_003）：</strong>
+      <br>条件：成就「黑暗决斗者」或「千年神器」（决斗都市事件触发获得）
+      <br>奖励：精灵力100 → <strong>开启精灵力系统</strong>
+    </li>
+    <li data-step="5"><strong>城之内之死？（star_004）：</strong>
+      <br>条件：成就「不可动摇的羁绊」或「过路人」+ 游戏/城之内好感80+
+      <br>奖励：精灵力300+觉醒碎片50
+    </li>
+    <li data-step="6"><strong>登上决斗飞艇（star_005）：</strong>
+      <br>条件：牌力≥5000
+      <br>奖励：精灵力500+成就「决斗都市八强」
+    </li>
+    <li data-step="7"><strong>蠢蠢欲动的黑暗（star_006）：</strong>
+      <br>条件：成就「暗之清算」+ 击败马利克
+      <br>奖励：精灵力5000+成就「比太阳更炽热」
+    </li>
+    <li data-step="8"><strong>离真相只差一步（star_007）：</strong>
+      <br>条件：牌力≥7000 + 击败暗游戏
+      <br>奖励：精灵力8000+成就「更深邃的黑暗」
+    </li>
+    <li data-step="9"><strong>解锁黑暗领域：</strong>
+      <br>击败暗游戏后触发事件「最后的决斗」→ 解锁地点「黑暗领域」
+    </li>
+  </div>
+
+  <h3>🎯 这个阶段该做什么</h3>
+  <table>
+    <tr><th>优先级</th><th>行动</th><th>说明</th></tr>
+    <tr><td>⭐⭐⭐</td><td>完成star_001，解锁决斗都市</td><td>整个剧情的起点</td></tr>
+    <tr><td>⭐⭐⭐</td><td>在决斗都市刷事件</td><td>收集拼图卡，触发剧情事件获得关键成就</td></tr>
+    <tr><td>⭐⭐</td><td>提升牌力到5000+</td><td>star_005的要求，也是击败马利克/暗游戏的基础</td></tr>
+    <tr><td>⭐⭐</td><td>与游戏/城之内好感刷到80+</td><td>star_004的解锁条件</td></tr>
+    <tr><td>⭐</td><td>尝试黑暗决斗</td><td>胜利获得寿命（天数），失败失去1年寿命</td></tr>
+  </table>
+
+  <div class="warning">
+    <p><strong>⚠️ 黑暗决斗注意：</strong>黑暗决斗失败会失去365天（1年寿命），如果失败后年龄达到25岁会直接游戏结束！建议牌力足够高再尝试，胜利可以获得额外寿命。</p>
+  </div>
+</div>
+
+<div class="section" id="phase4">
+  <h2>🧚 六、第四阶段：精灵界与黑暗领域</h2>
+  <p><strong>阶段目标：</strong>探索精灵界提升精灵力，解锁卡灵觉醒，探索黑暗领域揭开真相。</p>
+
+  <h3>📋 精灵界引导任务</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>精灵界的呼唤：</strong>精灵力达到4星 → 解锁地点「精灵界」</li>
+    <li data-step="2"><strong>初入精灵界：</strong>首次进入精灵界 → 300决斗点+觉醒碎片10</li>
+    <li data-step="3"><strong>精灵的修炼：</strong>精灵力达到5星 → 50卡点+精灵力300</li>
+    <li data-step="4"><strong>精灵界的试炼：</strong>击败精灵精灵 → 成就「恩底弥翁圣地」</li>
+    <li data-step="5"><strong>精灵的友谊：</strong>精灵力达到6星 → 80卡点+精灵力1000</li>
+    <li data-step="6"><strong>一方统帅：</strong>精灵力达到7星 → 天赋「精灵领主」+称号「精灵统帅者」</li>
+  </div>
+
+  <h3>📋 黑暗领域探索</h3>
+  <div class="step-list">
+    <li data-step="1"><strong>帮助迷失的灵魂：</strong>触发事件，获得大量卡点或觉醒碎片</li>
+    <li data-step="2"><strong>遭遇黑暗精灵：</strong>指定黑暗决斗，胜利获得生命力（天数）</li>
+    <li data-step="3"><strong>休息修炼：</strong>将黑暗能量转化为生命力（生命+84天）</li>
+    <li data-step="4"><strong>隐藏事件：</strong>在黑暗深处获得冥界之神的力量（获得sp003）</li>
+    <li data-step="5"><strong>破灭的结局（star_008）：</strong>访问黑暗领域10次 → 成就「破灭之光」</li>
+  </div>
+
+  <h3>🔮 卡灵觉醒系统</h3>
+  <div class="highlight">
+    <p><strong>解锁条件：</strong>成就「神之觉醒」（拥有sp001千年积木）</p>
+    <p><strong>觉醒效果：</strong>觉醒后卡牌提供的属性大幅提升</p>
+    <table>
+      <tr><th>品质</th><th>觉醒消耗</th><th>成功率</th><th>属性倍率</th></tr>
+      <tr><td><span class="badge badge-sr">SR</span></td><td>50碎片</td><td>30%</td><td>×5</td></tr>
+      <tr><td><span class="badge badge-ur">UR</span></td><td>100碎片</td><td>20%</td><td>×10</td></tr>
+      <tr><td><span class="badge badge-sp">SP</span></td><td>500碎片</td><td>10%</td><td>×100</td></tr>
+    </table>
+    <p><strong>天赋「人人如龙」：</strong>所有卡牌可觉醒，N×5、R×10、SR×20、UR×50、SP×100</p>
+  </div>
+
+  <div class="tip">
+    <p><strong>💡 精灵力升级所需经验：</strong></p>
+    <p>• 0→4星：累计812点精灵力</p>
+    <p>• 0→7星：累计约3,375点</p>
+    <p>• 0→12星：累计25,745点</p>
+    <p>精灵界事件消耗1天（其他地点7天），是后期提升精灵力的主要场所。</p>
+  </div>
+</div>
+
+<div class="section" id="systems">
+  <h2>⚙️ 七、核心系统详解</h2>
+
+  <h3>🃏 卡片系统</h3>
+  <table>
+    <tr><th>品质</th><th>主属性数量</th><th>单属性上限</th><th>分解获得</th></tr>
+    <tr><td><span class="badge badge-n">N</span></td><td>1个</td><td>3点</td><td>1卡点</td></tr>
+    <tr><td><span class="badge badge-r">R</span></td><td>2个</td><td>6点</td><td>2卡点</td></tr>
+    <tr><td><span class="badge badge-sr">SR</span></td><td>3个</td><td>6点</td><td>3卡点</td></tr>
+    <tr><td><span class="badge badge-ur">UR</span></td><td>3个以上</td><td>3-9点</td><td>5卡点</td></tr>
+    <tr><td><span class="badge badge-sp">SP</span></td><td>不限</td><td>不限</td><td>不可分解</td></tr>
+  </table>
+  <p><strong>卡组限制：</strong>主卡组最少20(快速)/40(大师)，最多60张；额外卡组最多15张；同名卡最多3张。</p>
+  <p><strong>SP特殊卡：</strong>ID以sp开头，只能由事件获取，不加入卡池，不可加入卡组，但提供属性加成。</p>
+
+  <h3>⚔️ 决斗系统（v4.0差值结算制）</h3>
+  <table>
+    <tr><th>模式</th><th>主卡组要求</th><th>额外要求</th><th>最多回合</th><th>说明</th></tr>
+    <tr><td>快速决斗</td><td>20-60张</td><td>无</td><td>30回合</td><td>难度较低，适合新手</td></tr>
+    <tr><td>大师决斗</td><td>40-60张</td><td>最多15张</td><td>60回合</td><td>正式比赛规则</td></tr>
+    <tr><td>黑暗决斗</td><td>40-60张</td><td>最多15张</td><td>60回合</td><td>胜利+寿命，失败-1年寿命</td></tr>
+  </table>
+  <p><strong>决斗机制（差值结算制）：</strong></p>
+  <ul>
+    <li><strong>玩家回合：</strong>检索+展开产生本回合牌力值，受展开成功率判定（完美×2.0/常规×1.0/失败×0.3）</li>
+    <li><strong>对手回合：</strong>对方产生牌力，受玩家干扰（小幅削弱检索/展开，上限40%）和压制（大幅削弱展开，上限60%）影响</li>
+    <li><strong>差值结算：</strong>双方一回合产生值之差转化为牌力削减，diff>0对手扣血，diff<0玩家扣血</li>
+    <li><strong>胜负判定：</strong>牌力归零即败，同时归零时剩余牌力高者胜，回合耗尽时剩余牌力高者胜</li>
+  </ul>
+  
+  <h3>🎯 玩家行为类型系统</h3>
+  <p>根据卡组主属性配比自动分配行为类型，纯正面加成，无负面效果：</p>
+  <table>
+    <tr><th>类型</th><th>触发条件</th><th>加成效果</th></tr>
+    <tr><td>展开型</td><td>展开占比≥25%且最高</td><td>展开+8%</td></tr>
+    <tr><td>干扰型</td><td>干扰+压制占比≥35%</td><td>干扰+8%、压制+8%</td></tr>
+    <tr><td>防御型</td><td>抗性占比≥25%且最高</td><td>抗性+10%</td></tr>
+    <tr><td>均衡型</td><td>各属性较平均</td><td>全属性+3%</td></tr>
+  </table>
+  
+  <h3>🏷️ 副属性标签系统</h3>
+  <p>根据副属性占比自动获得标签（占比≥35%触发），可与行为类型叠加：</p>
+  <table>
+    <tr><th>标签</th><th>触发条件</th><th>加成效果</th></tr>
+    <tr><td>强度党</td><td>强度占比≥35%</td><td>牌力增长+5%，抗性+3%</td></tr>
+    <tr><td>魂玩家</td><td>魂度占比≥35%</td><td>战斗事件效果+10%</td></tr>
+    <tr><td>赌狗</td><td>掏度占比≥35%</td><td>幸运事件触发率+5%</td></tr>
+    <tr><td>打牌高手</td><td>熟练度占比≥35%</td><td>完美展开+3%，常规展开+2%</td></tr>
+    <tr><td>情报玩家</td><td>情报力占比≥35%</td><td>干扰/压制效果+5%，抗性+3%</td></tr>
+  </table>
+  
+  <h3>🃏 多系列卡组支持</h3>
+  <p>卡片archetype字段用/分隔多个系列，每个系列15张以上激活，加成叠加（每个系列强度+5、魂度+5、掏度+5）。卡组显示多个系列标签，幸运事件概率38%+每系列3%。</p>
+
+  <h3>📊 牌力计算公式</h3>
+  <div class="highlight">
+    <p>有效展开 = 展开 + 熟练度×0.5</p>
+    <p>有效干扰 = 干扰 + 熟练度×0.5</p>
+    <p>有效抗性 = 抗性 + 情报力×0.5</p>
+    <p>有效压制 = 压制 + 情报力×0.5</p>
+    <p><strong>牌力 = 检索×1.0 + 有效展开×1.2 + 有效干扰×1.0 + 有效抗性×0.8 + 有效压制×1.1 + 强度×2.0 + 魂度×0.5 + 掏度×1.5</strong></p>
+  </div>
+
+  <h3>🎁 天赋系统</h3>
+  <p>开局随机抽取6个天赋，选择2个装备。天赋按品质分为N/R/SR/UR，部分天赋可通过事件/任务/好感度解锁。</p>
+  <p><strong>隐藏天赋：</strong>局内获得后自动装备，可在天赋图鉴中查看详情和获取方式。</p>
+
+  <h3>🏆 成就系统</h3>
+  <p>达成条件自动解锁，每个成就提供属性加成。部分成就可解锁隐藏天赋、新系统、新地点。</p>
+</div>
+
+<div class="section" id="faq">
+  <h2>❓ 八、常见问题与注意事项</h2>
+
+  <h3>Q: 时间不够用怎么办？</h3>
+  <p>A: 决斗和比赛<strong>不消耗时间</strong>！只有前往地点触发事件才消耗7天（精灵界1天）。合理安排：需要刷决斗点/胜利时直接去决斗页面，不要浪费时间去地点。</p>
+
+  <h3>Q: 决斗都市怎么解锁？</h3>
+  <p>A: 完整流程：①牌力达到2000解锁任务「决斗都市启动」→ ②完成条件（成就「一年牌佬」+访问龟游戏屋5次）→ ③获得天赋「都市决斗者」→ ④前往龟游戏屋触发事件「决斗都市 起」→ ⑤选择选项解锁地点。</p>
+
+  <h3>Q: 精灵力系统怎么开启？</h3>
+  <p>A: 完成决斗都市任务star_003「决斗的另一面」（需要成就「黑暗决斗者」或「千年神器」），奖励精灵力100，系统自动开启。精灵力达到4星后解锁精灵界地点。</p>
+
+  <h3>Q: 卡灵觉醒怎么开启？</h3>
+  <p>A: 获得SP卡「千年积木」（sp001）后自动解锁成就「神之觉醒」，卡灵觉醒系统开启。SR及以上品质卡牌可觉醒，需要消耗觉醒碎片。</p>
+
+  <h3>Q: 黑暗领域怎么解锁？</h3>
+  <p>A: 完成star_007「离真相只差一步」（牌力7000+击败暗游戏）后，触发事件「最后的决斗」，选择后解锁黑暗领域。在黑暗领域只能进行黑暗决斗。</p>
+
+  <h3>Q: 卡点怎么获得？怎么用？</h3>
+  <p>A: 分解多余卡片获得卡点（同名卡超过3张的部分可分解）。N=1、R=2、SR=3、UR=5卡点。在卡组页面使用卡点强化主属性，2卡点=1点主属性。</p>
+
+  <h3>Q: 存档怎么用？</h3>
+  <p>A: 游戏支持3个存档槽位，可随时保存/读取。还支持导出标识码（Base64字符串），跨设备导入存档。主菜单和游戏内主页都有存读档入口。</p>
+
+  <div class="warning">
+    <p><strong>⚠️ 重要注意事项：</strong></p>
+    <p>1. 任务奖励需要<strong>手动领取</strong>，完成后在任务面板点击领取</p>
+    <p>2. 已完成的任务可以折叠隐藏</p>
+    <p>3. 卡组编辑后属性实时更新，牌力实时计算</p>
+    <p>4. 黑暗决斗失败会失去1年寿命，25岁游戏结束，谨慎尝试</p>
+    <p>5. 天赋「天才洗牌手」比赛有概率被发现作弊，被发现直接结束存档</p>
+    <p>6. 兑换码入口在个人主页角落，可输入兑换码获得奖励</p>
+  </div>
+</div>
+
+<div class="section" id="checklist">
+  <h2>✅ 九、通关检查清单</h2>
+  <p>按顺序完成以下内容，即可体验完整游戏剧情：</p>
+
+  <h3>🌱 新手期</h3>
+  <div class="step-list">
+    <li data-step="1">完成所有8个引导任务，获得称号「时空旅人」</li>
+    <li data-step="2">主卡组40张+额外5张，解锁大师决斗</li>
+    <li data-step="3">完成1次大师决斗，解锁卡点系统</li>
+  </div>
+
+  <h3>⚡ 成长期</h3>
+  <div class="step-list">
+    <li data-step="4">度过365天，获得成就「一年牌佬」</li>
+    <li data-step="5">牌力达到2000，解锁任务「决斗都市启动」</li>
+    <li data-step="6">访问龟游戏屋5次，完成star_001</li>
+  </div>
+
+  <h3>🏙️ 决斗都市篇</h3>
+  <div class="step-list">
+    <li data-step="7">龟游戏屋触发事件，解锁决斗都市地点</li>
+    <li data-step="8">访问决斗都市8次，完成star_002，解锁黑暗决斗</li>
+    <li data-step="9">触发剧情事件获得成就，完成star_003，开启精灵力系统</li>
+    <li data-step="10">好感度刷够，完成star_004</li>
+    <li data-step="11">牌力5000，完成star_005</li>
+    <li data-step="12">击败马利克，完成star_006</li>
+    <li data-step="13">牌力7000+击败暗游戏，完成star_007</li>
+    <li data-step="14">触发「最后的决斗」，解锁黑暗领域</li>
+  </div>
+
+  <h3>🧚 后期探索</h3>
+  <div class="step-list">
+    <li data-step="15">精灵力4星，解锁精灵界</li>
+    <li data-step="16">获得sp001千年积木，开启卡灵觉醒</li>
+    <li data-step="17">精灵力7星，获得天赋「精灵领主」</li>
+    <li data-step="18">探索黑暗领域，获得sp003冥界之神力量</li>
+    <li data-step="19">访问黑暗领域10次，完成star_008，获得成就「破灭之光」</li>
+    <li data-step="20">完成终局任务end_009，自由游玩！</li>
+  </div>
+</div>
+
+<div class="footer">
+  <p>🎴 牌佬模拟器 · 新手指南</p>
+  <p>祝你在童实野市的决斗之旅顺利！</p>
+  <p style="margin-top:10px;color:#444;">版本 v3.8</p>
+</div>
+
+</div>
+</body>
+</html>

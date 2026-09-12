@@ -1059,7 +1059,7 @@ body::before {
     <div class="start-view">
       <div class="start-title">牌佬模拟器</div>
       <div class="start-subtitle">童 实 野 市 篇</div>
-      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v3.8 完整版 | 剧情完结 | 支持DLC扩展</div>
+      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v4.0 存档修复版 | 剧情完结 | 支持DLC扩展</div>
 
       <!-- 主菜单 -->
       <div id="main-menu" class="panel" style="max-width:400px;margin:0 auto;padding:24px;">
@@ -1630,16 +1630,16 @@ body::before {
       <!-- 卡组 -->
       <div id="subview-deck" class="view">
         <div class="panel">
-          <div class="panel-title">卡组属性 <span id="archetype-tag" style="display:none; background:linear-gradient(90deg,#ffd700,#ff6b6b); color:#1a1a2e; padding:2px 10px; border-radius:10px; font-size:12px; margin-left:8px;"></span></div>
+          <div class="panel-title">卡组属性 <span id="archetype-tag" style="display:none; background:linear-gradient(90deg,#ffd700,#ff6b6b); color:#1a1a2e; padding:2px 10px; border-radius:10px; font-size:12px; margin-left:8px;"></span> <span id="player-style-tag" style="background:rgba(59,130,246,0.2); color:var(--accent-blue-light); padding:2px 10px; border-radius:10px; font-size:12px; margin-left:8px;">均衡型</span><span id="player-sub-tags" style="display:none; margin-left:4px;"></span></div>
           <div class="stats-grid" style="margin-bottom:16px;">
-            <div class="stat-box search"><div class="stat-box-label">检索</div><div class="stat-box-value" id="deck-stat-search">0</div></div>
-            <div class="stat-box expand"><div class="stat-box-label">展开</div><div class="stat-box-value" id="deck-stat-expand">0</div></div>
-            <div class="stat-box disrupt"><div class="stat-box-label">干扰</div><div class="stat-box-value" id="deck-stat-disrupt">0</div></div>
-            <div class="stat-box resist"><div class="stat-box-label">抗性</div><div class="stat-box-value" id="deck-stat-resist">0</div></div>
-            <div class="stat-box suppress"><div class="stat-box-label">压制</div><div class="stat-box-value" id="deck-stat-suppress">0</div></div>
+            <div class="stat-box search" style="cursor:pointer;" onclick="showStatDetail('search')"><div class="stat-box-label">检索</div><div class="stat-box-value" id="deck-stat-search">0</div></div>
+            <div class="stat-box expand" style="cursor:pointer;" onclick="showStatDetail('expand')"><div class="stat-box-label">展开</div><div class="stat-box-value" id="deck-stat-expand">0</div></div>
+            <div class="stat-box disrupt" style="cursor:pointer;" onclick="showStatDetail('disrupt')"><div class="stat-box-label">干扰</div><div class="stat-box-value" id="deck-stat-disrupt">0</div></div>
+            <div class="stat-box resist" style="cursor:pointer;" onclick="showStatDetail('resist')"><div class="stat-box-label">抗性</div><div class="stat-box-value" id="deck-stat-resist">0</div></div>
+            <div class="stat-box suppress" style="cursor:pointer;" onclick="showStatDetail('suppress')"><div class="stat-box-label">压制</div><div class="stat-box-value" id="deck-stat-suppress">0</div></div>
           </div>
           <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
-            主属性 = 天赋 + 成就 + 卡组 + 共鸣 · 卡组变化时实时更新
+            主属性 = 天赋 + 成就 + 卡组 + 共鸣 · 卡组变化时实时更新 · 点击属性查看详情
           </div>
         </div>
 
@@ -1674,9 +1674,24 @@ body::before {
             <button class="deck-tab" data-deck-tab="extra">额外卡组</button>
             <button class="deck-tab" data-deck-tab="collection">牌库</button>
           </div>
+          <div id="deck-sort-bar" style="display:none; margin-bottom:8px; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:11px; color:var(--text-muted);">排序：</span>
+            <button class="deck-sort-btn active" data-sort="rarity" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">稀有度</button>
+            <button class="deck-sort-btn" data-sort="time" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">获得时间</button>
+            <button class="deck-sort-btn" data-sort="power" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">牌力</button>
+          </div>
+          <div id="deck-filter-bar" style="display:none; margin-bottom:8px; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:11px; color:var(--text-muted);">类型：</span>
+            <button class="deck-filter-btn active" data-filter="all" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">全部</button>
+            <button class="deck-filter-btn" data-filter="monster" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">怪兽</button>
+            <button class="deck-filter-btn" data-filter="spell" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">魔法</button>
+            <button class="deck-filter-btn" data-filter="trap" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">陷阱</button>
+            <button class="deck-filter-btn" data-filter="extra" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">额外</button>
+            <button class="deck-filter-btn" data-filter="special" style="padding:4px 10px; font-size:11px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:6px; cursor:pointer;">特殊(SP)</button>
+          </div>
           <div class="cards-list" id="deck-cards-list"></div>
           <div style="margin-top:10px; font-size:11px; color:var(--text-muted);">
-            点击卡片可在卡组/牌库之间移动 · 主卡组最少20张最多50张 · 额外最多15张 · 同一系列15张以上触发系列卡组加成
+            点击卡片可在卡组/牌库之间移动 · 主卡组最少20张最多60张 · 额外最多15张 · 同一系列15张以上触发系列卡组加成（一张卡可属于多个系列，用/分隔，多系列加成叠加） · ⚔为单卡牌力加成
           </div>
         </div>
       </div>
@@ -2037,6 +2052,14 @@ body::before {
           <div style="font-weight:bold;color:#fbbf24;font-size:12px;" id="profile-archetype">无</div>
         </div>
       </div>
+      <div style="margin-top:8px;padding:8px;background:var(--bg-card);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="color:var(--text-muted);font-size:10px;">决斗类型：</span>
+          <span id="profile-play-style" style="font-weight:bold;color:var(--accent-blue-light);font-size:11px;">均衡型</span>
+          <span style="color:var(--text-muted);font-size:10px;margin-left:8px;">副属性标签：</span>
+          <span id="profile-sub-tags" style="font-size:10px;color:var(--text-muted);">无</span>
+        </div>
+      </div>
     </div>
 
     <!-- 成就和称号 -->
@@ -2133,6 +2156,11 @@ body::before {
   </div>
 </div>
 
+<!-- 通用模态框（用于事件恢复等） -->
+<div id="generic-modal" class="modal-overlay" style="display:none;z-index:10008;">
+  <div class="card-detail-box" id="generic-modal-content" style="max-width:500px;max-height:85vh;overflow-y:auto;"></div>
+</div>
+
 <!-- 数据已内嵌到下方 script 中，dev-tool.html 可直接编辑本文件 -->
 <script>
 /* ============================================================
@@ -2178,6 +2206,38 @@ let CARD_DB = {
   m030: { id:'m030', name:'救援猫', type:'monster', rarity:'N', archetype:'救援', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
   m031: { id:'m031', name:'青眼亚白龙', type:'monster', rarity:'SR', archetype:'青眼', stats:{search:2,expand:8,disrupt:0,resist:0,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
   m032: { id:'m032', name:'黑魔术女孩', type:'monster', rarity:'SR', archetype:'黑魔导', stats:{search:0,expand:0,disrupt:5,resist:5,suppress:6}, sub:{power:5,soul:5,proficiency:0,intelligence:0} },
+  m033: { id:'m033', name:'究极昆虫 LV1', type:'monster', rarity:'R', archetype:'昆虫/LV', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:0}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
+  m034: { id:'m034', name:'野蛮人0号', type:'monster', rarity:'SR', archetype:'野蛮人', stats:{search:8,expand:8,disrupt:0,resist:0,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m035: { id:'m035', name:'暗黑之宝箱怪 LV1', type:'monster', rarity:'R', archetype:'LV/反转', stats:{search:4,expand:4,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  m036: { id:'m036', name:'谜之剑士 LV2', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m037: { id:'m037', name:'魅惑的女王 LV3', type:'monster', rarity:'SR', archetype:'魅惑的女王/LV', stats:{search:0,expand:7,disrupt:7,resist:5,suppress:0}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  m038: { id:'m038', name:'暗黑之宝箱怪 LV3', type:'monster', rarity:'R', archetype:'LV', stats:{search:6,expand:4,disrupt:0,resist:0,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m039: { id:'m039', name:'沉默剑士 LV3', type:'monster', rarity:'R', archetype:'沉默剑士/LV', stats:{search:0,expand:6,disrupt:0,resist:6,suppress:0}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m040: { id:'m040', name:'武装龙 LV3', type:'monster', rarity:'N', archetype:'武装龙/LV', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:0,soul:0,proficiency:0,intelligence:0} },
+  m041: { id:'m041', name:'究极昆虫 LV3', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:5,disrupt:5,resist:0,suppress:0}, sub:{power:3,soul:6,proficiency:0,intelligence:0} },
+  m042: { id:'m042', name:'沉默魔导剑士', type:'monster', rarity:'R', archetype:'魔导/LV', stats:{search:6,expand:0,disrupt:0,resist:6,suppress:0}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m043: { id:'m043', name:'漆黑之魔王 LV4', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:5,soul:6,proficiency:0,intelligence:0} },
+  m044: { id:'m044', name:'沉默魔术师 LV4', type:'monster', rarity:'SR', archetype:'沉默魔术师/LV', stats:{search:0,expand:7,disrupt:0,resist:7,suppress:7}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
+  m045: { id:'m045', name:'荷鲁斯之黑炎龙 LV4', type:'monster', rarity:'R', archetype:'荷鲁斯之黑炎龙/LV', stats:{search:0,expand:6,disrupt:0,resist:4,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m046: { id:'m046', name:'谜之剑士 LV4', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:0,resist:6,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m047: { id:'m047', name:'魅惑的女王 LV5', type:'monster', rarity:'SR', archetype:'魅惑的女王/LV', stats:{search:0,expand:8,disrupt:8,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  m048: { id:'m048', name:'究极昆虫 LV5', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:6,resist:0,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  m049: { id:'m049', name:'沉默剑士 LV5', type:'monster', rarity:'R', archetype:'沉默剑士/LV', stats:{search:0,expand:6,disrupt:0,resist:6,suppress:0}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m050: { id:'m050', name:'武装龙 LV5', type:'monster', rarity:'R', archetype:'武装龙/LV', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m051: { id:'m051', name:'漆黑之魔王 LV6', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m052: { id:'m052', name:'荷鲁斯之黑炎龙 LV6', type:'monster', rarity:'SR', archetype:'荷鲁斯之黑炎龙/LV', stats:{search:0,expand:8,disrupt:0,resist:8,suppress:6}, sub:{power:6,soul:8,proficiency:0,intelligence:0} },
+  m053: { id:'m053', name:'谜之剑士 LV6', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m054: { id:'m054', name:'魅惑的女王 LV7', type:'monster', rarity:'SR', archetype:'魅惑的女王/LV', stats:{search:0,expand:0,disrupt:6,resist:6,suppress:6}, sub:{power:6,soul:8,proficiency:0,intelligence:0} },
+  m055: { id:'m055', name:'究极昆虫 LV7', type:'monster', rarity:'N', archetype:'LV', stats:{search:0,expand:0,disrupt:3,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
+  m056: { id:'m056', name:'沉默剑士 LV7', type:'monster', rarity:'R', archetype:'沉默剑士/LV', stats:{search:0,expand:0,disrupt:6,resist:6,suppress:0}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m057: { id:'m057', name:'武装龙 LV7', type:'monster', rarity:'SR', archetype:'武装龙/LV', stats:{search:0,expand:0,disrupt:4,resist:4,suppress:7}, sub:{power:7,soul:8,proficiency:0,intelligence:0} },
+  m058: { id:'m058', name:'漆黑之魔王 LV8', type:'monster', rarity:'R', archetype:'LV', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m059: { id:'m059', name:'荷鲁斯之黑炎龙 LV8', type:'monster', rarity:'SR', archetype:'荷鲁斯之黑炎龙/LV', stats:{search:0,expand:0,disrupt:8,resist:8,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  m060: { id:'m060', name:'沉默魔术师 LV8', type:'monster', rarity:'R', archetype:'沉默魔术师/LV', stats:{search:0,expand:0,disrupt:0,resist:6,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  m061: { id:'m061', name:'武装龙 LV10', type:'monster', rarity:'SR', archetype:'武装龙/LV', stats:{search:0,expand:6,disrupt:6,resist:0,suppress:8}, sub:{power:6,soul:8,proficiency:0,intelligence:0} },
+  m062: { id:'m062', name:'沉默剑士', type:'monster', rarity:'UR', archetype:'沉默剑士', stats:{search:0,expand:8,disrupt:9,resist:7,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
+  m063: { id:'m063', name:'沉默剑士·零', type:'monster', rarity:'SR', archetype:'沉默剑士/光之黄金柜', stats:{search:0,expand:0,disrupt:8,resist:8,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  m064: { id:'m064', name:'沉默魔术师', type:'monster', rarity:'UR', archetype:'沉默魔术师', stats:{search:0,expand:9,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
   sp001: { id:'sp001', name:'拉之翼神龙', type:'monster', rarity:'UR', archetype:'幻神兽', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
   sp002: { id:'sp002', name:'欧贝利斯克之巨神兵', type:'monster', rarity:'UR', archetype:'幻神', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
   sp003: { id:'sp003', name:'奥西里斯之天空龙', type:'monster', rarity:'UR', archetype:'幻神', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
@@ -2255,6 +2315,17 @@ let CARD_DB = {
   s029: { id:'s029', name:'被封印的黄金柜', type:'spell', rarity:'SR', archetype:'被封印的', stats:{search:8,expand:8,disrupt:0,resist:0,suppress:6}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
   s030: { id:'s030', name:'雷击', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:3,expand:4,disrupt:8,resist:5,suppress:8}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
   s031: { id:'s031', name:'魔法都市 恩底弥翁', type:'spell', rarity:'SR', archetype:'恩底弥翁', stats:{search:0,expand:8,disrupt:2,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  s032: { id:'s032', name:'等级下降！？', type:'spell', rarity:'R', archetype:'LV', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  s033: { id:'s033', name:'磁力召唤圆 LV2', type:'spell', rarity:'N', archetype:'磁力/LV', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  s034: { id:'s034', name:'四次元之墓', type:'spell', rarity:'R', archetype:'LV', stats:{search:5,expand:5,disrupt:0,resist:0,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  s035: { id:'s035', name:'等级调整', type:'spell', rarity:'SR', archetype:'LV', stats:{search:8,expand:8,disrupt:0,resist:0,suppress:8}, sub:{power:6,soul:8,proficiency:0,intelligence:0} },
+  s036: { id:'s036', name:'蛮族的狂宴LV5', type:'spell', rarity:'R', archetype:'战士/LV/野蛮人', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:2}, sub:{power:2,soul:4,proficiency:0,intelligence:0} },
+  s037: { id:'s037', name:'等级上升！', type:'spell', rarity:'SR', archetype:'LV', stats:{search:0,expand:8,disrupt:8,resist:0,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  s038: { id:'s038', name:'沉默的死者', type:'spell', rarity:'N', archetype:'泛用', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:2,proficiency:0,intelligence:0} },
+  s039: { id:'s039', name:'时间沉默', type:'spell', rarity:'SR', archetype:'光之黄金柜', stats:{search:0,expand:0,disrupt:8,resist:6,suppress:6}, sub:{power:8,soul:6,proficiency:0,intelligence:0} },
+  s040: { id:'s040', name:'沉默之剑', type:'spell', rarity:'SR', archetype:'沉默剑士', stats:{search:8,expand:0,disrupt:0,resist:8,suppress:6}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  s041: { id:'s041', name:'沉默魔爆破', type:'spell', rarity:'SR', archetype:'沉默魔术师', stats:{search:8,expand:8,disrupt:0,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
+  s042: { id:'s042', name:'对未来的沉默', type:'spell', rarity:'R', archetype:'光之黄金柜', stats:{search:6,expand:6,disrupt:0,resist:0,suppress:0}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
 
   // 陷阱卡
   t001: { id:'t001', name:'激流葬', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:0,suppress:6}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
@@ -2287,6 +2358,7 @@ let CARD_DB = {
   t028: { id:'t028', name:'异次元的落穴', type:'trap', rarity:'N', archetype:'洞穴', stats:{search:0,expand:0,disrupt:3,resist:0,suppress:0}, sub:{power:2,soul:1,proficiency:0,intelligence:0} },
   t029: { id:'t029', name:'对手登场', type:'trap', rarity:'N', archetype:'泛用', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:0}, sub:{power:3,soul:3,proficiency:0,intelligence:0} },
   t030: { id:'t030', name:'打草惹蛇', type:'trap', rarity:'SR', archetype:'泛用', stats:{search:7,expand:8,disrupt:0,resist:0,suppress:8}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
+  t031: { id:'t031', name:'沉默的邪恶灵', type:'trap', rarity:'R', archetype:'泛用', stats:{search:0,expand:0,disrupt:6,resist:6,suppress:0}, sub:{power:6,soul:2,proficiency:0,intelligence:0} },
 
 };
 
@@ -2789,7 +2861,8 @@ const OPPONENTS = [
     "stats": {},
     "deckArchetype": "",
     "rewards": {},
-    "enabled": true
+    "enabled": true,
+    "playStyle": "beat"
   },
   {
     "id": "op005",
@@ -2803,7 +2876,8 @@ const OPPONENTS = [
     "stats": {},
     "deckArchetype": "",
     "rewards": {},
-    "enabled": true
+    "enabled": true,
+    "playStyle": "disrupt"
   },
   {
     "id": "op006",
@@ -2817,7 +2891,8 @@ const OPPONENTS = [
     "stats": {},
     "deckArchetype": "",
     "rewards": {},
-    "enabled": true
+    "enabled": true,
+    "playStyle": "expand"
   },
   {
     "id": "op007",
@@ -2867,7 +2942,8 @@ const OPPONENTS = [
     "rewards": {
       "cardPoints": 20
     },
-    "enabled": true
+    "enabled": true,
+    "playStyle": "beat"
   },
   {
     "id": "op102",
@@ -2888,7 +2964,8 @@ const OPPONENTS = [
     "rewards": {
       "cardPoints": 30
     },
-    "enabled": true
+    "enabled": true,
+    "playStyle": "expand"
   },
   {
     "id": "op201",
@@ -2902,7 +2979,8 @@ const OPPONENTS = [
     "stats": {},
     "deckArchetype": "",
     "rewards": {},
-    "enabled": true
+    "enabled": true,
+    "playStyle": "balance"
   },
   {
     "id": "op202",
@@ -2985,7 +3063,8 @@ const OPPONENTS = [
       "duelPoints": 3000
     },
     "enabled": true,
-    "deckArchetype": "真红眼"
+    "deckArchetype": "真红眼",
+    "playStyle": "beat"
   },
   {
     "id": "spirit_elf",
@@ -3009,7 +3088,8 @@ const OPPONENTS = [
       "cardPoints": 50,
       "cardId": "s031"
     },
-    "enabled": true
+    "enabled": true,
+    "playStyle": "beat"
   },
   {
     "id": "malike",
@@ -3032,7 +3112,8 @@ const OPPONENTS = [
       "cardId": "sp001"
     },
     "enabled": true,
-    "deckArchetype": "太阳神"
+    "deckArchetype": "太阳神",
+    "playStyle": "disrupt"
   },
   {
     "id": "kimi_yogi",
@@ -3055,7 +3136,8 @@ const OPPONENTS = [
       "cardId": "sp002"
     },
     "enabled": true,
-    "deckArchetype": "黑魔导,幻神"
+    "deckArchetype": "黑魔导,幻神",
+    "playStyle": "disrupt"
   },
   {
     "id": "yami001",
@@ -3080,7 +3162,8 @@ const OPPONENTS = [
       "duelPoints": 1000,
       "days": 10
     },
-    "enabled": true
+    "enabled": true,
+    "playStyle": "expand"
   },
   {
     "id": "yami002",
@@ -3104,7 +3187,8 @@ const OPPONENTS = [
       "days": 30
     },
     "enabled": true,
-    "deckArchetype": "未界域"
+    "deckArchetype": "未界域",
+    "playStyle": "expand"
   },
   {
     "id": "god_card_guardian",
@@ -3128,7 +3212,8 @@ const OPPONENTS = [
       "awakeningShards": 20
     },
     "enabled": true,
-    "deckArchetype": "幻神兽"
+    "deckArchetype": "幻神兽",
+    "playStyle": "beat"
   },
   {
     "id": "sky_knight",
@@ -3152,7 +3237,8 @@ const OPPONENTS = [
       "awakeningShards": 50
     },
     "enabled": true,
-    "deckArchetype": "战士族"
+    "deckArchetype": "战士族",
+    "playStyle": "expand"
   },
   {
     "id": "obelisk_crusher",
@@ -3176,7 +3262,8 @@ const OPPONENTS = [
       "awakeningShards": 60
     },
     "enabled": true,
-    "deckArchetype": "机械族"
+    "deckArchetype": "机械族",
+    "playStyle": "disrupt"
   },
   {
     "id": "ra_apostle",
@@ -3200,7 +3287,8 @@ const OPPONENTS = [
       "awakeningShards": 80
     },
     "enabled": true,
-    "deckArchetype": "炎族"
+    "deckArchetype": "炎族",
+    "playStyle": "beat"
   }
 ];
 
@@ -4394,7 +4482,6 @@ const ACHIEVEMENTS = [
     "bonus": {
       "all": 5,
       "resist": 10,
-      "soul": 0,
       "power": 10,
       "suppress": 10
     },
@@ -6855,6 +6942,8 @@ let currentTalentPool = []; // 当前显示的随机天赋池（6个）
 let talentRerollCount = 0; // 天赋刷新次数
 const MAX_TALENT_REROLL = 3; // 最大刷新次数
 let currentDeckTab = 'main';
+let currentDeckSort = 'rarity'; // 排序方式：rarity（稀有度）、time（获得时间）、power（牌力）
+let currentDeckFilter = 'all'; // 类型筛选：all、monster、spell、trap、extra、special
 let currentDuel = null;
 
 // ===== 工具函数 =====
@@ -6889,6 +6978,15 @@ function loadGame() {
       if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
         gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
       }
+      // 兼容性：初始化获得时间记录
+      if (!gameState.collectionObtainTime) gameState.collectionObtainTime = {};
+      // 为已有但没有获得时间的卡片设置默认时间
+      const now = Date.now();
+      gameState.collection.forEach((id, idx) => {
+        if (!gameState.collectionObtainTime[id]) {
+          gameState.collectionObtainTime[id] = now - idx * 1000; // 按收藏顺序分配时间
+        }
+      });
       if (!gameState.affinity) gameState.affinity = {};
       if (!gameState.wins) gameState.wins = 0;
       if (!gameState.losses) gameState.losses = 0;
@@ -7015,7 +7113,7 @@ function deleteSaveSlot(slot) {
 }
 
 // ===== 存档标识码导出导入 =====
-// 导出存档为标识码（Base64编码，带校验前缀）
+// 导出存档为标识码（Base64编码，带校验前缀，格式：DLSIM-长度-Base64数据）
 function exportSaveCode() {
   try {
     if (!gameState) return null;
@@ -7023,33 +7121,59 @@ function exportSaveCode() {
     const jsonStr = JSON.stringify(saveData);
     // 使用UTF-8安全的Base64编码
     const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
-    // 添加前缀标识和长度校验
-    const code = 'DLSIM' + base64.length.toString(36).toUpperCase() + base64;
+    // 格式：DLSIM-长度-Base64数据（长度用十进制，Base64保留大小写）
+    const code = 'DLSIM-' + base64.length + '-' + base64;
     return code;
   } catch(e) { return null; }
 }
 
-// 从标识码导入存档
+// 从标识码导入存档（兼容新旧两种格式）
 function importSaveCode(code) {
   try {
     if (!code || typeof code !== 'string') return { success: false, error: '标识码为空' };
-    code = code.trim().toUpperCase();
-    // 校验前缀
-    if (!code.startsWith('DLSIM')) {
-      return { success: false, error: '标识码格式错误（前缀不正确）' };
+    code = code.trim();
+    
+    let base64 = '';
+    let dataLen = 0;
+    
+    // 判断格式：新格式有分隔符 DLSIM-长度-数据，旧格式无分隔符 DLSIM+3位长度+数据
+    const firstDash = code.indexOf('-');
+    if (firstDash === 5) {
+      // 新格式：DLSIM-长度-Base64数据
+      if (!code.toUpperCase().startsWith('DLSIM-')) {
+        return { success: false, error: '标识码格式错误（前缀不正确，应以 DLSIM- 开头）' };
+      }
+      const secondDash = code.indexOf('-', firstDash + 1);
+      if (secondDash === -1) {
+        return { success: false, error: '标识码格式错误（缺少长度分隔符）' };
+      }
+      const lenStr = code.substring(firstDash + 1, secondDash);
+      dataLen = parseInt(lenStr, 10);
+      if (isNaN(dataLen) || dataLen <= 0) {
+        return { success: false, error: '标识码格式错误（长度校验失败）' };
+      }
+      base64 = code.substring(secondDash + 1);
+    } else {
+      // 旧格式：DLSIM + 3位36进制长度 + Base64数据
+      if (!code.toUpperCase().startsWith('DLSIM')) {
+        return { success: false, error: '标识码格式错误（前缀不正确，应以 DLSIM 开头）' };
+      }
+      if (code.length < 8) {
+        return { success: false, error: '标识码格式错误（长度过短）' };
+      }
+      // 长度部分转大写（36进制），数据部分保留原始大小写
+      const lenStr = code.substring(5, 8).toUpperCase();
+      dataLen = parseInt(lenStr, 36);
+      if (isNaN(dataLen)) {
+        return { success: false, error: '标识码格式错误（长度校验失败）' };
+      }
+      base64 = code.substring(8);
     }
-    // 解析长度
-    const lenStr = code.substring(5, 8);
-    const dataLen = parseInt(lenStr, 36);
-    if (isNaN(dataLen)) {
-      return { success: false, error: '标识码格式错误（长度校验失败）' };
-    }
-    // 提取Base64数据
-    const base64 = code.substring(8);
+    
     if (base64.length !== dataLen) {
       return { success: false, error: `标识码长度不匹配（期望${dataLen}，实际${base64.length}）` };
     }
-    // 解码
+    // 解码（Base64保留原始大小写）
     const jsonStr = decodeURIComponent(escape(atob(base64)));
     const state = JSON.parse(jsonStr);
     if (!state || typeof state !== 'object') {
@@ -7067,6 +7191,14 @@ function importSaveCode(code) {
     if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
       gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
     }
+    // 兼容性：初始化获得时间记录
+    if (!gameState.collectionObtainTime) gameState.collectionObtainTime = {};
+    const importNow = Date.now();
+    gameState.collection.forEach((id, idx) => {
+      if (!gameState.collectionObtainTime[id]) {
+        gameState.collectionObtainTime[id] = importNow - idx * 1000;
+      }
+    });
     if (!gameState.affinity) gameState.affinity = {};
     if (!gameState.wins) gameState.wins = 0;
     if (!gameState.losses) gameState.losses = 0;
@@ -7085,10 +7217,35 @@ function importSaveCode(code) {
     if (!gameState.titles) gameState.titles = [];
     if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
     if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
-    // 保存到自动存档
-    saveGame();
+    // 新增系统兼容性初始化
+    if (!gameState.spiritPower) gameState.spiritPower = 0;
+    if (!gameState.spiritLevel) gameState.spiritLevel = 0;
+    if (!gameState.awakeningShards) gameState.awakeningShards = 0;
+    if (!gameState.spiritSystemUnlocked) gameState.spiritSystemUnlocked = false;
+    if (!gameState.awakenedCards) gameState.awakenedCards = {};
+    if (!gameState.cardSpiritSystemUnlocked) gameState.cardSpiritSystemUnlocked = false;
+    if (!gameState.unlockedDuelModes) gameState.unlockedDuelModes = ['quick', 'master'];
+    if (!gameState.usedRedeemCodes) gameState.usedRedeemCodes = [];
+    if (!gameState.specialCards) gameState.specialCards = [];
+    if (!gameState.playerName) gameState.playerName = '决斗者';
+    if (!gameState.playerSignature) gameState.playerSignature = '';
+    if (!gameState.activeTitle) gameState.activeTitle = '';
+    if (!gameState.talentRerollCount) gameState.talentRerollCount = 0;
+    if (!gameState.currentDeckSort) gameState.currentDeckSort = 'rarity';
+    if (!gameState.currentDeckFilter) gameState.currentDeckFilter = 'all';
+    if (!gameState.bonusDays) gameState.bonusDays = 0;
+    if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+    if (!gameState.tournamentWins) gameState.tournamentWins = [];
+    if (!gameState.cardResonance) gameState.cardResonance = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+    // 保存到自动存档（添加错误保护，防止保存失败导致卡死）
+    try {
+      saveGame();
+    } catch(saveErr) {
+      console.warn('保存存档出错，但不影响导入:', saveErr);
+    }
     return { success: true, state: gameState };
   } catch(e) {
+    console.error('导入存档出错:', e);
     return { success: false, error: '标识码解析失败：' + e.message };
   }
 }
@@ -7240,14 +7397,19 @@ function doImportCode() {
     resultEl.style.display = 'block';
     resultEl.style.color = '#22c55e';
     resultEl.textContent = '✅ 导入成功！正在加载存档...';
+    
     setTimeout(() => {
-      closeSaveManager();
-      // 进入游戏界面
-      document.getElementById('main-menu').style.display = 'none';
-      document.getElementById('view-home').classList.add('active');
-      updateAllDisplays();
-      refreshCurrentView();
-    }, 1000);
+      try { closeSaveManager(); } catch(e) { console.error(e); }
+      try {
+        const viewStart = document.getElementById('view-start');
+        const viewGame = document.getElementById('view-game');
+        if (viewStart) viewStart.classList.remove('active');
+        if (viewGame) viewGame.classList.add('active');
+      } catch(e) { console.error(e); }
+      try { updateAllDisplays(); } catch(e) { console.error(e); }
+      try { if (typeof refreshCurrentView === 'function') refreshCurrentView(); } catch(e) { console.error(e); }
+      try { showToast('存档导入成功！'); } catch(e) { console.error(e); }
+    }, 300);
   } else {
     resultEl.style.display = 'block';
     resultEl.style.color = '#ef4444';
@@ -7409,56 +7571,208 @@ function getTotalStats() {
   return total;
 }
 
-// ===== 系列卡组系统 =====
+// ===== 系列卡组系统（支持多系列，卡片archetype字段用/分隔多个系列）=====
 function getDeckArchetypeCount() {
   const counts = {};
   const allCards = [...gameState.mainDeck, ...gameState.extraDeck];
   allCards.forEach(cardId => {
     const c = CARD_DB[cardId];
     if (c && c.archetype) {
-      counts[c.archetype] = (counts[c.archetype] || 0) + 1;
+      // 支持多个系列，用/分隔
+      const arches = c.archetype.split('/').map(a => a.trim()).filter(a => a);
+      arches.forEach(arch => {
+        counts[arch] = (counts[arch] || 0) + 1;
+      });
     }
   });
   return counts;
 }
 
-function getActiveArchetype() {
+// 获取所有激活的系列（15张以上），按数量从多到少排序
+function getActiveArchetypes() {
   const counts = getDeckArchetypeCount();
-  let maxArchetype = null;
-  let maxCount = 0;
+  const active = [];
   Object.keys(counts).forEach(arch => {
-    if (counts[arch] >= 15 && counts[arch] > maxCount) {
-      maxArchetype = arch;
-      maxCount = counts[arch];
+    if (counts[arch] >= 15) {
+      active.push({ name: arch, count: counts[arch] });
     }
   });
-  return maxArchetype;
+  active.sort((a, b) => b.count - a.count);
+  return active;
+}
+
+// 兼容旧函数名
+function getActiveArchetype() {
+  const arches = getActiveArchetypes();
+  return arches.length > 0 ? arches[0].name : null;
 }
 
 function getArchetypeBonus() {
-  const arch = getActiveArchetype();
-  if (!arch) return null;
-  // 系列卡组加成：魂度+5、强度+5、掏度+5，天赋可定义系列加成倍率
+  const arches = getActiveArchetypes();
+  if (arches.length === 0) return null;
+  // 每个系列卡组加成：魂度+5、强度+5、掏度+5，多个系列叠加
   const archMult = getTalentMultiplier('archetypeBonusMultiplier', 1);
-  return { power: Math.round(5 * archMult), soul: Math.round(5 * archMult), luck: Math.round(5 * archMult) };
+  return {
+    power: Math.round(5 * archMult * arches.length),
+    soul: Math.round(5 * archMult * arches.length),
+    luck: Math.round(5 * archMult * arches.length)
+  };
 }
 
 function updateArchetypeTag() {
   const tagEl = document.getElementById('archetype-tag');
-  if (!tagEl) return;
-  const arch = getActiveArchetype();
-  if (arch) {
-    tagEl.textContent = arch + '系列';
-    tagEl.style.display = 'inline-block';
-  } else {
-    tagEl.style.display = 'none';
+  if (tagEl) {
+    const arches = getActiveArchetypes();
+    if (arches.length > 0) {
+      tagEl.textContent = arches.map(a => a.name).join(' · ');
+      tagEl.style.display = 'inline-block';
+    } else {
+      tagEl.style.display = 'none';
+    }
+  }
+  // 玩家行为类型标签
+  const styleTagEl = document.getElementById('player-style-tag');
+  if (styleTagEl && gameState && gameState.mainDeck) {
+    const style = getPlayerPlayStyle();
+    styleTagEl.textContent = getPlayStyleLabel(style);
+    styleTagEl.style.display = 'inline-block';
+  }
+  // 副属性标签
+  const subTagEl = document.getElementById('player-sub-tags');
+  if (subTagEl && gameState && gameState.mainDeck) {
+    const subTags = getPlayerSubTags();
+    if (subTags.length > 0) {
+      subTagEl.innerHTML = subTags.map(tag => 
+        `<span style="background:rgba(168,85,247,0.2); color:var(--accent-purple-light); padding:2px 8px; border-radius:8px; font-size:11px; margin-left:4px;">${getSubTagLabel(tag)}</span>`
+      ).join('');
+      subTagEl.style.display = 'inline-block';
+    } else {
+      subTagEl.style.display = 'none';
+    }
   }
 }
 
 function getArchetypeLuckBonus() {
-  const arch = getActiveArchetype();
-  // 系列卡组提升幸运事件概率：从30%提升到45%
-  return arch ? 0.45 : 0.3;
+  const arches = getActiveArchetypes();
+  // 系列卡组提升幸运事件概率：从30%提升到38%，多个系列额外+3%（降低过高加成）
+  return arches.length > 0 ? 0.38 + (arches.length - 1) * 0.03 : 0.3;
+}
+
+// ===== 玩家行为类型（根据卡组主属性配比自动分配）=====
+function getPlayerPlayStyle() {
+  const stats = getDeckStats();
+  const total = (stats.search || 0) + (stats.expand || 0) + (stats.disrupt || 0) + (stats.resist || 0) + (stats.suppress || 0);
+  if (total === 0) return 'balance';
+  
+  const expandRatio = (stats.expand || 0) / total;
+  const disruptRatio = ((stats.disrupt || 0) + (stats.suppress || 0)) / total;
+  const resistRatio = (stats.resist || 0) / total;
+  const searchRatio = (stats.search || 0) / total;
+  
+  // 展开型：展开占比最高且超过25%
+  if (expandRatio >= 0.25 && expandRatio >= disruptRatio && expandRatio >= resistRatio) {
+    return 'expand';
+  }
+  // 干扰型：干扰+压制占比超过35%
+  if (disruptRatio >= 0.35 && disruptRatio >= expandRatio && disruptRatio >= resistRatio) {
+    return 'disrupt';
+  }
+  // 防御型：抗性占比最高且超过25%
+  if (resistRatio >= 0.25 && resistRatio >= expandRatio && resistRatio >= disruptRatio) {
+    return 'beat';
+  }
+  // 检索展开型：检索+展开占比高
+  if (searchRatio + expandRatio >= 0.45) {
+    return 'expand';
+  }
+  return 'balance';
+}
+
+// 获取玩家行为类型加成（纯正面加成，无负面效果）
+function getPlayerStyleBonus(playStyle) {
+  const style = playStyle || getPlayerPlayStyle();
+  // 玩家类型只有正面加成，无负面效果
+  switch(style) {
+    case 'expand': return { expandMult: 1.08, disruptMult: 1.0, suppressMult: 1.0, resistMult: 1.0 };
+    case 'disrupt': return { expandMult: 1.0, disruptMult: 1.08, suppressMult: 1.08, resistMult: 1.0 };
+    case 'beat': return { expandMult: 1.0, disruptMult: 1.0, suppressMult: 1.0, resistMult: 1.10 };
+    default: return { expandMult: 1.03, disruptMult: 1.03, suppressMult: 1.03, resistMult: 1.03 };
+  }
+}
+
+function getPlayStyleLabel(style) {
+  const labels = { expand: '展开型', disrupt: '干扰型', beat: '防御型', balance: '均衡型' };
+  return labels[style] || '均衡型';
+}
+
+// ===== 副属性标签系统（根据副属性比例自动获得，可与行为类型叠加）=====
+function getPlayerSubTags() {
+  const stats = getTotalStats();
+  const subTotal = (stats.power || 0) + (stats.soul || 0) + (stats.luck || 0) + (stats.proficiency || 0) + (stats.intelligence || 0);
+  if (subTotal === 0) return [];
+  
+  const tags = [];
+  const threshold = 0.35; // 占比35%以上触发标签
+  
+  if ((stats.power || 0) / subTotal >= threshold) tags.push('power');
+  if ((stats.soul || 0) / subTotal >= threshold) tags.push('soul');
+  if ((stats.luck || 0) / subTotal >= threshold) tags.push('luck');
+  if ((stats.proficiency || 0) / subTotal >= threshold) tags.push('proficiency');
+  if ((stats.intelligence || 0) / subTotal >= threshold) tags.push('intelligence');
+  
+  return tags;
+}
+
+function getSubTagLabel(tag) {
+  const labels = {
+    power: '强度党',
+    soul: '魂玩家',
+    luck: '赌狗',
+    proficiency: '打牌高手',
+    intelligence: '情报玩家'
+  };
+  return labels[tag] || tag;
+}
+
+// 副属性标签加成（平滑，不过高）
+function getSubTagBonus() {
+  const tags = getPlayerSubTags();
+  const bonus = {
+    powerGrowthMult: 1.0,      // 牌力增长倍率
+    eventBonusMult: 1.0,        // 战斗事件效果倍率
+    luckEventRate: 0,           // 幸运事件触发率加成
+    perfectExpandRate: 0,       // 完美展开概率加成
+    normalExpandRate: 0,        // 常规展开概率加成
+    disruptEffectMult: 1.0,     // 干扰效果倍率
+    suppressEffectMult: 1.0,    // 压制效果倍率
+    resistMult: 1.0             // 抗性倍率
+  };
+  
+  tags.forEach(tag => {
+    switch(tag) {
+      case 'power': // 强度党：牌力增长+5%，抗性+3%
+        bonus.powerGrowthMult *= 1.05;
+        bonus.resistMult *= 1.03;
+        break;
+      case 'soul': // 魂玩家：战斗事件效果+10%
+        bonus.eventBonusMult *= 1.10;
+        break;
+      case 'luck': // 赌狗：幸运事件触发率+5%
+        bonus.luckEventRate += 0.05;
+        break;
+      case 'proficiency': // 打牌高手：完美展开+3%，常规展开+2%
+        bonus.perfectExpandRate += 0.03;
+        bonus.normalExpandRate += 0.02;
+        break;
+      case 'intelligence': // 情报玩家：干扰/压制效果+5%，抗性+3%
+        bonus.disruptEffectMult *= 1.05;
+        bonus.suppressEffectMult *= 1.05;
+        bonus.resistMult *= 1.03;
+        break;
+    }
+  });
+  
+  return bonus;
 }
 
 function getDuelPower() {
@@ -7480,6 +7794,24 @@ function getDuelPower() {
     (s.power || 0) * 2.0 +
     (s.soul || 0) * 0.5 +
     (s.luck || 0) * 1.5
+  );
+}
+
+// ===== 单卡牌力加成计算（用于卡组构筑参考）=====
+function calcCardPower(card) {
+  if (!card) return 0;
+  const s = card.stats || {};
+  const sub = card.sub || {};
+  // 与getDuelPower公式一致，但单卡不计算熟练度/情报力交叉加成
+  return Math.round(
+    (s.search || 0) * 1.0 +
+    (s.expand || 0) * 1.2 +
+    (s.disrupt || 0) * 1.0 +
+    (s.resist || 0) * 0.8 +
+    (s.suppress || 0) * 1.1 +
+    (sub.power || 0) * 2.0 +
+    (sub.soul || 0) * 0.5 +
+    (sub.luck || 0) * 1.5
   );
 }
 
@@ -7979,6 +8311,7 @@ function startGame() {
     extraDeck: [],
     collection: [],
     collectionCount: {},
+    collectionObtainTime: {}, // 记录每张卡的获得时间戳
     affinity: {},
     wins: 0,
     losses: 0,
@@ -8136,6 +8469,9 @@ function addCardToCollection(cardId) {
   if (!gameState.collection.includes(cardId)) {
     gameState.collection.push(cardId);
     gameState.collectionCount[cardId] = 1;
+    // 记录获得时间
+    if (!gameState.collectionObtainTime) gameState.collectionObtainTime = {};
+    gameState.collectionObtainTime[cardId] = Date.now();
   } else {
     gameState.collectionCount[cardId] = (gameState.collectionCount[cardId] || 1) + 1;
   }
@@ -8168,7 +8504,7 @@ function showNextCardObtain() {
   document.getElementById('obtain-rarity').setAttribute('data-rarity', card.rarity);
   document.getElementById('obtain-name').textContent = card.name;
   document.getElementById('obtain-type').textContent = typeMap[card.type] || card.type;
-  document.getElementById('obtain-archetype').textContent = (card.archetype || '泛用') + '系列';
+  document.getElementById('obtain-archetype').textContent = card.archetype ? card.archetype.split('/').map(a => a.trim()).join(' · ') + '系列' : '泛用';
   document.getElementById('obtain-search').textContent = '+' + (card.stats.search || 0);
   document.getElementById('obtain-expand').textContent = '+' + (card.stats.expand || 0);
   document.getElementById('obtain-disrupt').textContent = '+' + (card.stats.disrupt || 0);
@@ -8302,9 +8638,24 @@ function updateProfileModal() {
   document.getElementById('profile-main-deck').textContent = gameState.mainDeck.length + '/60';
   document.getElementById('profile-extra-deck').textContent = gameState.extraDeck.length + '/15';
 
-  // 系列标签
-  const archetype = getActiveArchetype();
-  document.getElementById('profile-archetype').textContent = archetype || '无';
+  // 系列标签（支持多系列）
+  const arches = getActiveArchetypes();
+  document.getElementById('profile-archetype').textContent = arches.length > 0 ? arches.map(a => a.name).join(' · ') : '无';
+  
+  // 决斗类型和副属性标签
+  const playStyle = getPlayerPlayStyle();
+  document.getElementById('profile-play-style').textContent = getPlayStyleLabel(playStyle);
+  const subTags = getPlayerSubTags();
+  const subTagsEl = document.getElementById('profile-sub-tags');
+  if (subTagsEl) {
+    if (subTags.length > 0) {
+      subTagsEl.innerHTML = subTags.map(tag => 
+        `<span style="padding:2px 6px;background:rgba(168,85,247,0.2);border-radius:6px;color:var(--accent-purple-light);margin-right:4px;">${getSubTagLabel(tag)}</span>`
+      ).join('');
+    } else {
+      subTagsEl.textContent = '无';
+    }
+  }
 
   // 称号
   const titlesEl = document.getElementById('profile-titles');
@@ -8552,6 +8903,107 @@ function openStatDetail(statKey) {
 
   document.getElementById('stat-detail-title').textContent = `${statName} 属性详情`;
   document.getElementById('stat-detail-content').innerHTML = html;
+  document.getElementById('stat-detail-modal').style.display = 'flex';
+}
+
+function showStatDetail(statKey) {
+  const statInfo = {
+    search: {
+      name: '检索', icon: '🔍', color: 'var(--accent-blue-light)',
+      desc: '从卡组中精准找到需要的关键卡片的能力。',
+      powerWeight: '×1.0',
+      duelEffect: [
+        '主要在我方回合生效，辅助展开',
+        '每回合产生牌力值：检索 × 0.6',
+        '掏度和魂度小幅影响检索效果',
+        '检索越高，越容易在开局找到核心卡'
+      ]
+    },
+    expand: {
+      name: '展开', icon: '✨', color: 'var(--accent-green-light)',
+      desc: '将手牌和场上的卡片组合成强力场面的能力。',
+      powerWeight: '×1.2',
+      duelEffect: [
+        '主要在我方回合生效，是产生牌力的核心',
+        '每回合产生牌力值：展开 × 1.2',
+        '展开判定：完美×2.0 / 常规×1.0 / 失败×0.3',
+        '熟练度影响展开能力和完美展开概率',
+        '掏度和魂度提高完美展开概率'
+      ]
+    },
+    disrupt: {
+      name: '干扰', icon: '⚡', color: 'var(--accent-red-light)',
+      desc: '打断对方的关键操作和展开节奏的能力。',
+      powerWeight: '×1.0',
+      duelEffect: [
+        '主要影响对方回合',
+        '小幅削弱对方检索（50%系数）和展开',
+        '削弱上限40%，成功率上限95%',
+        '熟练度影响干扰能力',
+        '对方抗性可减免干扰效果'
+      ]
+    },
+    resist: {
+      name: '抗性', icon: '🛡️', color: 'var(--accent-purple-light)',
+      desc: '抵御对方干扰和压制，保护自己展开节奏的能力。',
+      powerWeight: '×0.8',
+      duelEffect: [
+        '降低对方干扰和压制的效果',
+        '采用倒数形式，不会完全免疫',
+        '抗性越高，对方干扰/压制效果越弱',
+        '情报力影响抗性能力',
+        '强度也能小幅提升抗性减免'
+      ]
+    },
+    suppress: {
+      name: '压制', icon: '🔥', color: 'var(--accent-gold-light)',
+      desc: '主动破坏对方场面，大幅限制对方展开的能力。',
+      powerWeight: '×1.1',
+      duelEffect: [
+        '主要影响对方回合',
+        '大幅削弱对方展开，削弱上限60%',
+        '成功率上限95%',
+        '情报力影响压制能力',
+        '压制成功还能小幅提高结算时的产生数值',
+        '对方抗性可减免压制效果'
+      ]
+    }
+  };
+
+  const info = statInfo[statKey];
+  if (!info) return;
+
+  // 获取当前属性值
+  const stats = getDeckStats();
+  const value = stats[statKey] || 0;
+
+  document.getElementById('stat-detail-title').textContent = `${info.icon} ${info.name}详情`;
+  document.getElementById('stat-detail-title').style.color = info.color;
+  
+  const content = document.getElementById('stat-detail-content');
+  content.innerHTML = `
+    <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:14px; color:var(--text-secondary);">当前值</span>
+        <span style="font-size:24px; font-weight:bold; color:${info.color};">${value}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:8px;">
+        <span style="font-size:12px; color:var(--text-muted);">牌力公式权重</span>
+        <span style="font-size:12px; color:var(--accent-gold);">${info.powerWeight}</span>
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:6px;">📖 属性描述</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.6;">${info.desc}</div>
+    </div>
+    <div>
+      <div style="font-size:13px; font-weight:bold; color:var(--text); margin-bottom:6px;">⚔️ 对对局的影响</div>
+      <ul style="margin:0; padding-left:18px; font-size:12px; color:var(--text-secondary); line-height:1.8;">
+        ${info.duelEffect.map(e => `<li>${e}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+  
   document.getElementById('stat-detail-modal').style.display = 'flex';
 }
 
@@ -8904,7 +9356,12 @@ function runDataDrivenEvent(loc) {
   }
 
   // 记录一次性事件和冷却
-  if (selectedEvent.oneTime) {
+  // 检查事件是否包含决斗选项：如果包含，则延迟到决斗胜利后才标记为已触发
+  const eventHasDuelOption = selectedEvent.options && selectedEvent.options.some(op => 
+    (op.effects || []).some(ef => ef.type === 'duel' || ef.type === 'characterDuel')
+  );
+  
+  if (selectedEvent.oneTime && !eventHasDuelOption) {
     if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
     if (!gameState.triggeredEvents.includes(selectedEvent.id)) gameState.triggeredEvents.push(selectedEvent.id);
   }
@@ -9253,7 +9710,20 @@ function executeEffects(effects, event, loc) {
           }
         }
         result.displayItems.push({ name: customOpponent ? `与 ${customOpponent.name} 决斗` : '开始决斗' });
-        startDuel(ef.mode || 'quick', ef.gamble || false, customOpponent, null, false, true);
+        // 决斗胜利后标记一次性事件为已触发，失败时允许重试
+        startDuel(ef.mode || 'quick', ef.gamble || false, customOpponent, (duelResult) => {
+          if (event && event.oneTime) {
+            if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+            if (duelResult.won) {
+              if (!gameState.triggeredEvents.includes(event.id)) gameState.triggeredEvents.push(event.id);
+            } else {
+              // 决斗失败：从已触发列表中移除，允许重试
+              const idx = gameState.triggeredEvents.indexOf(event.id);
+              if (idx > -1) gameState.triggeredEvents.splice(idx, 1);
+            }
+            saveGame();
+          }
+        }, false, true);
         break;
       }
       case 'characterDuel': {
@@ -9279,6 +9749,16 @@ function executeEffects(effects, event, loc) {
           // 支持winEffects：决斗胜利后执行额外效果
           const winEffects = ef.winEffects || [];
           startDuel(ef.mode || 'quick', false, customOpponent, (duelResult) => {
+            // 一次性事件：决斗胜利后标记为已触发，失败时允许重试
+            if (event && event.oneTime) {
+              if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+              if (duelResult.won) {
+                if (!gameState.triggeredEvents.includes(event.id)) gameState.triggeredEvents.push(event.id);
+              } else {
+                const idx = gameState.triggeredEvents.indexOf(event.id);
+                if (idx > -1) gameState.triggeredEvents.splice(idx, 1);
+              }
+            }
             if (duelResult.won && winEffects.length > 0) {
               winEffects.forEach(we => {
                 if (we.type === 'addDays' && we.amount > 0) {
@@ -9707,13 +10187,10 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty, id: opponentTemplate.id };
   }
 
-  // 计算玩家初始牌力（生命值）= 基础牌力 + 综合属性加成
+  // 计算玩家初始牌力（生命值）= 主页显示牌力 + 天赋/精灵力加成
   const stats = getTotalStats();
   const winRateBonus = getTalentBonus('winRateBonus', 0);
-  const basePlayerPower = (modeConfig.playerBasePower || 100) + 
-    Math.round((stats.search || 0) * 1.5 + (stats.expand || 0) * 1.5 + 
-    (stats.disrupt || 0) * 1.5 + (stats.resist || 0) * 1.5 + 
-    (stats.suppress || 0) * 1.5 + (stats.power || 0) * 2.0);
+  const basePlayerPower = getDuelPower();
   const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100) * (1 + getSpiritPowerBonus()));
 
   currentDuel = {
@@ -9769,84 +10246,186 @@ function runDuelTurn() {
   const stats = getTotalStats();
 
   setTimeout(() => {
-    // ===== 玩家回合：检索+展开 =====
+    // ===== 玩家回合：检索+展开产生本回合牌力（受对手干扰/压制影响）=====
     addDuelLog(`第${currentDuel.turn}回合——你的回合`, 'turn');
 
-    // 检索+展开计算本回合交互强度（熟练度影响展开和检索）
-    const searchExpandBase = (stats.search || 0) * 0.6 + 
-                              (stats.expand || 0) * 1.2 + 
-                              (stats.proficiency || 0) * 0.4 + 
-                              (stats.power || 0) * 0.6;
-    const expandRoll = Math.random();
-    const expandGreat = expandRoll < 0.1 + (stats.expand || 0) * 0.008 + (stats.proficiency || 0) * 0.005;
-    const expandSuccess = expandRoll < 0.5 + (stats.expand || 0) * 0.015 + (stats.proficiency || 0) * 0.008;
+    // 根据对手牌力反推对手属性（用于对手干扰/压制）
+    const oppTotal = currentDuel.opponent.power / 3;
+    const oppDisrupt = oppTotal * 0.12;
+    const oppSuppress = oppTotal * 0.1;
+    const oppResist = oppTotal * 0.15;
+    const oppPower = oppTotal * 0.15;
 
-    let playerInteraction = 0;
+    // 对手行为模式（expand展开型/disrupt干扰型/beat防御型/balance均衡型）
+    const playStyle = currentDuel.opponent.playStyle || 'balance';
+    let styleDisruptMult = 1.0, styleSuppressMult = 1.0, styleExpandMult = 1.0, styleResistMult = 1.0;
+    if (playStyle === 'expand') { styleExpandMult = 1.2; styleDisruptMult = 0.7; styleSuppressMult = 0.7; }
+    else if (playStyle === 'disrupt') { styleExpandMult = 0.8; styleDisruptMult = 1.3; styleSuppressMult = 1.3; }
+    else if (playStyle === 'beat') { styleExpandMult = 0.8; styleDisruptMult = 1.1; styleSuppressMult = 1.1; styleResistMult = 1.3; }
+
+    // 对手干扰：小幅削弱玩家检索和展开
+    const oppDisruptPower = oppDisrupt * styleDisruptMult;
+    const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01);
+    let playerSearchMult = 1.0, playerExpandMult = 1.0;
+    if (oppDisruptSuccess) {
+      // 玩家抗性降低对手干扰效果（副属性标签抗性加成）
+      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      const resistDenom = 1 + playerResist * 0.025 + (stats.power || 0) * 0.015;
+      const disruptFactor = Math.min(0.35, oppDisruptPower * 0.012 / resistDenom);
+      playerSearchMult = 1 - disruptFactor * 0.5;
+      playerExpandMult = 1 - disruptFactor;
+      addDuelLog(`⚡ 对方干扰！你的检索削弱${Math.round(disruptFactor * 50)}%，展开削弱${Math.round(disruptFactor * 100)}%！`);
+    }
+
+    // 对手压制：大幅削弱玩家展开
+    const oppSuppressPower = oppSuppress * styleSuppressMult;
+    const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01);
+    if (oppSuppressSuccess) {
+      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      const suppressDenom = 1 + playerResist * 0.025 + (stats.power || 0) * 0.015;
+      const suppressFactor = Math.min(0.5, oppSuppressPower * 0.015 / suppressDenom);
+      playerExpandMult *= (1 - suppressFactor);
+      addDuelLog(`🔥 对方压制！你的展开被大幅削弱${Math.round(suppressFactor * 100)}%！`);
+    }
+
+    // 玩家行为类型（根据卡组属性自动分配，纯正面加成）
+    const playerStyle = getPlayerPlayStyle();
+    const pStyleBonus = getPlayerStyleBonus(playerStyle);
+    
+    // 副属性标签加成（可与行为类型叠加）
+    const subTagBonus = getSubTagBonus();
+
+    // 检索辅助展开，熟练度影响展开和检索，强度提升基础值
+    // 掏度小幅影响检索，魂度小幅影响检索
+    // 玩家行为类型加成 + 副属性标签加成
+    let playerGen = ((stats.search || 0) * 0.6 * playerSearchMult +
+                     (stats.expand || 0) * 1.2 * playerExpandMult * pStyleBonus.expandMult +
+                     (stats.proficiency || 0) * 0.4 +
+                     (stats.power || 0) * 0.6 +
+                     (stats.luck || 0) * 0.2 +
+                     (stats.soul || 0) * 0.15) * subTagBonus.powerGrowthMult;
+
+    // 展开成功率判定（掏度和魂度提高完美展开/幸运事件概率，打牌高手标签加成）
+    const expandRoll = Math.random();
+    const expandGreat = expandRoll < 0.1 + (stats.expand || 0) * 0.008 + (stats.proficiency || 0) * 0.005 + (stats.luck || 0) * 0.005 + (stats.soul || 0) * 0.003 + subTagBonus.perfectExpandRate;
+    const expandSuccess = expandRoll < 0.5 + (stats.expand || 0) * 0.015 + (stats.proficiency || 0) * 0.008 + (stats.luck || 0) * 0.004 + (stats.soul || 0) * 0.002 + subTagBonus.normalExpandRate;
+
     if (expandGreat) {
-      playerInteraction = searchExpandBase * 2.0;
+      playerGen *= 2.0;
       addDuelLog('✨ 完美展开！核心Combo全部达成，场面优势巨大！');
     } else if (expandSuccess) {
-      playerInteraction = searchExpandBase * 1.0;
+      playerGen *= 1.0;
       addDuelLog('你完成了常规展开，场面稳步建立。');
     } else {
-      playerInteraction = searchExpandBase * 0.3;
+      playerGen *= 0.3;
       addDuelLog('你的展开受到一些干扰，但还是做出了场面。');
     }
 
-    // 战斗事件（可能额外增加交互强度或直接削减对手牌力）
+    // 战斗事件提供系数加成
     triggerBattleEvent(stats, (eventBonus, eventDamage) => {
-      playerInteraction += eventBonus || 0;
-      if (eventDamage) currentDuel.opponentPower -= eventDamage;
+      // 魂玩家标签：战斗事件效果+10%
+      playerGen += (eventBonus || 0) * subTagBonus.eventBonusMult;
+      if (eventDamage) currentDuel.opponentPower -= eventDamage * subTagBonus.eventBonusMult;
     });
 
+    // 对手战斗事件（概率约为玩家的40%）
+    if (Math.random() < 0.1 + oppTotal * 0.003) {
+      const oppEventBonus = oppTotal * 0.15 * (0.5 + Math.random());
+      playerGen -= oppEventBonus * 0.3; // 对手事件小幅削弱玩家产生值
+      addDuelLog(`👹 对方触发战斗事件！场面受到冲击，产生值 -${Math.round(oppEventBonus * 0.3)}！`);
+    }
+
+    // 天赋等加成
+    const winRateBonus = getTalentBonus('winRateBonus', 0);
+    playerGen *= (1 + winRateBonus / 100);
+
     setTimeout(() => {
-      // ===== 对手回合 =====
+      // ===== 对手回合：产生牌力，受玩家干扰/压制影响 =====
       addDuelLog(`对方回合——${currentDuel.opponent.name}的操作！`, 'turn');
 
-      // 根据对手牌力反推属性（用于计算干扰/抗性减免）
-      const oppTotal = currentDuel.opponent.power / 8;
-      const oppResist = oppTotal * 0.15;
+      // 根据对手牌力反推属性
+      const oppTotal = currentDuel.opponent.power / 3;
+      const oppSearch = oppTotal * 0.15;
+      const oppExpand = oppTotal * 0.2;
+      const oppResist = oppTotal * 0.15 * styleResistMult; // 防御型提高抗性
       const oppPower = oppTotal * 0.15;
 
-      // 对手展开交互强度
-      const opponentExpandBase = oppTotal * 0.4 + oppPower * 0.5;
-      let opponentInteraction = opponentExpandBase * (0.5 + Math.random() * 0.5);
+      // 玩家行为类型加成（纯正面加成）
+      const pStyle = getPlayerPlayStyle();
+      const pBonus = getPlayerStyleBonus(pStyle);
+      
+      // 副属性标签加成（可与行为类型叠加）
+      const pSubBonus = getSubTagBonus();
 
-      // 玩家干扰（情报力影响干扰和压制）
-      const disruptPower = (stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4;
-      const disruptSuccess = Math.random() < 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008;
+      // 玩家干扰：小幅影响对方检索和展开（行为类型+情报玩家标签加成）
+      const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4) * pBonus.disruptMult * pSubBonus.disruptEffectMult;
+      const disruptSuccessRate = Math.min(0.95, 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
+      const disruptSuccess = Math.random() < disruptSuccessRate;
+
+      let effectiveOppSearch = oppSearch;
+      let effectiveOppExpand = oppExpand;
+
       if (disruptSuccess) {
-        // 抗性减免：对手抗性+强度减少干扰效果
-        const resistFactor = Math.min(0.7, disruptPower * 0.018 * (1 - oppResist * 0.025 - oppPower * 0.015));
-        opponentInteraction *= (1 - resistFactor);
-        addDuelLog(`⚡ 干扰成功！对方展开被打断，交互效率降低${Math.round(resistFactor * 100)}%！`);
+        // 抗性降低干扰效果（倒数形式，不会完全免疫），玩家抗性+标签加成
+        const playerResistEffective = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * pBonus.resistMult * pSubBonus.resistMult;
+        const resistDenominator = 1 + oppResist * 0.025 + oppPower * 0.015;
+        const disruptFactor = Math.min(0.4, disruptPower * 0.012 / resistDenominator);
+        effectiveOppSearch *= (1 - disruptFactor * 0.5); // 小幅影响检索
+        effectiveOppExpand *= (1 - disruptFactor);       // 影响展开
+        addDuelLog(`⚡ 干扰成功！对方检索削弱${Math.round(disruptFactor * 50)}%，展开削弱${Math.round(disruptFactor * 100)}%！`);
       }
 
-      // 玩家压制（直接削减对手牌力）
-      const suppressPower = (stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4;
-      const suppressSuccess = Math.random() < 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008;
-      let suppressDamage = 0;
+      // 玩家压制：大幅影响对方展开（行为类型+情报玩家标签加成）
+      const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4) * pBonus.suppressMult * pSubBonus.suppressEffectMult;
+      const suppressSuccessRate = Math.min(0.95, 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
+      const suppressSuccess = Math.random() < suppressSuccessRate;
+
       if (suppressSuccess) {
-        suppressDamage = suppressPower * 0.6 * (1 - Math.min(0.5, oppResist * 0.025 + oppPower * 0.015));
-        addDuelLog(`🔥 压制成功！对方场面被破坏，损失${Math.round(suppressDamage)}点牌力！`);
+        const suppressDenominator = 1 + oppResist * 0.025 + oppPower * 0.015;
+        const suppressFactor = Math.min(0.6, suppressPower * 0.015 / suppressDenominator);
+        effectiveOppExpand *= (1 - suppressFactor);
+        addDuelLog(`🔥 压制成功！对方展开被大幅削弱${Math.round(suppressFactor * 100)}%！`);
       }
 
-      // ===== 结算 =====
-      currentDuel.opponentPower -= playerInteraction;
-      currentDuel.playerPower -= opponentInteraction;
-      currentDuel.opponentPower -= suppressDamage;
+      // 对手本回合产生牌力
+      let opponentGen = effectiveOppSearch * 0.6 + effectiveOppExpand * 1.2 + oppPower * 0.6;
+      opponentGen *= (0.2 + Math.random() * 0.2) * styleExpandMult; // 对手展开倍率（同牌力下比玩家弱约20%）
 
-      addDuelLog(`你的展开为你带来 ${Math.round(playerInteraction)} 点牌力优势，对方展开带来 ${Math.round(opponentInteraction)} 点压力`);
+      // 压制小幅提高结算时我方产生数值
+      if (suppressSuccess) {
+        const suppressBonus = suppressPower * 0.1;
+        playerGen += suppressBonus;
+        addDuelLog(`压制带来额外 ${Math.round(suppressBonus)} 点结算优势！`);
+      }
+
+      // ===== 差值结算：双方产生值之差转化为牌力削减 =====
+      const diff = playerGen - opponentGen;
+      const damageCoeff = 1.0;
+
+      if (diff > 0) {
+        const damage = Math.round(diff * damageCoeff);
+        currentDuel.opponentPower -= damage;
+        addDuelLog(`结算：你产生 ${Math.round(playerGen)}，对方产生 ${Math.round(opponentGen)}，差值 ${damage}，对方牌力 -${damage}！`);
+      } else if (diff < 0) {
+        const damage = Math.round(Math.abs(diff) * damageCoeff);
+        currentDuel.playerPower -= damage;
+        addDuelLog(`结算：你产生 ${Math.round(playerGen)}，对方产生 ${Math.round(opponentGen)}，差值 ${damage}，你的牌力 -${damage}！`);
+      } else {
+        addDuelLog(`结算：双方均产生 ${Math.round(playerGen)} 牌力，势均力敌！`);
+      }
 
       // 更新显示
       currentDuel.turn++;
       document.getElementById('duel-player-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.playerPower));
       document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.opponentPower));
 
-      // 胜负判定：牌力归零即败
+      // 胜负判定：牌力归零即败；同时归零时牌力更高（更接近0）者胜
       if (currentDuel.playerPower <= 0 && currentDuel.opponentPower <= 0) {
-        // 同归于尽，算玩家败
-        addDuelLog('双方牌力同时归零...你勉强输掉了决斗。', 'lose');
+        if (currentDuel.playerPower >= currentDuel.opponentPower) {
+          addDuelLog('双方牌力同时归零...你的剩余牌力更高，险胜！', 'win');
+        } else {
+          addDuelLog('双方牌力同时归零...对方剩余牌力更高，你惜败。', 'lose');
+        }
         finishDuel();
       } else if (currentDuel.opponentPower <= 0) {
         addDuelLog('对方牌力归零！决斗胜利！', 'win');
@@ -9922,24 +10501,25 @@ function checkBattleEventCondition(cond, stats, hiddenBonus) {
 // 计算战斗事件效果
 function calcBattleEventEffect(effect, stats) {
   let bonus = 0, damage = 0;
+  const EVENT_NERF = 0.75; // 全局事件加成微调系数（保留多样性，避免过高）
   if (effect.bonusType && effect.bonusType !== 'none') {
     if (effect.bonusType === 'fixed') {
-      bonus = effect.bonusValue + rand(effect.bonusMin || 0, effect.bonusMax || 0);
+      bonus = (effect.bonusValue + rand(effect.bonusMin || 0, effect.bonusMax || 0)) * EVENT_NERF;
     } else if (effect.bonusType === 'stat') {
       const statVal = stats[effect.bonusStat] || 0;
-      bonus = statVal * (effect.bonusMult || 1) + rand(effect.bonusMin || 0, effect.bonusMax || 0);
+      bonus = (statVal * (effect.bonusMult || 1) + rand(effect.bonusMin || 0, effect.bonusMax || 0)) * EVENT_NERF;
     } else if (effect.bonusType === 'random') {
-      bonus = rand(effect.bonusMin || 0, effect.bonusMax || 10);
+      bonus = rand(effect.bonusMin || 0, effect.bonusMax || 10) * EVENT_NERF;
     }
   }
   if (effect.damageType && effect.damageType !== 'none') {
     if (effect.damageType === 'fixed') {
-      damage = effect.damageValue + rand(effect.damageMin || 0, effect.damageMax || 0);
+      damage = (effect.damageValue + rand(effect.damageMin || 0, effect.damageMax || 0)) * EVENT_NERF;
     } else if (effect.damageType === 'stat') {
       const statVal = stats[effect.damageStat] || 0;
-      damage = statVal * (effect.damageMult || 1) + rand(effect.damageMin || 0, effect.damageMax || 0);
+      damage = (statVal * (effect.damageMult || 1) + rand(effect.damageMin || 0, effect.damageMax || 0)) * EVENT_NERF;
     } else if (effect.damageType === 'random') {
-      damage = rand(effect.damageMin || 0, effect.damageMax || 10);
+      damage = rand(effect.damageMin || 0, effect.damageMax || 10) * EVENT_NERF;
     }
   }
   return { bonus: Math.round(bonus), damage: Math.round(damage) };
@@ -9952,6 +10532,9 @@ function triggerBattleEvent(stats, callback) {
   let triggerRate = 0.25 + soul * 0.008 + luck * 0.008;
   // 系列卡组加成
   triggerRate += getArchetypeLuckBonus() - 0.3;
+  // 副属性标签加成（赌狗：幸运事件触发率+5%）
+  const subTagBonus = getSubTagBonus();
+  triggerRate += subTagBonus.luckEventRate;
   // 天赋加成
   const battleBonus = getTalentBonus('battleEventBonus', 0);
   const luckBonus = getTalentBonus('luckEventBonus', 0);
@@ -10276,6 +10859,44 @@ function renderDeckView() {
     tab.classList.toggle('active', tab.dataset.deckTab === currentDeckTab);
   });
 
+  // 只有牌库页面显示排序栏和筛选栏
+  const sortBar = document.getElementById('deck-sort-bar');
+  if (sortBar) {
+    sortBar.style.display = currentDeckTab === 'collection' ? 'flex' : 'none';
+    // 更新排序按钮状态
+    sortBar.querySelectorAll('.deck-sort-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sort === currentDeckSort);
+      if (btn.dataset.sort === currentDeckSort) {
+        btn.style.background = 'rgba(139, 92, 246, 0.15)';
+        btn.style.borderColor = 'var(--accent-purple)';
+        btn.style.color = 'var(--accent-purple-light)';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text)';
+      }
+    });
+  }
+
+  // 筛选栏显示控制
+  const filterBar = document.getElementById('deck-filter-bar');
+  if (filterBar) {
+    filterBar.style.display = currentDeckTab === 'collection' ? 'flex' : 'none';
+    // 更新筛选按钮状态
+    filterBar.querySelectorAll('.deck-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === currentDeckFilter);
+      if (btn.dataset.filter === currentDeckFilter) {
+        btn.style.background = 'rgba(59, 130, 246, 0.15)';
+        btn.style.borderColor = 'var(--accent-blue)';
+        btn.style.color = 'var(--accent-blue-light)';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text)';
+      }
+    });
+  }
+
   const list = document.getElementById('deck-cards-list');
   if (!list) { console.error('deck-cards-list not found'); return; }
   list.innerHTML = '';
@@ -10295,10 +10916,39 @@ function renderDeckView() {
     });
   }
 
-  // 过滤掉不存在的卡片，按稀有度排序
+  // 过滤掉不存在的卡片
   cards = cards.filter(item => item.card);
-  const rarityOrder = { UR: 0, SR: 1, R: 2, N: 3 };
-  cards.sort((a, b) => (rarityOrder[a.card.rarity] || 9) - (rarityOrder[b.card.rarity] || 9));
+  
+  // 类型筛选（仅牌库页面生效）
+  if (currentDeckTab === 'collection' && currentDeckFilter !== 'all') {
+    cards = cards.filter(item => {
+      const c = item.card;
+      if (currentDeckFilter === 'special') {
+        return c.id && c.id.startsWith('sp');
+      }
+      if (currentDeckFilter === 'extra') {
+        return c.type === 'extra' || (c.id && c.id.startsWith('e'));
+      }
+      return c.type === currentDeckFilter;
+    });
+  }
+  
+  // 根据排序方式排序
+  if (currentDeckSort === 'time') {
+    // 按获得时间排序（最新获得的在前）
+    cards.sort((a, b) => {
+      const timeA = (gameState.collectionObtainTime && gameState.collectionObtainTime[a.card.id]) || 0;
+      const timeB = (gameState.collectionObtainTime && gameState.collectionObtainTime[b.card.id]) || 0;
+      return timeB - timeA;
+    });
+  } else if (currentDeckSort === 'power') {
+    // 按单卡牌力加成排序（高到低）
+    cards.sort((a, b) => calcCardPower(b.card) - calcCardPower(a.card));
+  } else {
+    // 默认按稀有度排序
+    const rarityOrder = { UR: 0, SR: 1, R: 2, N: 3 };
+    cards.sort((a, b) => (rarityOrder[a.card.rarity] || 9) - (rarityOrder[b.card.rarity] || 9));
+  }
 
   if (cards.length === 0) {
     list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">暂无卡片</div>';
@@ -10310,6 +10960,7 @@ function renderDeckView() {
     const div = document.createElement('div');
     div.className = 'card-item';
     const typeLabel = card.type === 'monster' ? '怪兽' : card.type === 'spell' ? '魔法' : card.type === 'trap' ? '陷阱' : '额外';
+    const cardPower = calcCardPower(card);
     let deckBadge = '';
     if (mainCount > 0) deckBadge += `<div class="card-type-badge" style="background:rgba(34,197,94,0.2); color:var(--accent-green-light);">主×${mainCount}</div>`;
     if (extraCount > 0) deckBadge += `<div class="card-type-badge" style="background:rgba(59,130,246,0.2); color:var(--accent-blue-light);">额×${extraCount}</div>`;
@@ -10317,6 +10968,7 @@ function renderDeckView() {
       <div class="card-rarity-dot ${card.rarity}"></div>
       <div class="card-name">${card.name}</div>
       <div class="card-type-badge">${typeLabel}</div>
+      <div class="card-type-badge" style="background:rgba(245,158,11,0.15); color:var(--accent-gold-light);" title="单卡牌力加成">⚔${cardPower}</div>
       ${count > 1 ? `<div class="card-count">×${count}</div>` : ''}
       ${deckBadge}
     `;
@@ -11670,12 +12322,22 @@ function renderHomeTaskPanel() {
     return;
   }
 
+  // 回退检测：检查是否有任务因为一次性事件消失而卡死
+  const blockedTasks = detectBlockedTasks();
+  const recoveryBtn = blockedTasks.length > 0 ? 
+    `<div style="text-align:center;margin:4px 0;padding:4px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:4px;cursor:pointer;" onclick="showEventRecoveryPanel()">
+      <span style="color:#f87171;font-size:10px;">⚠ 检测到 ${blockedTasks.length} 个任务可能因事件消失卡死，点击恢复</span>
+    </div>` : 
+    `<div style="text-align:center;margin:4px 0;padding:2px;cursor:pointer;" onclick="showEventRecoveryPanel()">
+      <span style="color:var(--text-muted);font-size:9px;">任务卡住了？点击重置事件</span>
+    </div>`;
+
   // 最多显示5个任务
   const displayTasks = activeTasks.slice(0, 5);
   const typeColors = { guide: '#3b82f6', main: '#f59e0b', side: '#10b981', hidden: '#8b5cf6' };
   const typeNames = { guide: '引导', main: '主线', side: '支线', hidden: '隐藏' };
 
-  panel.innerHTML = displayTasks.map(({ task, progress, isClaimable }) => {
+  panel.innerHTML = recoveryBtn + displayTasks.map(({ task, progress, isClaimable }) => {
     const percent = isClaimable ? 100 : Math.min(100, Math.round((progress.current / progress.target) * 100));
     const bgColor = isClaimable ? 'rgba(212,175,55,0.08)' : 'transparent';
     const borderColor = isClaimable ? 'rgba(212,175,55,0.3)' : 'var(--border-subtle)';
@@ -11697,6 +12359,115 @@ function renderHomeTaskPanel() {
       </div>
     `;
   }).join('') + (activeTasks.length > 5 ? `<div style="text-align:center;color:var(--text-muted);font-size:10px;padding-top:4px;cursor:pointer;" onclick="switchSubView('task')">还有 ${activeTasks.length - 5} 个任务，点击查看全部 →</div>` : '');
+}
+
+// ===== 回退检测系统：检测任务是否因一次性事件消失而卡死 =====
+function detectBlockedTasks() {
+  if (!gameState.triggeredEvents || gameState.triggeredEvents.length === 0) return [];
+  const blocked = [];
+  
+  TASKS.forEach(task => {
+    if (gameState.completedTasks && gameState.completedTasks.includes(task.id)) return;
+    if (!isTaskUnlocked(task)) return;
+    
+    // 检查任务条件是否涉及已触发的一次性事件
+    const conditions = task.conditions || [];
+    conditions.forEach(cond => {
+      // 如果条件类型是事件相关，且该事件已被触发但任务未完成
+      if (cond.type === 'triggerEvent' || cond.type === 'event' || cond.type === 'completeEvent') {
+        const eventId = cond.target || cond.eventId || cond.value;
+        if (eventId && gameState.triggeredEvents.includes(eventId)) {
+          // 检查事件是否包含决斗选项（可能是挑战失败导致的）
+          const event = EVENTS.find(e => e.id === eventId);
+          if (event && event.options && event.options.some(op => 
+            (op.effects || []).some(ef => ef.type === 'duel' || ef.type === 'characterDuel')
+          )) {
+            blocked.push({ task, eventId, eventName: event.name || eventId });
+          }
+        }
+      }
+    });
+  });
+  
+  return blocked;
+}
+
+// 显示事件恢复面板
+function showEventRecoveryPanel() {
+  if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+  
+  const triggeredEvents = gameState.triggeredEvents.map(id => {
+    const event = EVENTS.find(e => e.id === id);
+    return { id, name: event ? (event.name || event.title || id) : id, hasDuel: event && event.options && event.options.some(op => 
+      (op.effects || []).some(ef => ef.type === 'duel' || ef.type === 'characterDuel')
+    )};
+  });
+  
+  const blockedTasks = detectBlockedTasks();
+  
+  let html = `
+    <div style="font-size:18px;font-weight:600;margin-bottom:12px;color:var(--accent-gold);display:flex;justify-content:space-between;align-items:center;">
+      <span>事件恢复中心</span>
+      <button onclick="closeEventRecoveryPanel()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">×</button>
+    </div>
+  `;
+  
+  if (blockedTasks.length > 0) {
+    html += `
+      <div style="padding:10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;margin-bottom:12px;">
+        <div style="color:#f87171;font-size:13px;font-weight:600;margin-bottom:6px;">⚠ 检测到可能卡死的任务</div>
+        ${blockedTasks.map(b => `<div style="font-size:11px;color:#e0e0e0;margin:2px 0;">• 【${b.task.name}】依赖事件【${b.eventName}】，可能因挑战失败而消失</div>`).join('')}
+      </div>
+    `;
+  }
+  
+  if (triggeredEvents.length === 0) {
+    html += '<div style="text-align:center;color:var(--text-muted);padding:20px;">暂无已触发的一次性事件</div>';
+  } else {
+    html += `
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">已触发的一次性事件（点击重置可重新触发）：</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+    `;
+    triggeredEvents.forEach(ev => {
+      html += `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border-subtle);">
+          <div>
+            <span style="font-size:12px;color:#e0e0e0;">${ev.name}</span>
+            ${ev.hasDuel ? '<span style="font-size:10px;color:#f87171;margin-left:6px;">含决斗</span>' : ''}
+          </div>
+          <button onclick="resetTriggeredEvent('${ev.id}')" style="padding:4px 10px;background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.4);border-radius:4px;color:#60a5fa;font-size:11px;cursor:pointer;">重置</button>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  
+  html += `
+      <div style="margin-top:16px;text-align:center;">
+        <button onclick="closeEventRecoveryPanel()" style="padding:8px 24px;background:rgba(255,255,255,0.1);border:1px solid var(--border);border-radius:6px;color:#e0e0e0;font-size:13px;cursor:pointer;">关闭</button>
+      </div>
+  `;
+  
+  document.getElementById('generic-modal-content').innerHTML = html;
+  document.getElementById('generic-modal').style.display = 'flex';
+}
+
+// 重置指定的一次性事件
+function resetTriggeredEvent(eventId) {
+  if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+  const idx = gameState.triggeredEvents.indexOf(eventId);
+  if (idx > -1) {
+    gameState.triggeredEvents.splice(idx, 1);
+    const event = EVENTS.find(e => e.id === eventId);
+    showToast(`已重置事件【${event ? (event.name || event.title || eventId) : eventId}】，可以重新触发`);
+    saveGame();
+    closeEventRecoveryPanel();
+    updateAllDisplays();
+  }
+}
+
+function closeEventRecoveryPanel() {
+  document.getElementById('generic-modal').style.display = 'none';
 }
 
 function checkAchievements() {
@@ -11950,7 +12721,7 @@ function showCardDetail(cardId) {
 
   setText('cd-name', card.name);
   setText('cd-type', isSpecialCard(card) ? `✨ 特殊卡片 · ${typeLabel}` : typeLabel);
-  setText('cd-archetype', card.archetype ? `系列：${card.archetype}` : '');
+  setText('cd-archetype', card.archetype ? `系列：${card.archetype.split('/').map(a => a.trim()).join(' · ')}` : '');
 
   ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
     const source = ['power','soul','luck','proficiency','intelligence'].includes(k) ? (card.sub || {}) : (card.stats || {});
@@ -12301,6 +13072,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.deck-tab').forEach(tab => {
     tab.onclick = () => {
       currentDeckTab = tab.dataset.deckTab;
+      renderDeckView();
+    };
+  });
+
+  // 牌库排序按钮
+  document.querySelectorAll('.deck-sort-btn').forEach(btn => {
+    btn.onclick = () => {
+      currentDeckSort = btn.dataset.sort;
+      renderDeckView();
+    };
+  });
+
+  // 卡组类型筛选按钮
+  document.querySelectorAll('.deck-filter-btn').forEach(btn => {
+    btn.onclick = () => {
+      currentDeckFilter = btn.dataset.filter;
       renderDeckView();
     };
   });
