@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>牌佬模拟器 - 童实野市篇</title>
+<title>牌佬模拟器 - 童实野市篇 v3.9</title>
 <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
 <style>
 :root {
@@ -1066,6 +1066,10 @@ body::before {
         <div style="display:flex;flex-direction:column;gap:12px;">
           <button class="btn btn-gold" id="menu-new-game" style="width:100%;padding:14px;font-size:15px;">🎮 开始新游戏</button>
           <button class="btn btn-secondary" id="menu-continue" style="width:100%;padding:14px;font-size:15px;display:none;">📂 继续游戏</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary" style="flex:1;padding:10px;font-size:13px;" onclick="openSaveManager('load')">📂 读取存档</button>
+            <button class="btn btn-secondary" style="flex:1;padding:10px;font-size:13px;" onclick="openSaveManager('import')">📥 导入标识码</button>
+          </div>
           <button class="btn btn-secondary" id="menu-tutorial" style="width:100%;padding:14px;font-size:15px;">📖 新手引导</button>
         </div>
         <div style="text-align:center; font-size:11px; color:var(--text-muted); line-height:1.8; margin-top:20px;">
@@ -1610,7 +1614,14 @@ body::before {
           <div class="locations-grid" id="locations-grid"></div>
         </div>
 
-        <div style="text-align:center; margin-top:16px; display:flex; gap:8px; justify-content:center;">
+        <div style="text-align:center; margin-top:16px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" style="padding:6px 12px;font-size:11px;" onclick="openSaveManager('save')">💾 保存存档</button>
+          <button class="btn btn-secondary btn-sm" style="padding:6px 12px;font-size:11px;" onclick="openSaveManager('load')">📂 读取存档</button>
+          <button class="btn btn-secondary btn-sm" style="padding:6px 12px;font-size:11px;" onclick="openSaveManager('export')">📤 导出标识码</button>
+          <button class="btn btn-secondary btn-sm" style="padding:6px 12px;font-size:11px;" onclick="openSaveManager('import')">📥 导入标识码</button>
+        </div>
+
+        <div style="text-align:center; margin-top:12px; display:flex; gap:8px; justify-content:center;">
           <button class="btn btn-secondary" id="back-to-menu-btn" style="flex:1; max-width:200px;">🏠 返回主菜单</button>
           <button class="btn btn-danger" id="end-sim-btn" style="flex:1; max-width:200px;">结束模拟 / 重置存档</button>
         </div>
@@ -1857,14 +1868,14 @@ body::before {
     <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border-subtle);position:relative;">
       <div id="profile-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer;" title="点击更换头像（暂未开放）">🎮</div>
       <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span id="profile-name" style="font-size:18px;font-weight:bold;color:#fff;cursor:pointer;" title="点击修改名字">无名决斗者</span>
-          <button class="btn btn-secondary btn-sm" onclick="openNameEdit()" style="padding:2px 8px;font-size:10px;">✏️ 改名</button>
-          <span id="profile-title" style="font-size:11px;padding:2px 8px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;cursor:pointer;" title="点击选择称号">新手决斗者</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span id="profile-name" style="font-size:16px;font-weight:bold;color:#fff;cursor:pointer;" title="点击修改名字">无名决斗者</span>
+          <button class="btn btn-secondary btn-sm" onclick="openNameEdit()" style="padding:1px 6px;font-size:9px;line-height:1.4;">改名</button>
+          <span id="profile-title" style="font-size:10px;padding:1px 6px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:8px;color:#fff;cursor:pointer;" title="点击选择称号">新手决斗者</span>
         </div>
       </div>
       <!-- 兑换码按钮 -->
-      <button class="btn btn-gold btn-sm" onclick="openRedeemModal()" style="position:absolute;top:0;right:0;padding:4px 10px;font-size:11px;" title="输入兑换码领取奖励">🎁 兑换码</button>
+      <button class="btn btn-gold btn-sm" onclick="openRedeemModal()" style="padding:2px 8px;font-size:9px;line-height:1.4;" title="输入兑换码领取奖励">兑换码</button>
     </div>
 
     <!-- 基本信息 -->
@@ -2111,6 +2122,17 @@ body::before {
   </div>
 </div>
 
+<!-- 存读档管理弹窗 -->
+<div id="save-manager-modal" class="modal-overlay" style="display:none;z-index:10007;">
+  <div class="card-detail-box" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span id="save-manager-title" style="font-size:16px;font-weight:bold;color:#fbbf24;">存档管理</span>
+      <button onclick="closeSaveManager()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <div id="save-manager-content"></div>
+  </div>
+</div>
+
 <!-- 数据已内嵌到下方 script 中，dev-tool.html 可直接编辑本文件 -->
 <script>
 /* ============================================================
@@ -2191,6 +2213,15 @@ let CARD_DB = {
   e028: { id:'e028', name:'真红眼超越黑龙', type:'extra', rarity:'SR', archetype:'真红眼', stats:{search:0,expand:8,disrupt:8,resist:8,suppress:0}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
   e029: { id:'e029', name:'龙骑士 黑魔术师', type:'extra', rarity:'UR', archetype:'黑魔导', stats:{search:0,expand:7,disrupt:3,resist:8,suppress:7}, sub:{power:7,soul:7,proficiency:0,intelligence:0} },
   e030: { id:'e030', name:'超魔导龙骑士-真红眼龙骑士', type:'extra', rarity:'UR', archetype:'真红眼', stats:{search:3,expand:3,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
+  e031: { id:'e031', name:'龙魔导骑士黑魔导', type:'extra', rarity:'SR', archetype:'黑魔导', stats:{search:0,expand:8,disrupt:0,resist:4,suppress:8}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
+  e032: { id:'e032', name:'龙骑士黑魔导女孩', type:'extra', rarity:'SR', archetype:'黑魔导', stats:{search:0,expand:4,disrupt:8,resist:0,suppress:8}, sub:{power:7,soul:4,proficiency:0,intelligence:0} },
+  e033: { id:'e033', name:'超魔导骑士—黑骑兵', type:'extra', rarity:'SR', archetype:'黑魔导', stats:{search:0,expand:0,disrupt:8,resist:8,suppress:8}, sub:{power:8,soul:7,proficiency:0,intelligence:0} },
+  e034: { id:'e034', name:'究极龙骑士', type:'extra', rarity:'SR', archetype:'龙', stats:{search:0,expand:0,disrupt:8,resist:8,suppress:8}, sub:{power:4,soul:8,proficiency:0,intelligence:0} },
+  e035: { id:'e035', name:'超魔导剑士—黑暗帕拉丁', type:'extra', rarity:'UR', archetype:'黑魔导', stats:{search:0,expand:5,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
+  e036: { id:'e036', name:'咒符龙', type:'extra', rarity:'R', archetype:'龙', stats:{search:0,expand:6,disrupt:0,resist:0,suppress:6}, sub:{power:5,soul:6,proficiency:0,intelligence:0} },
+  e037: { id:'e037', name:'黑炎之骑士', type:'extra', rarity:'R', archetype:'战士', stats:{search:0,expand:6,disrupt:0,resist:6,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
+  e038: { id:'e038', name:'真红眼的黑龙剑', type:'extra', rarity:'R', archetype:'真红眼', stats:{search:0,expand:0,disrupt:0,resist:6,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
+  e039: { id:'e039', name:'NO.39 希望皇霍普', type:'extra', rarity:'UR', archetype:'霍普', stats:{search:6,expand:9,disrupt:9,resist:9,suppress:7}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
 
   // 魔法卡
   s001: { id:'s001', name:'死者苏生', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:0,expand:8,disrupt:0,resist:6,suppress:6}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
@@ -3074,6 +3105,102 @@ const OPPONENTS = [
     },
     "enabled": true,
     "deckArchetype": "未界域"
+  },
+  {
+    "id": "god_card_guardian",
+    "name": "神之守护者",
+    "basePower": 6000,
+    "variance": 1000,
+    "difficulty": 5,
+    "desc": "守护神之卡空间的神秘精灵，拥有三幻神的部分力量。",
+    "category": "Boss",
+    "specialTag": "",
+    "stats": {
+      "search": 80,
+      "expand": 80,
+      "disrupt": 80,
+      "resist": 80,
+      "suppress": 80
+    },
+    "rewards": {
+      "cardPoints": 100,
+      "duelPoints": 20000,
+      "awakeningShards": 20
+    },
+    "enabled": true,
+    "deckArchetype": "幻神兽"
+  },
+  {
+    "id": "sky_knight",
+    "name": "绘札三骑士",
+    "basePower": 7000,
+    "variance": 500,
+    "difficulty": 5,
+    "desc": "奥西里斯之天空龙的侍卫，守护着天空龙的觉醒之力。",
+    "category": "Boss",
+    "specialTag": "",
+    "stats": {
+      "search": 100,
+      "expand": 120,
+      "disrupt": 90,
+      "resist": 80,
+      "suppress": 90
+    },
+    "rewards": {
+      "cardPoints": 200,
+      "duelPoints": 5000,
+      "awakeningShards": 50
+    },
+    "enabled": true,
+    "deckArchetype": "战士族"
+  },
+  {
+    "id": "obelisk_crusher",
+    "name": "AtoZ-神龙歼灭炮",
+    "basePower": 8000,
+    "variance": 500,
+    "difficulty": 5,
+    "desc": "欧贝利斯克之巨神兵的粉碎军团首领，拥有毁灭性的攻击力。",
+    "category": "Boss",
+    "specialTag": "",
+    "stats": {
+      "search": 90,
+      "expand": 100,
+      "disrupt": 110,
+      "resist": 120,
+      "suppress": 100
+    },
+    "rewards": {
+      "cardPoints": 250,
+      "duelPoints": 6000,
+      "awakeningShards": 60
+    },
+    "enabled": true,
+    "deckArchetype": "机械族"
+  },
+  {
+    "id": "ra_apostle",
+    "name": "拉的使徒",
+    "basePower": 9000,
+    "variance": 500,
+    "difficulty": 5,
+    "desc": "拉之翼神龙的仆从，掌握着不死的烈焰之力，是三神侍卫中最强的存在。",
+    "category": "Boss",
+    "specialTag": "",
+    "stats": {
+      "search": 120,
+      "expand": 110,
+      "disrupt": 120,
+      "resist": 110,
+      "suppress": 120
+    },
+    "rewards": {
+      "cardPoints": 300,
+      "duelPoints": 8000,
+      "awakeningShards": 80
+    },
+    "enabled": true,
+    "deckArchetype": "炎族"
   }
 ];
 
@@ -3141,7 +3268,7 @@ const DUEL_CONFIG = {
     },
     "custom1": {
       "name": "都市决斗",
-      "enabled": false,
+      "enabled": true,
       "maxTurns": 30,
       "playerBasePower": 1000,
       "modeBonus": 1.2,
@@ -3171,7 +3298,7 @@ const DUEL_CONFIG = {
     },
     "dark": {
       "name": "黑暗决斗",
-      "enabled": false,
+      "enabled": true,
       "maxTurns": 20,
       "playerBasePower": 1000,
       "modeBonus": 1.5,
@@ -3341,6 +3468,19 @@ const LOCATIONS = [
     ],
     "hidden": true,
     "onlyDuelMode": "dark"
+  },
+  {
+    "id": "god_card_space",
+    "name": "神之卡的空间",
+    "desc": "集齐三幻神后开启的神秘空间，这里是神之卡力量的源头。在此挑战可以更高效地获得属性值和大量觉醒碎片，但对手也异常强大。",
+    "tags": [
+      "神之卡",
+      "挑战",
+      "属性",
+      "觉醒碎片",
+      "隐藏"
+    ],
+    "hidden": true
   }
 ];
 
@@ -3617,7 +3757,7 @@ const TOURNAMENTS = [
     "conditions": [
       {
         "type": "main_deck_size",
-        "value": 30
+        "value": 40
       }
     ]
   },
@@ -4223,6 +4363,52 @@ const ACHIEVEMENTS = [
     "bonus": {
       "all": 10,
       "intelligence": 20
+    },
+    "conditions": []
+  },
+  {
+    "id": "NO39",
+    "name": "希望的使者",
+    "desc": "这是一份来自超量网络的馈赠！",
+    "bonus": {
+      "all": 3
+    },
+    "conditions": []
+  },
+  {
+    "id": "sky_burst",
+    "name": "超电波导之爆裂",
+    "desc": "战胜绘札三骑士，获得奥西里斯之天空龙的认可，解锁天空龙的卡牌觉醒。",
+    "bonus": {
+      "all": 5,
+      "expand": 10,
+      "suppress": 10,
+      "disrupt": 10
+    },
+    "conditions": []
+  },
+  {
+    "id": "obelisk_crush",
+    "name": "灵魂脉冲之粉碎",
+    "desc": "战胜AtoZ-神龙歼灭炮，获得欧贝利斯克之巨神兵的认可，解锁巨神兵的卡牌觉醒。",
+    "bonus": {
+      "all": 5,
+      "resist": 10,
+      "soul": 0,
+      "power": 10,
+      "suppress": 10
+    },
+    "conditions": []
+  },
+  {
+    "id": "ra_flame",
+    "name": "不死神威之烈焰",
+    "desc": "战胜拉的使徒，获得拉之翼神龙的认可，解锁翼神龙的卡牌觉醒。",
+    "bonus": {
+      "all": 5,
+      "power": 10,
+      "suppress": 10,
+      "resist": 10
     },
     "conditions": []
   }
@@ -5388,10 +5574,6 @@ const EVENTS = {
           "effects": [
             {
               "type": "tenPackDraw"
-            },
-            {
-              "type": "loseDuelPoints",
-              "amount": 3000
             }
           ]
         },
@@ -5494,7 +5676,8 @@ const EVENTS = {
           ]
         }
       ],
-      "failText": "没钱抽什么卡！"
+      "failText": "没钱抽什么卡！",
+      "cooldown": 4
     }
   ],
   "beach": [
@@ -6368,6 +6551,184 @@ const EVENTS = {
       ],
       "log": "解锁黑暗领域"
     }
+  ],
+  "god_card_space": [
+    {
+      "id": "god_challenge",
+      "name": "神之卡挑战",
+      "probability": 0.4,
+      "title": "神之卡的试炼",
+      "text": "三幻神的力量在空间中回荡，你感受到了前所未有的压力。接受神之卡的试炼，可以获得强大的属性提升，但失败也会付出代价。（建议牌力6000+）",
+      "effects": [],
+      "options": [
+        {
+          "name": "接受试炼（大师决斗，胜利获得全主属性+5）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "god_card_guardian",
+              "mode": "master",
+              "winEffects": [
+                {
+                  "type": "stats",
+                  "stats": {
+                    "search": 5,
+                    "expand": 5,
+                    "disrupt": 5,
+                    "resist": 5,
+                    "suppress": 5
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "effects": []
+        }
+      ],
+      "oneTime": false
+    },
+    {
+      "id": "god_meditation",
+      "name": "神之卡冥想",
+      "probability": 0.3,
+      "title": "与神之卡共鸣",
+      "text": "你闭上眼睛，感受三幻神的力量在体内流动。这种共鸣可以提升你的副属性和精灵力。",
+      "effects": [
+        {
+          "type": "randomStat",
+          "stats": {
+            "power": 3,
+            "soul": 3,
+            "luck": 2
+          },
+          "min": 10,
+          "max": 50
+        },
+        {
+          "type": "spiritPower",
+          "amount": 500
+        }
+      ],
+      "log": "在神之卡的空间冥想，获得了属性和精灵力提升",
+      "oneTime": false
+    },
+    {
+      "id": "god_shard",
+      "name": "觉醒碎片矿脉",
+      "probability": 0.3,
+      "title": "闪耀的碎片",
+      "text": "空间深处发现了大量觉醒碎片矿脉，这里的碎片由神之卡散发的力量凝结而成。",
+      "effects": [
+        {
+          "type": "awakeningShards",
+          "amount": 50
+        }
+      ],
+      "log": "在神之卡的空间获得了50个觉醒碎片",
+      "oneTime": false
+    },
+    {
+      "id": "sky_awaken",
+      "name": "天空龙的觉醒试炼",
+      "probability": 0.2,
+      "title": "奥西里斯之天空龙的试炼",
+      "text": "天空中传来雷鸣，奥西里斯之天空龙的侍卫<绘札三骑士>出现在你面前。只有战胜他们，才能获得天空龙的认可，解锁其卡牌觉醒之力。（建议牌力7000+）",
+      "effects": [],
+      "options": [
+        {
+          "name": "接受试炼（大师决斗，胜利解锁天空龙觉醒）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "sky_knight",
+              "mode": "master",
+              "winEffects": [
+                {
+                  "type": "unlockAchievement",
+                  "achievementId": "sky_burst"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "effects": []
+        }
+      ],
+      "oneTime": false,
+      "requiredCard": "sp003",
+      "excludeAchievement": "sky_burst"
+    },
+    {
+      "id": "obelisk_awaken",
+      "name": "巨神兵的觉醒试炼",
+      "probability": 0.2,
+      "title": "欧贝利斯克之巨神兵的试炼",
+      "text": "大地在颤抖，欧贝利斯克之巨神兵的粉碎军团首领<AtoZ-神龙歼灭炮>挡在你面前。只有战胜他，才能获得巨神兵的认可，解锁其卡牌觉醒之力。（建议牌力8000+）",
+      "effects": [],
+      "options": [
+        {
+          "name": "接受试炼（大师决斗，胜利解锁巨神兵觉醒）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "obelisk_crusher",
+              "mode": "master",
+              "winEffects": [
+                {
+                  "type": "unlockAchievement",
+                  "achievementId": "obelisk_crush"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "effects": []
+        }
+      ],
+      "oneTime": false,
+      "requiredCard": "sp002",
+      "excludeAchievement": "obelisk_crush"
+    },
+    {
+      "id": "ra_awaken",
+      "name": "翼神龙的觉醒试炼",
+      "probability": 0.2,
+      "title": "拉之翼神龙的试炼",
+      "text": "烈焰冲天，拉之翼神龙的仆从<拉的使徒>从火焰中走出。这是三神侍卫中最强的存在，只有战胜他，才能获得翼神龙的认可，解锁其卡牌觉醒之力。（建议牌力9000+）",
+      "effects": [],
+      "options": [
+        {
+          "name": "接受试炼（大师决斗，胜利解锁翼神龙觉醒）",
+          "effects": [
+            {
+              "type": "characterDuel",
+              "charId": "ra_apostle",
+              "mode": "master",
+              "winEffects": [
+                {
+                  "type": "unlockAchievement",
+                  "achievementId": "ra_flame"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "离开",
+          "effects": []
+        }
+      ],
+      "oneTime": false,
+      "requiredCard": "sp001",
+      "excludeAchievement": "ra_flame"
+    }
   ]
 };
 
@@ -6407,6 +6768,18 @@ const REDEEM_CODES = [
     "reward": {
       "duelPoints": 100,
       "unlockLocation": "duel_city"
+    }
+  },
+  {
+    "id": "yh001",
+    "name": "新兑换码",
+    "desc": "",
+    "reward": {
+      "duelPoints": 100,
+      "achievement": "NO39",
+      "cards": [
+        "e039"
+      ]
     }
   }
 ];
@@ -6479,6 +6852,8 @@ let gameState = null;
 let selectedTalents = [];
 
 let currentTalentPool = []; // 当前显示的随机天赋池（6个）
+let talentRerollCount = 0; // 天赋刷新次数
+const MAX_TALENT_REROLL = 3; // 最大刷新次数
 let currentDeckTab = 'main';
 let currentDuel = null;
 
@@ -6486,6 +6861,13 @@ let currentDuel = null;
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function choice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// 判断卡片是否为特殊卡片（sp开头的ID自动视为特殊卡片，无需手动设置special字段）
+function isSpecialCard(card) {
+  if (!card) return false;
+  if (card.id && typeof card.id === 'string' && card.id.toLowerCase().startsWith('sp')) return true;
+  return card.special === true;
+}
 
 function saveGame() {
   try { localStorage.setItem('duelist_sim_save', JSON.stringify(gameState)); return true; } catch(e) { return false; }
@@ -6538,6 +6920,340 @@ function loadGame() {
   return false;
 }
 function clearSave() { try { localStorage.removeItem('duelist_sim_save'); } catch(e) {} }
+
+// ===== 多槽位存档系统 =====
+const SAVE_SLOT_COUNT = 3;
+const SAVE_SLOT_KEY = 'duelist_sim_slot_';
+
+// 获取存档槽位信息
+function getSaveSlots() {
+  const slots = [];
+  for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+    try {
+      const data = localStorage.getItem(SAVE_SLOT_KEY + i);
+      if (data) {
+        const state = JSON.parse(data);
+        slots.push({
+          slot: i,
+          exists: true,
+          name: state.playerName || '无名决斗者',
+          age: state.age || 18,
+          week: state.week || 1,
+          power: state.duelPoints || 0,
+          wins: state.wins || 0,
+          losses: state.losses || 0,
+          savedAt: state.savedAt || null,
+          talents: (state.talents || []).length,
+          cards: (state.collection || []).length
+        });
+      } else {
+        slots.push({ slot: i, exists: false });
+      }
+    } catch(e) {
+      slots.push({ slot: i, exists: false });
+    }
+  }
+  return slots;
+}
+
+// 保存到指定槽位
+function saveToSlot(slot) {
+  try {
+    if (!gameState) return false;
+    const saveData = { ...gameState, savedAt: new Date().toISOString() };
+    localStorage.setItem(SAVE_SLOT_KEY + slot, JSON.stringify(saveData));
+    // 同时更新自动存档
+    saveGame();
+    return true;
+  } catch(e) { return false; }
+}
+
+// 从指定槽位加载
+function loadFromSlot(slot) {
+  try {
+    const data = localStorage.getItem(SAVE_SLOT_KEY + slot);
+    if (!data) return false;
+    gameState = JSON.parse(data);
+    // 兼容性检查
+    if (!gameState.week) gameState.week = 1;
+    if (!gameState.age) gameState.age = 18;
+    if (!gameState.talents) gameState.talents = [];
+    if (!gameState.mainDeck) gameState.mainDeck = [];
+    if (!gameState.extraDeck) gameState.extraDeck = [];
+    if (!gameState.collection) gameState.collection = [];
+    if (!gameState.collectionCount) gameState.collectionCount = {};
+    if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
+      gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
+    }
+    if (!gameState.affinity) gameState.affinity = {};
+    if (!gameState.wins) gameState.wins = 0;
+    if (!gameState.losses) gameState.losses = 0;
+    if (!gameState.achievements) gameState.achievements = [];
+    if (!gameState.recentEvents) gameState.recentEvents = [];
+    if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+    if (!gameState.eventCooldowns) gameState.eventCooldowns = {};
+    if (!gameState.bonusStats) gameState.bonusStats = {};
+    if (!gameState.duelPoints) gameState.duelPoints = 0;
+    if (!gameState.cardPoints) gameState.cardPoints = 0;
+    if (!gameState.masterDuelCount) gameState.masterDuelCount = 0;
+    if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+    if (!gameState.locationVisits) gameState.locationVisits = {};
+    if (!gameState.completedTasks) gameState.completedTasks = [];
+    if (!gameState.claimableTasks) gameState.claimableTasks = [];
+    if (!gameState.titles) gameState.titles = [];
+    if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
+    if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+    // 同步到自动存档
+    saveGame();
+    return true;
+  } catch(e) { return false; }
+}
+
+// 删除指定槽位
+function deleteSaveSlot(slot) {
+  try { localStorage.removeItem(SAVE_SLOT_KEY + slot); return true; } catch(e) { return false; }
+}
+
+// ===== 存档标识码导出导入 =====
+// 导出存档为标识码（Base64编码，带校验前缀）
+function exportSaveCode() {
+  try {
+    if (!gameState) return null;
+    const saveData = { ...gameState, savedAt: new Date().toISOString(), exportVersion: 1 };
+    const jsonStr = JSON.stringify(saveData);
+    // 使用UTF-8安全的Base64编码
+    const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    // 添加前缀标识和长度校验
+    const code = 'DLSIM' + base64.length.toString(36).toUpperCase() + base64;
+    return code;
+  } catch(e) { return null; }
+}
+
+// 从标识码导入存档
+function importSaveCode(code) {
+  try {
+    if (!code || typeof code !== 'string') return { success: false, error: '标识码为空' };
+    code = code.trim().toUpperCase();
+    // 校验前缀
+    if (!code.startsWith('DLSIM')) {
+      return { success: false, error: '标识码格式错误（前缀不正确）' };
+    }
+    // 解析长度
+    const lenStr = code.substring(5, 8);
+    const dataLen = parseInt(lenStr, 36);
+    if (isNaN(dataLen)) {
+      return { success: false, error: '标识码格式错误（长度校验失败）' };
+    }
+    // 提取Base64数据
+    const base64 = code.substring(8);
+    if (base64.length !== dataLen) {
+      return { success: false, error: `标识码长度不匹配（期望${dataLen}，实际${base64.length}）` };
+    }
+    // 解码
+    const jsonStr = decodeURIComponent(escape(atob(base64)));
+    const state = JSON.parse(jsonStr);
+    if (!state || typeof state !== 'object') {
+      return { success: false, error: '存档数据解析失败' };
+    }
+    gameState = state;
+    // 兼容性检查
+    if (!gameState.week) gameState.week = 1;
+    if (!gameState.age) gameState.age = 18;
+    if (!gameState.talents) gameState.talents = [];
+    if (!gameState.mainDeck) gameState.mainDeck = [];
+    if (!gameState.extraDeck) gameState.extraDeck = [];
+    if (!gameState.collection) gameState.collection = [];
+    if (!gameState.collectionCount) gameState.collectionCount = {};
+    if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
+      gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
+    }
+    if (!gameState.affinity) gameState.affinity = {};
+    if (!gameState.wins) gameState.wins = 0;
+    if (!gameState.losses) gameState.losses = 0;
+    if (!gameState.achievements) gameState.achievements = [];
+    if (!gameState.recentEvents) gameState.recentEvents = [];
+    if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
+    if (!gameState.eventCooldowns) gameState.eventCooldowns = {};
+    if (!gameState.bonusStats) gameState.bonusStats = {};
+    if (!gameState.duelPoints) gameState.duelPoints = 0;
+    if (!gameState.cardPoints) gameState.cardPoints = 0;
+    if (!gameState.masterDuelCount) gameState.masterDuelCount = 0;
+    if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+    if (!gameState.locationVisits) gameState.locationVisits = {};
+    if (!gameState.completedTasks) gameState.completedTasks = [];
+    if (!gameState.claimableTasks) gameState.claimableTasks = [];
+    if (!gameState.titles) gameState.titles = [];
+    if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
+    if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+    // 保存到自动存档
+    saveGame();
+    return { success: true, state: gameState };
+  } catch(e) {
+    return { success: false, error: '标识码解析失败：' + e.message };
+  }
+}
+
+// ===== 存读档弹窗 =====
+let saveModalMode = 'save'; // save / load / export / import
+
+function openSaveManager(mode) {
+  saveModalMode = mode || 'save';
+  const modal = document.getElementById('save-manager-modal');
+  if (!modal) return;
+  renderSaveManager();
+  modal.style.display = 'flex';
+}
+
+function closeSaveManager() {
+  const modal = document.getElementById('save-manager-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderSaveManager() {
+  const content = document.getElementById('save-manager-content');
+  if (!content) return;
+  
+  const titleMap = { save: '保存游戏', load: '读取存档', export: '导出标识码', import: '导入标识码' };
+  document.getElementById('save-manager-title').textContent = titleMap[saveModalMode] || '存档管理';
+  
+  if (saveModalMode === 'export') {
+    const code = exportSaveCode();
+    content.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">当前存档已转换为标识码，复制后可在其他设备导入：</div>
+        <textarea id="export-code-text" readonly style="width:100%;height:120px;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:#a8d8ea;font-size:11px;font-family:monospace;box-sizing:border-box;word-break:break-all;">${code || '导出失败'}</textarea>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="copyExportCode()">复制标识码</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeSaveManager()">关闭</button>
+      </div>
+    `;
+    return;
+  }
+  
+  if (saveModalMode === 'import') {
+    content.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">粘贴从其他设备导出的标识码，导入后将覆盖当前存档：</div>
+        <textarea id="import-code-text" placeholder="请粘贴标识码（DLSIM开头）..." style="width:100%;height:120px;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:11px;font-family:monospace;box-sizing:border-box;word-break:break-all;"></textarea>
+        <div id="import-result" style="margin-top:8px;font-size:12px;display:none;"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-gold" style="flex:1;" onclick="doImportCode()">导入存档</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeSaveManager()">取消</button>
+      </div>
+    `;
+    return;
+  }
+  
+  // save / load 模式：显示槽位列表
+  const slots = getSaveSlots();
+  content.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${saveModalMode === 'save' ? '选择一个槽位保存当前进度（覆盖原有存档）' : '选择一个存档槽位读取（将覆盖当前进度）'}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${slots.map(slot => `
+        <div style="padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-weight:bold;color:#fff;">存档槽位 ${slot.slot}</span>
+            ${slot.exists ? `<span style="font-size:10px;color:#10b981;">已保存</span>` : `<span style="font-size:10px;color:var(--text-muted);">空</span>`}
+          </div>
+          ${slot.exists ? `
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+              <div>决斗者：${slot.name} | 年龄：${slot.age}岁 | 第${slot.week}天</div>
+              <div>战绩：${slot.wins}胜${slot.losses}负 | 卡组：${slot.cards}张 | 天赋：${slot.talents}个</div>
+              <div>决斗点：${slot.power} | 保存时间：${slot.savedAt ? new Date(slot.savedAt).toLocaleString() : '未知'}</div>
+            </div>
+          ` : '<div style="font-size:11px;color:var(--text-muted);">该槽位暂无存档</div>'}
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            ${saveModalMode === 'save' 
+              ? `<button class="btn btn-primary" style="flex:1;" onclick="doSaveSlot(${slot.slot})">${slot.exists ? '覆盖保存' : '保存到此'}</button>`
+              : `<button class="btn btn-gold" style="flex:1;" ${slot.exists ? '' : 'disabled style="opacity:0.5;cursor:not-allowed;"'} onclick="doLoadSlot(${slot.slot})">读取存档</button>`
+            }
+            ${slot.exists ? `<button class="btn btn-danger" style="padding:4px 12px;" onclick="doDeleteSlot(${slot.slot})">删除</button>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="closeSaveManager()">关闭</button>
+    </div>
+  `;
+}
+
+function doSaveSlot(slot) {
+  if (saveToSlot(slot)) {
+    showToast(`✅ 已保存到槽位 ${slot}`);
+    renderSaveManager();
+  } else {
+    showToast('❌ 保存失败');
+  }
+}
+
+function doLoadSlot(slot) {
+  if (loadFromSlot(slot)) {
+    showToast(`✅ 已读取槽位 ${slot} 的存档`);
+    closeSaveManager();
+    // 进入游戏界面
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('view-home').classList.add('active');
+    // 刷新游戏界面
+    updateAllDisplays();
+    refreshCurrentView();
+  } else {
+    showToast('❌ 读取失败');
+  }
+}
+
+function doDeleteSlot(slot) {
+  if (confirm(`确定要删除槽位 ${slot} 的存档吗？此操作不可恢复。`)) {
+    if (deleteSaveSlot(slot)) {
+      showToast(`已删除槽位 ${slot} 的存档`);
+      renderSaveManager();
+    }
+  }
+}
+
+function copyExportCode() {
+  const textarea = document.getElementById('export-code-text');
+  if (textarea) {
+    textarea.select();
+    document.execCommand('copy');
+    showToast('✅ 标识码已复制到剪贴板');
+  }
+}
+
+function doImportCode() {
+  const textarea = document.getElementById('import-code-text');
+  const resultEl = document.getElementById('import-result');
+  if (!textarea || !resultEl) return;
+  
+  const code = textarea.value.trim();
+  if (!code) {
+    resultEl.style.display = 'block';
+    resultEl.style.color = '#ef4444';
+    resultEl.textContent = '请输入标识码';
+    return;
+  }
+  
+  const result = importSaveCode(code);
+  if (result.success) {
+    resultEl.style.display = 'block';
+    resultEl.style.color = '#22c55e';
+    resultEl.textContent = '✅ 导入成功！正在加载存档...';
+    setTimeout(() => {
+      closeSaveManager();
+      // 进入游戏界面
+      document.getElementById('main-menu').style.display = 'none';
+      document.getElementById('view-home').classList.add('active');
+      updateAllDisplays();
+      refreshCurrentView();
+    }, 1000);
+  } else {
+    resultEl.style.display = 'block';
+    resultEl.style.color = '#ef4444';
+    resultEl.textContent = '❌ ' + result.error;
+  }
+}
 
 function showToast(msg) {
   const t = document.createElement('div');
@@ -6650,7 +7366,7 @@ function getDeckStats() {
     });
     // 卡灵觉醒倍率
     if (gameState.awakenedCards && gameState.awakenedCards.includes(card.id)) {
-      if (card.special) {
+      if (isSpecialCard(card)) {
         mult *= 100; // SP卡觉醒100倍
       } else if (card.rarity === 'UR') {
         mult *= 10; // UR卡觉醒10倍
@@ -6875,14 +7591,26 @@ function checkUnlockHiddenTalents() {
   if (newlyUnlocked.length > 0) {
     saveUnlockedHiddenTalents(unlocked);
     newlyUnlocked.forEach(t => {
-      showToast(`🎉 解锁隐藏天赋：${t.name}！下次开局可选择`);
-      addEventLog(`解锁隐藏天赋：${t.name}`);
+      // 自动装备到当前游戏
+      if (gameState && gameState.talents && !gameState.talents.includes(t.id)) {
+        gameState.talents.push(t.id);
+      }
+      showToast(`🎉 解锁隐藏天赋：${t.name}！已自动装备`);
+      addEventLog(`解锁隐藏天赋：${t.name}，已自动装备`);
     });
+    updateAllDisplays();
+    saveGame();
   }
   return newlyUnlocked;
 }
 
 function randomTalents() {
+  // 检查刷新次数
+  if (talentRerollCount >= MAX_TALENT_REROLL) {
+    showToast(`已达到最大刷新次数（${MAX_TALENT_REROLL}次），可通过游戏内其他方式获取天赋`);
+    return;
+  }
+  talentRerollCount++;
   selectedTalents = [];
   currentTalentPool = [];
 
@@ -6901,6 +7629,19 @@ function randomTalents() {
   }
 
   renderTalents();
+
+  // 更新按钮显示剩余次数
+  const btn = document.getElementById('random-talent-btn');
+  if (btn) {
+    const remaining = MAX_TALENT_REROLL - talentRerollCount;
+    if (remaining <= 0) {
+      btn.textContent = '已达上限';
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+    } else {
+      btn.textContent = `🎲 随机天赋 (${remaining}/${MAX_TALENT_REROLL})`;
+    }
+  }
 }
 
 // ===== 新手引导系统 =====
@@ -7379,7 +8120,7 @@ function addCardToCollection(cardId) {
   if (!CARD_DB[cardId]) return;
   const card = CARD_DB[cardId];
   // 特殊卡片：不加入普通收藏，加入特殊卡片收藏
-  if (card.special) {
+  if (isSpecialCard(card)) {
     if (!gameState.specialCards) gameState.specialCards = [];
     if (!gameState.specialCards.includes(cardId)) {
       gameState.specialCards.push(cardId);
@@ -7909,6 +8650,27 @@ function refreshCurrentView() {
 
 // ===== 显示更新 =====
 function updateAllDisplays() {
+  // 检测是否集齐三幻神，解锁神之卡的空间
+  if (gameState.specialCards && 
+      gameState.specialCards.includes('sp001') && 
+      gameState.specialCards.includes('sp002') && 
+      gameState.specialCards.includes('sp003')) {
+    if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+    if (!gameState.unlockedLocations.includes('god_card_space')) {
+      gameState.unlockedLocations.push('god_card_space');
+      showToast('🎉 集齐三幻神！解锁新地点：神之卡的空间！');
+      addEventLog('集齐三幻神，解锁了神之卡的空间');
+    }
+  }
+  // 检测：解锁决斗都市但没有天赋"都市决斗者"时，自动给予天赋
+  if (gameState.unlockedLocations && gameState.unlockedLocations.includes('duel_city')) {
+    if (!gameState.talents) gameState.talents = [];
+    if (!gameState.talents.includes('duelist_city')) {
+      gameState.talents.push('duelist_city');
+      showToast('✨ 获得天赋：都市决斗者！');
+      addEventLog('解锁决斗都市，自动获得天赋：都市决斗者');
+    }
+  }
   const s = getTotalStats();
   ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
     const el = document.getElementById('stat-' + k);
@@ -7959,6 +8721,10 @@ function updateAllDisplays() {
   }
   // 主页任务面板实时更新
   renderHomeTaskPanel();
+  // 地点列表实时更新（解锁新地点后主页和地点页面同步刷新）
+  if (document.getElementById('locations-grid') && !currentDuel) {
+    renderLocations();
+  }
 }
 
 // ===== 地点渲染与行动 =====
@@ -8077,8 +8843,12 @@ function runDataDrivenEvent(loc) {
     if (e.maxWeek && gameState.week > e.maxWeek * 7) return false;
     // 最早年龄检查
     if (e.minAge && gameState.age < e.minAge) return false;
-    // 需要拥有指定卡
-    if (e.requiredCard && !gameState.collection.includes(e.requiredCard)) return false;
+    // 需要拥有指定卡（同时检查普通卡片和特殊卡片）
+    if (e.requiredCard) {
+      const hasCard = gameState.collection.includes(e.requiredCard) || 
+                      (gameState.specialCards && gameState.specialCards.includes(e.requiredCard));
+      if (!hasCard) return false;
+    }
     // 需要指定天赋
     if (e.requiredTalent && !gameState.talents.includes(e.requiredTalent)) return false;
     // 需要决斗点
@@ -8092,6 +8862,8 @@ function runDataDrivenEvent(loc) {
     if (e.requiredTask && (!gameState.completedTasks || !gameState.completedTasks.includes(e.requiredTask))) return false;
     // 需要解锁指定成就
     if (e.requiredAchievement && (!gameState.achievements || !gameState.achievements.includes(e.requiredAchievement))) return false;
+    // 排除已获得指定成就（获得成就后事件消失）
+    if (e.excludeAchievement && gameState.achievements && gameState.achievements.includes(e.excludeAchievement)) return false;
     // 需要拥有指定称号
     if (e.requiredTitle && (!gameState.titles || !gameState.titles.includes(e.requiredTitle))) return false;
     // 需要赢得指定比赛
@@ -8111,7 +8883,16 @@ function runDataDrivenEvent(loc) {
     return true;
   });
 
-  const eventPool = validEvents.length ? validEvents : events;
+  // 如果没有符合条件的事件，显示"没有发生什么特别的事情"，不回退到使用所有事件
+  if (validEvents.length === 0) {
+    showEventModal(loc.name, '你在这里闲逛了一会儿，没有发生什么特别的事情。', null, [{ name: '离开', action: () => {} }]);
+    addEventLog(`在${loc.name}闲逛，没有发生特别的事情`);
+    updateAllDisplays();
+    saveGame();
+    return;
+  }
+
+  const eventPool = validEvents;
 
   // 按概率选择事件
   const totalProb = eventPool.reduce((sum, e) => sum + (e.probability || 0), 0);
@@ -8271,7 +9052,7 @@ function executeEffects(effects, event, loc) {
           // 如果指定卡池中没有该稀有度的卡，从指定卡池中随机选
           if (!pool.length) pool = ef.pool.map(id => CARD_DB[id]).filter(c => c);
         } else {
-          pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !c.special);
+          pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
         }
         if (pool.length) {
           const card = choice(pool);
@@ -8344,13 +9125,31 @@ function executeEffects(effects, event, loc) {
         result.displayItems.push({ name: `全主属性+${ef.amount || 1}（永久）` });
         break;
       }
+      case 'stats': {
+        if (ef.stats) {
+          if (!gameState.bonusStats) gameState.bonusStats = {};
+          const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+          Object.entries(ef.stats).forEach(([k, v]) => {
+            gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
+          });
+          const statText = Object.entries(ef.stats).map(([k, v]) => `${statNames[k]||k}+${v}`).join('，');
+          result.displayItems.push({ name: statText + '（永久）' });
+        }
+        break;
+      }
       case 'unlockTalent': {
         if (ef.talentId) {
           if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
           if (!gameState.unlockedTalents.includes(ef.talentId)) {
             gameState.unlockedTalents.push(ef.talentId);
+            // 自动装备到当前游戏
+            if (!gameState.talents) gameState.talents = [];
+            if (!gameState.talents.includes(ef.talentId)) {
+              gameState.talents.push(ef.talentId);
+            }
             const talent = TALENTS.find(t => t.id === ef.talentId);
-            result.displayItems.push({ name: `解锁天赋【${talent ? talent.name : ef.talentId}】（新存档可用）` });
+            result.displayItems.push({ name: `解锁天赋【${talent ? talent.name : ef.talentId}】，已自动装备` });
+            addEventLog(`解锁天赋：${talent ? talent.name : ef.talentId}，已自动装备`);
           } else {
             result.displayItems.push({ name: '天赋已解锁' });
           }
@@ -8369,8 +9168,14 @@ function executeEffects(effects, event, loc) {
               if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
               if (!gameState.unlockedTalents.includes(ach.unlockTalent)) {
                 gameState.unlockedTalents.push(ach.unlockTalent);
+                // 自动装备到当前游戏
+                if (!gameState.talents) gameState.talents = [];
+                if (!gameState.talents.includes(ach.unlockTalent)) {
+                  gameState.talents.push(ach.unlockTalent);
+                }
                 const talent = TALENTS.find(t => t.id === ach.unlockTalent);
-                result.displayItems.push({ name: `解锁隐藏天赋【${talent ? talent.name : ach.unlockTalent}】` });
+                result.displayItems.push({ name: `解锁隐藏天赋【${talent ? talent.name : ach.unlockTalent}】，已自动装备` });
+                addEventLog(`解锁隐藏天赋：${talent ? talent.name : ach.unlockTalent}，已自动装备`);
               }
             }
           } else {
@@ -8400,6 +9205,16 @@ function executeEffects(effects, event, loc) {
             gameState.unlockedLocations.push(ef.locationId);
             const loc = LOCATIONS.find(l => l.id === ef.locationId);
             result.displayItems.push({ name: `解锁地点【${loc ? loc.name : ef.locationId}】` });
+            // 解锁决斗都市时，自动给予天赋"都市决斗者"，确保事件能正常触发
+            if (ef.locationId === 'duel_city') {
+              if (!gameState.talents) gameState.talents = [];
+              if (!gameState.talents.includes('duelist_city')) {
+                gameState.talents.push('duelist_city');
+                const talent = TALENTS.find(t => t.id === 'duelist_city');
+                result.displayItems.push({ name: `获得天赋【${talent ? talent.name : '都市决斗者'}】` });
+                addEventLog('解锁决斗都市，自动获得天赋：都市决斗者');
+              }
+            }
           }
         }
         break;
@@ -8489,6 +9304,36 @@ function executeEffects(effects, event, loc) {
                     const loc = LOCATIONS.find(l => l.id === we.locationId);
                     addEventLog(`决斗胜利，解锁地点【${loc ? loc.name : we.locationId}】`);
                     showToast(`🎉 解锁新地点：${loc ? loc.name : we.locationId}！`);
+                  }
+                } else if (we.type === 'stats' && we.stats) {
+                  if (!gameState.bonusStats) gameState.bonusStats = {};
+                  Object.entries(we.stats).forEach(([k, v]) => {
+                    gameState.bonusStats[k] = (gameState.bonusStats[k] || 0) + v;
+                  });
+                  const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+                  const statText = Object.entries(we.stats).map(([k, v]) => `${statNames[k]||k}+${v}`).join('，');
+                  addEventLog(`决斗胜利，${statText}`);
+                  showToast(`🎉 决斗胜利！${statText}`);
+                } else if (we.type === 'unlockAchievement' && we.achievementId) {
+                  if (!gameState.achievements) gameState.achievements = [];
+                  if (!gameState.achievements.includes(we.achievementId)) {
+                    gameState.achievements.push(we.achievementId);
+                    const ach = ACHIEVEMENTS.find(a => a.id === we.achievementId);
+                    addEventLog(`决斗胜利，解锁成就【${ach ? ach.name : we.achievementId}】`);
+                    showToast(`🏆 解锁成就：${ach ? ach.name : we.achievementId}！`);
+                    // 检查成就解锁的隐藏天赋
+                    if (ach && ach.unlockTalent) {
+                      if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
+                      if (!gameState.unlockedTalents.includes(ach.unlockTalent)) {
+                        gameState.unlockedTalents.push(ach.unlockTalent);
+                        if (!gameState.talents) gameState.talents = [];
+                        if (!gameState.talents.includes(ach.unlockTalent)) {
+                          gameState.talents.push(ach.unlockTalent);
+                        }
+                        const talent = TALENTS.find(t => t.id === ach.unlockTalent);
+                        addEventLog(`解锁隐藏天赋：${talent ? talent.name : ach.unlockTalent}，已自动装备`);
+                      }
+                    }
                   }
                 }
               });
@@ -9145,22 +9990,27 @@ function triggerBattleEvent(stats, callback) {
 }
 
 function finishDuel() {
+  if (currentDuel.finished) return; // 防止重复调用
   currentDuel.finished = true;
-  // 累计决斗次数
-  gameState.duelCount = (gameState.duelCount || 0) + 1;
-  if (currentDuel.gamble) gameState.gambleCount = (gameState.gambleCount || 0) + 1;
-  if (currentDuel.mode === 'master') {
-    gameState.masterDuelCount = (gameState.masterDuelCount || 0) + 1;
-    if (gameState.masterDuelCount === 1) {
-      setTimeout(() => showToast('🎉 解锁：卡片分解与卡点系统！'), 1500);
+  
+  let darkDuelGameOver = false;
+  let duelResult = { won: false, rewardCard: null, lostCard: null };
+  
+  try {
+    // 累计决斗次数
+    gameState.duelCount = (gameState.duelCount || 0) + 1;
+    if (currentDuel.gamble) gameState.gambleCount = (gameState.gambleCount || 0) + 1;
+    if (currentDuel.mode === 'master') {
+      gameState.masterDuelCount = (gameState.masterDuelCount || 0) + 1;
+      if (gameState.masterDuelCount === 1) {
+        setTimeout(() => showToast('🎉 解锁：卡片分解与卡点系统！'), 1500);
+      }
     }
-  }
-  const won = currentDuel.playerPower >= currentDuel.opponentPower;
-  const resultArea = document.getElementById('duel-result-area');
+    const won = currentDuel.playerPower >= currentDuel.opponentPower;
+    duelResult.won = won;
+    const resultArea = document.getElementById('duel-result-area');
 
-  document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
-
-  let duelResult = { won, rewardCard: null, lostCard: null };
+    document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.round(currentDuel.opponentPower);
 
   if (won) {
     gameState.wins++;
@@ -9306,38 +10156,50 @@ function finishDuel() {
     `;
   }
 
-  resultArea.style.display = 'block';
+  } catch (e) {
+    console.error('决斗结算出错:', e);
+    addDuelLog('决斗结算出现异常，但已正常结束。', 'lose');
+  } finally {
+    // 确保结果区域和按钮一定会更新
+    const resultArea = document.getElementById('duel-result-area');
+    if (resultArea) resultArea.style.display = 'block';
   
-  // 如果黑暗决斗失败导致寿命耗尽，显示结束游戏按钮
-  if (darkDuelGameOver) {
-    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-gold" style="width:100%;" id="duel-gameover-btn">接受命运</button>';
-    document.getElementById('duel-gameover-btn').onclick = () => {
-      exitDuel();
-      showGameOver('dark_duel');
-    };
-  } else if (currentDuel.onFinish) {
-    // 如果有回调函数，显示"继续"按钮并在点击时调用回调
-    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" id="duel-continue-btn">继续</button>';
-    document.getElementById('duel-continue-btn').onclick = () => {
-      const cb = currentDuel.onFinish;
-      // 先调用回调函数（比赛系统会在这里开始下一轮），再退出决斗
-      if (cb) cb(duelResult);
-      // 如果回调函数没有开始新的决斗，则退出决斗界面
-      setTimeout(() => {
-        if (!currentDuel || currentDuel.finished) {
-          exitDuel();
-        }
-      }, 100);
-    };
-  } else {
-    document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" onclick="exitDuel()">返回</button>';
+    // 如果黑暗决斗失败导致寿命耗尽，显示结束游戏按钮
+    if (darkDuelGameOver) {
+      document.getElementById('duel-actions').innerHTML = '<button class="btn btn-gold" style="width:100%;" id="duel-gameover-btn">接受命运</button>';
+      document.getElementById('duel-gameover-btn').onclick = () => {
+        exitDuel();
+        showGameOver('dark_duel');
+      };
+    } else if (currentDuel && currentDuel.onFinish) {
+      // 如果有回调函数，显示"继续"按钮并在点击时调用回调
+      document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" id="duel-continue-btn">继续</button>';
+      document.getElementById('duel-continue-btn').onclick = () => {
+        const cb = currentDuel.onFinish;
+        // 先调用回调函数（比赛系统会在这里开始下一轮），再退出决斗
+        if (cb) cb(duelResult);
+        // 如果回调函数没有开始新的决斗，则退出决斗界面
+        setTimeout(() => {
+          if (!currentDuel || currentDuel.finished) {
+            exitDuel();
+          }
+        }, 100);
+      };
+    } else {
+      document.getElementById('duel-actions').innerHTML = '<button class="btn btn-primary" style="width:100%;" onclick="exitDuel()">返回</button>';
+    }
+  
+    try {
+      checkAchievements();
+      checkTasks();
+      updateAllDisplays();
+      saveGame();
+    } catch (e) {
+      console.error('决斗后更新出错:', e);
+    }
+    // 决斗结束，恢复导航
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
   }
-  
-  checkAchievements();
-  updateAllDisplays();
-  saveGame();
-  // 决斗结束，恢复导航
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
 }
 
 function exitDuel() {
@@ -10175,9 +11037,11 @@ function checkSingleCondition(cond) {
       current = (gameState.locationVisits && gameState.locationVisits[cond.target]) || 0;
       break;
     case 'visit_all_locations': {
-      const total = LOCATIONS.length;
+      // 只计算非隐藏地点，排除神之卡的空间、黑暗领域、精灵界等隐藏地点
+      const visibleLocations = LOCATIONS.filter(l => !l.hidden);
+      const total = visibleLocations.length;
       let visited = 0;
-      LOCATIONS.forEach(l => { if ((gameState.locationVisits && gameState.locationVisits[l.id]) > 0) visited++; });
+      visibleLocations.forEach(l => { if ((gameState.locationVisits && gameState.locationVisits[l.id]) > 0) visited++; });
       current = visited; target = total;
       break;
     }
@@ -10514,7 +11378,7 @@ function getAwakenCost(card) {
   // 卡牌自定义配置优先
   if (card.awakenCost !== undefined) return card.awakenCost;
   const config = GAME_CONFIG.cardSpiritSystem || {};
-  if (card.special) return config.spCost || 500;
+  if (isSpecialCard(card)) return config.spCost || 500;
   if (card.rarity === 'UR') return config.urCost || 100;
   if (card.rarity === 'SR') return config.srCost || 50;
   // N/R卡默认消耗（有天赋时可用）
@@ -10526,7 +11390,7 @@ function getAwakenCost(card) {
 function getAwakenRate(card) {
   if (card.awakenRate !== undefined) return card.awakenRate;
   const config = GAME_CONFIG.cardSpiritSystem || {};
-  if (card.special) return config.spRate || 0.1;
+  if (isSpecialCard(card)) return config.spRate || 0.1;
   if (card.rarity === 'UR') return config.urRate || 0.2;
   if (card.rarity === 'SR') return config.srRate || 0.3;
   if (card.rarity === 'R') return 0.4;
@@ -10541,7 +11405,7 @@ function getAwakenMultiplier(card) {
     baseMult = card.awakenMultiplier;
   } else {
     const config = GAME_CONFIG.cardSpiritSystem || {};
-    if (card.special) baseMult = config.spMultiplier || 100;
+    if (isSpecialCard(card)) baseMult = config.spMultiplier || 100;
     else if (card.rarity === 'UR') baseMult = config.urMultiplier || 10;
     else if (card.rarity === 'SR') baseMult = config.srMultiplier || 5;
     else if (card.rarity === 'R') baseMult = 3;
@@ -10549,7 +11413,7 @@ function getAwakenMultiplier(card) {
   }
   // 「人人如龙」天赋：觉醒属性再提升
   if (gameState.talents && gameState.talents.includes('everyone_dragon')) {
-    if (card.special) {
+    if (isSpecialCard(card)) {
       // SP卡不变
     } else if (card.rarity === 'UR') {
       baseMult = 50;
@@ -10572,7 +11436,7 @@ function canAwakenCard(cardId) {
   if (gameState.awakenedCards && gameState.awakenedCards.includes(cardId)) return { can: false, reason: '该卡牌已觉醒' };
   
   // 检查是否拥有该卡
-  const owned = card.special ? 
+  const owned = isSpecialCard(card) ? 
     (gameState.specialCards && gameState.specialCards.includes(cardId)) :
     (gameState.collectionCount && gameState.collectionCount[cardId] > 0);
   if (!owned) return { can: false, reason: '未拥有该卡牌' };
@@ -10582,7 +11446,7 @@ function canAwakenCard(cardId) {
   
   // 品质检查：SR以下默认上锁，「人人如龙」天赋解锁后所有卡牌可觉醒
   const hasEveryoneDragon = gameState.talents && gameState.talents.includes('everyone_dragon');
-  if (!card.special && card.rarity !== 'UR' && card.rarity !== 'SR') {
+  if (!isSpecialCard(card) && card.rarity !== 'UR' && card.rarity !== 'SR') {
     if (!hasEveryoneDragon && card.canAwaken !== true) {
       return { can: false, reason: '低于SR的卡牌无法承载卡片精灵的力量（需「人人如龙」天赋）' };
     }
@@ -10593,7 +11457,7 @@ function canAwakenCard(cardId) {
   if ((gameState.awakeningShards || 0) < cost) return { can: false, reason: `觉醒碎片不足（需要${cost}）` };
   
   // SP卡特殊条件检查
-  if (card.special) {
+  if (isSpecialCard(card)) {
     const config = GAME_CONFIG.cardSpiritSystem || {};
     const requiredAch = card.awakenAchievement || config.spDefaultAchievement || 'invigoration';
     if (!gameState.achievements.includes(requiredAch)) {
@@ -11085,7 +11949,7 @@ function showCardDetail(cardId) {
   }
 
   setText('cd-name', card.name);
-  setText('cd-type', card.special ? `✨ 特殊卡片 · ${typeLabel}` : typeLabel);
+  setText('cd-type', isSpecialCard(card) ? `✨ 特殊卡片 · ${typeLabel}` : typeLabel);
   setText('cd-archetype', card.archetype ? `系列：${card.archetype}` : '');
 
   ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
@@ -11096,7 +11960,7 @@ function showCardDetail(cardId) {
 
   // 特殊卡片的拥有数量和普通卡片不同
   let owned, inMain, inExtra;
-  if (card.special) {
+  if (isSpecialCard(card)) {
     owned = (gameState.specialCards || []).includes(cardId) ? 1 : 0;
     inMain = 0;
     inExtra = 0;
@@ -11119,7 +11983,7 @@ function showCardDetail(cardId) {
   const awakenBtn = document.getElementById('cd-awaken-btn');
 
   // 特殊卡片：隐藏卡组操作按钮和分解按钮
-  if (card.special) {
+  if (isSpecialCard(card)) {
     if (plusBtn) plusBtn.style.display = 'none';
     if (minusBtn) minusBtn.style.display = 'none';
     if (dismantleBtn) dismantleBtn.style.display = 'none';
@@ -11145,7 +12009,7 @@ function showCardDetail(cardId) {
         awakenCard(cardId);
         closeCardDetail();
       };
-    } else if (card.rarity === 'SR' || card.rarity === 'UR' || card.special) {
+    } else if (card.rarity === 'SR' || card.rarity === 'UR' || isSpecialCard(card)) {
       awakenBtn.style.display = 'block';
       awakenBtn.textContent = `✨ 卡灵觉醒（${check.reason}）`;
       awakenBtn.disabled = true;
@@ -11158,7 +12022,7 @@ function showCardDetail(cardId) {
   }
 
   // 特殊卡片直接返回（不处理卡组操作）
-  if (card.special) {
+  if (isSpecialCard(card)) {
     document.getElementById('card-detail-modal').style.display = 'flex';
     return;
   }
