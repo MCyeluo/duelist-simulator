@@ -1061,7 +1061,7 @@ body::before {
     <div class="start-view">
       <div class="start-title">牌佬模拟器</div>
       <div class="start-subtitle">童 实 野 市 篇</div>
-      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v4.0 存档修复版 | 剧情完结 | 支持DLC扩展</div>
+      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v4.1 战斗重构版 | 剧情完结 | 支持DLC扩展</div>
 
       <!-- 主菜单 -->
       <div id="main-menu" class="panel" style="max-width:400px;margin:0 auto;padding:24px;">
@@ -2677,7 +2677,7 @@ const TALENTS = [
     "id": "year_training",
     "name": "一年修行",
     "rarity": "UR",
-    "desc": "【隐藏天赋】经过一年的刻苦修行，熟练度+15，情报力+15，全主属性+3",
+    "desc": "【隐藏天赋】经过一年的刻苦修行，熟练度+15，情报力+15，全主属性+3。游戏内解锁，不可随机抽取。",
     "effects": {
       "search": 3,
       "expand": 3,
@@ -2689,6 +2689,7 @@ const TALENTS = [
     },
     "bonus": {},
     "hidden": true,
+    "noRandom": true,
     "unlockAchievement": "year_one"
   },
   {
@@ -2828,7 +2829,13 @@ const OPPONENTS = [
     "variance": 80,
     "difficulty": 1,
     "desc": "刚接触决斗的新手，牌力较弱",
-    "stats": {},
+    "stats": {
+      "search": 5,
+      "expand": 5,
+      "disrupt": 5,
+      "resist": 5,
+      "suppress": 5
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -2842,7 +2849,13 @@ const OPPONENTS = [
     "variance": 200,
     "difficulty": 2,
     "desc": "学校里的决斗爱好者，有一定基础",
-    "stats": {},
+    "stats": {
+      "search": 8,
+      "expand": 8,
+      "disrupt": 8,
+      "resist": 8,
+      "suppress": 8
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -2856,7 +2869,13 @@ const OPPONENTS = [
     "variance": 300,
     "difficulty": 2,
     "desc": "经常在卡店决斗的老手，经验丰富",
-    "stats": {},
+    "stats": {
+      "search": 10,
+      "expand": 10,
+      "disrupt": 10,
+      "resist": 10,
+      "suppress": 10
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -2870,7 +2889,13 @@ const OPPONENTS = [
     "variance": 300,
     "difficulty": 3,
     "desc": "在街头决斗中成名的高手",
-    "stats": {},
+    "stats": {
+      "search": 12,
+      "expand": 12,
+      "disrupt": 15,
+      "resist": 20,
+      "suppress": 16
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true,
@@ -2885,7 +2910,13 @@ const OPPONENTS = [
     "variance": 180,
     "difficulty": 3,
     "desc": "地下决斗场的常客，擅长赌卡决斗",
-    "stats": {},
+    "stats": {
+      "search": 15,
+      "expand": 15,
+      "disrupt": 25,
+      "resist": 15,
+      "suppress": 20
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true,
@@ -2900,7 +2931,13 @@ const OPPONENTS = [
     "variance": 800,
     "difficulty": 3,
     "desc": "参加过职业比赛的决斗者",
-    "stats": {},
+    "stats": {
+      "search": 30,
+      "expand": 30,
+      "disrupt": 15,
+      "resist": 15,
+      "suppress": 15
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true,
@@ -2915,7 +2952,13 @@ const OPPONENTS = [
     "variance": 1000,
     "difficulty": 5,
     "desc": "决斗界的顶级强者，牌力深厚",
-    "stats": {},
+    "stats": {
+      "search": 55,
+      "expand": 55,
+      "disrupt": 55,
+      "resist": 55,
+      "suppress": 55
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -2929,7 +2972,13 @@ const OPPONENTS = [
     "variance": 2000,
     "difficulty": 8,
     "desc": "传说中的决斗者，几乎无人能敌",
-    "stats": {},
+    "stats": {
+      "search": 110,
+      "expand": 110,
+      "disrupt": 110,
+      "resist": 110,
+      "suppress": 110
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -2988,7 +3037,13 @@ const OPPONENTS = [
     "variance": 100,
     "difficulty": 1,
     "desc": "卡店周赛首轮对手",
-    "stats": {},
+    "stats": {
+      "search": 8,
+      "expand": 8,
+      "disrupt": 8,
+      "resist": 8,
+      "suppress": 8
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true,
@@ -3003,7 +3058,13 @@ const OPPONENTS = [
     "variance": 200,
     "difficulty": 2,
     "desc": "卡店周赛决赛对手",
-    "stats": {},
+    "stats": {
+      "search": 10,
+      "expand": 10,
+      "disrupt": 10,
+      "resist": 10,
+      "suppress": 10
+    },
     "deckArchetype": "",
     "rewards": {},
     "enabled": true
@@ -3128,7 +3189,7 @@ const OPPONENTS = [
     "playStyle": "disrupt"
   },
   {
-    "id": "kimi_yogi",
+    "id": "kami_yugi",
     "name": "驾驭双神的暗游戏",
     "basePower": 7000,
     "variance": 500,
@@ -3370,7 +3431,7 @@ const DUEL_CONFIG = {
       "name": "都市决斗",
       "enabled": true,
       "maxTurns": 30,
-      "playerBasePower": 1000,
+      "playerBasePower": 100,
       "modeBonus": 1.2,
       "opponentMinDifficulty": 2,
       "opponentMaxDifficulty": 4,
@@ -3400,7 +3461,7 @@ const DUEL_CONFIG = {
       "name": "黑暗决斗",
       "enabled": true,
       "maxTurns": 20,
-      "playerBasePower": 1000,
+      "playerBasePower": 100,
       "modeBonus": 1.5,
       "opponentMinDifficulty": 2,
       "opponentMaxDifficulty": 5,
@@ -3421,6 +3482,29 @@ const DUEL_CONFIG = {
       "battleEventBaseRate": 0.6,
       "archetypeEventBonus": 0.5,
       "winDays": 70
+    },
+    "custom2": {
+      "name": "精灵界决斗",
+      "enabled": false,
+      "maxTurns": 20,
+      "playerBasePower": 100,
+      "modeBonus": 1.5,
+      "opponentMinDifficulty": 4,
+      "opponentMaxDifficulty": 9,
+      "opponentCategory": "event",
+      "mainDeckMin": 20,
+      "mainDeckMax": 60,
+      "extraDeckMin": 0,
+      "extraDeckMax": 15,
+      "gambleEnabled": false,
+      "winDuelPoints": 300,
+      "loseDuelPoints": 100,
+      "winCardPoints": 0,
+      "loseCardPoints": 0,
+      "winStats": {},
+      "loseStats": {},
+      "battleEventBaseRate": 0.3,
+      "archetypeEventBonus": 0.15
     }
   }
 };
@@ -5444,7 +5528,7 @@ const TASKS = [
     "name": "离真相只差一步",
     "type": "hidden",
     "order": 7,
-    "desc": "和游戏进行最后一次决斗（开启自由黑暗决斗）",
+    "desc": "和游戏进行最后一次决斗（开启自由黑暗决斗 建议牌力7000）",
     "story": "为了更接近真相，在见证游戏击败海马之后，你想要收集神之卡的数据决定向他发起挑战，",
     "reward": {
       "spiritPower": 8000,
@@ -5456,13 +5540,14 @@ const TASKS = [
     },
     "conditions": [
       {
-        "type": "power",
-        "value": 7000
-      },
-      {
         "type": "defeat_character",
         "value": 1,
-        "target": "kimi_yogi"
+        "target": "kami_yugi"
+      },
+      {
+        "type": "have_talent",
+        "value": 1,
+        "target": "darkgo"
       }
     ],
     "unlockConditions": [
@@ -5471,7 +5556,8 @@ const TASKS = [
         "value": 1,
         "target": "star_006"
       }
-    ]
+    ],
+    "conditionLogic": "or"
   },
   {
     "id": "star_008",
@@ -5745,6 +5831,7 @@ const EVENTS = {
       "text": "应对决斗都市的举办，卡店推出了更容易开出稀有的卡包！（5000决斗点一次）",
       "effects": [],
       "log": "闪光抽卡！",
+      "requiredAchievement": "duelcity",
       "options": [
         {
           "name": "来一些吧，物超所值！",
@@ -6484,6 +6571,22 @@ const EVENTS = {
       "log": "在精灵界发现神秘宝箱，获得UR卡和觉醒碎片+20",
       "oneTime": false,
       "cooldown": 5
+    },
+    {
+      "id": "spirit_bos",
+      "name": "圣地试炼",
+      "probability": 0.5,
+      "title": "精灵界",
+      "text": "循着一位精灵领主的线索，你来到了精灵界圣地之一的恩底弥翁圣地进行挑战。（推荐牌力5000+）",
+      "effects": [
+        {
+          "type": "characterDuel",
+          "charId": "spirit_elf"
+        }
+      ],
+      "log": "为了突破自我，你来到精灵圣地进行挑战。",
+      "requiredTalent": "spiritpower",
+      "oneTime": true
     }
   ],
   "dark_realm": [
@@ -6576,25 +6679,7 @@ const EVENTS = {
       "requiredTalent": "darkgo"
     }
   ],
-  "spirit": [
-    {
-      "id": "spirit_boss",
-      "name": "圣地试炼",
-      "probability": 0.5,
-      "title": "精灵界",
-      "text": "循着一位精灵领主的线索，你来到了精灵界圣地之一的恩底弥翁圣地进行挑战。（推荐牌力5000+）",
-      "effects": [
-        {
-          "type": "characterDuel",
-          "mode": "master",
-          "charId": "spirit_elf"
-        }
-      ],
-      "log": "为了突破自我，你来到精灵圣地进行挑战。",
-      "oneTime": true,
-      "requiredTalent": "spiritpower"
-    }
-  ],
+  "spirit": [],
   "duelcity": [
     {
       "id": "yc004",
@@ -6641,7 +6726,7 @@ const EVENTS = {
       "effects": [
         {
           "type": "characterDuel",
-          "charId": "kimi_yogi",
+          "charId": "kami_yugi",
           "mode": "master"
         },
         {
@@ -7411,12 +7496,21 @@ function doLoadSlot(slot) {
   if (loadFromSlot(slot)) {
     showToast(`✅ 已读取槽位 ${slot} 的存档`);
     closeSaveManager();
-    // 进入游戏界面
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementById('view-home').classList.add('active');
-    // 刷新游戏界面
-    updateAllDisplays();
-    refreshCurrentView();
+    // 正确的视图切换：先切换到游戏主视图，再切换到主页子视图
+    try { switchView('game'); } catch(e) { console.error('switchView error:', e); }
+    try { switchSubView('home'); } catch(e) { console.error('switchSubView error:', e); }
+    // 隐藏主菜单
+    try {
+      const mainMenu = document.getElementById('main-menu');
+      if (mainMenu) mainMenu.style.display = 'none';
+    } catch(e) {}
+    // 刷新游戏界面（延迟执行，确保视图切换完成）
+    setTimeout(() => {
+      try { updateAllDisplays(); } catch(e) { console.error('updateAllDisplays error:', e); }
+      try { refreshCurrentView(); } catch(e) { console.error('refreshCurrentView error:', e); }
+      // 再次刷新主页任务面板和最近事件，确保所有数据实时更新
+      try { if (typeof renderHomeTaskPanel === 'function') renderHomeTaskPanel(); } catch(e) {}
+    }, 100);
   } else {
     showToast('❌ 读取失败');
   }
@@ -7526,11 +7620,20 @@ function doImportToSlot(slot) {
       if (confirm(`导入成功！是否立即加载槽位 ${slot} 的存档？\n（当前进度将被覆盖）`)) {
         if (loadFromSlot(slot)) {
           closeSaveManager();
-          // 进入游戏界面
-          document.getElementById('main-menu').style.display = 'none';
-          document.getElementById('view-home').classList.add('active');
-          updateAllDisplays();
-          refreshCurrentView();
+          // 正确的视图切换：先切换到游戏主视图，再切换到主页子视图
+          try { switchView('game'); } catch(e) { console.error('switchView error:', e); }
+          try { switchSubView('home'); } catch(e) { console.error('switchSubView error:', e); }
+          // 隐藏主菜单
+          try {
+            const mainMenu = document.getElementById('main-menu');
+            if (mainMenu) mainMenu.style.display = 'none';
+          } catch(e) {}
+          // 刷新游戏界面（延迟执行，确保视图切换完成）
+          setTimeout(() => {
+            try { updateAllDisplays(); } catch(e) { console.error('updateAllDisplays error:', e); }
+            try { refreshCurrentView(); } catch(e) { console.error('refreshCurrentView error:', e); }
+            try { if (typeof renderHomeTaskPanel === 'function') renderHomeTaskPanel(); } catch(e) {}
+          }, 100);
           showToast('存档加载成功！');
         }
       } else {
@@ -8079,9 +8182,11 @@ function randomTalents() {
   currentTalentPool = [];
 
   // 从普通天赋+已解锁的隐藏天赋+已解锁的特殊天赋中随机抽取6个不重复的
+  // 排除 noRandom: true 的天赋（即使解锁也不可随机抽取，只能游戏内特定方式获取）
   const unlockedHidden = getUnlockedHiddenTalents();
   const unlockedSpecial = (gameState && gameState.unlockedTalents) || [];
   const availableTalents = TALENTS.filter(t => {
+    if (t.noRandom) return false; // 不可随机抽取的天赋直接排除
     if (t.hidden) return unlockedHidden.includes(t.id);
     if (t.unlockType && t.unlockType !== 'default') return unlockedSpecial.includes(t.id);
     return true;
@@ -8173,7 +8278,7 @@ const TUTORIAL_STEPS = [
   {
     id: 'first_duel',
     title: '进行你的第一次决斗',
-    content: '卡组达到20张后，点击底部导航的「决斗」按钮进入决斗页面。<br><br>• <b>快速决斗</b>：最多30回合，对手牌力较低，适合新手<br>• <b>大师决斗</b>：最多60回合，对手牌力较高，奖励更丰厚<br><br>决斗中牌力代表生命值，通过检索、展开、干扰、抗性、压制等属性与对手交互，先将对方牌力归零者获胜。<br><br>战斗中会随机触发幸运事件，魂度和掏度影响触发概率。',
+    content: '卡组达到20张后，点击底部导航的「决斗」按钮进入决斗页面。<br><br>• <b>快速决斗</b>：最多30回合，对手牌力较低，适合新手<br>• <b>大师决斗</b>：最多60回合，对手牌力较高，奖励更丰厚<br><br><b>战斗机制（V4.1）：</b><br>• 牌力代表生命值，先将对方牌力归零者获胜<br>• 双方各自造成伤害：检索+展开影响输出，干扰+压制削弱对方<br>• 抗性减免伤害：公式 100/(100+抗性)，最高减免85%<br>• 伤害上限：正常不超过目标牌力30%，防止秒杀<br>• 秒杀机制：原始伤害≥目标牌力3倍时可无视上限直接秒杀<br>• 战斗中会随机触发幸运事件，魂度和掏度影响触发概率。',
     target: '[data-demo="duel"]',
     position: 'top',
     autoNext: true,
@@ -8574,6 +8679,15 @@ function getTalentBonus(field, defaultVal = 0) {
     const t = TALENTS.find(x => x.id === tid);
     if (t && t[field]) bonus += t[field];
   });
+  return bonus;
+}
+
+// 成就胜率加成（预留接口，可根据已解锁成就计算胜率加成）
+function getAchievementWinRateBonus() {
+  let bonus = 0;
+  if (!gameState.achievements) return bonus;
+  // 示例：某些成就提供胜率加成
+  // if (gameState.achievements.includes('xxx')) bonus += 5;
   return bonus;
 }
 
@@ -9838,13 +9952,13 @@ function executeEffects(effects, event, loc) {
           const op = OPPONENTS.find(o => o.id === ef.opponentId);
           if (op) {
             const opPower = Math.round(op.basePower + rand(0, op.variance));
-            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty };
+            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty, stats: op.stats, playStyle: op.playStyle };
           }
         } else if (ef.difficulty) {
           const op = OPPONENTS.find(o => o.difficulty === ef.difficulty) || OPPONENTS[Math.min(ef.difficulty - 1, OPPONENTS.length - 1)];
           if (op) {
             const opPower = Math.round(op.basePower + rand(0, op.variance));
-            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty };
+            customOpponent = { id: op.id, name: op.name, power: opPower, difficulty: op.difficulty, stats: op.stats, playStyle: op.playStyle };
           }
         }
         result.displayItems.push({ name: customOpponent ? `与 ${customOpponent.name} 决斗` : '开始决斗' });
@@ -9882,7 +9996,7 @@ function executeEffects(effects, event, loc) {
         if (duelTarget) {
           // 使用角色牌力（将旧版power转换为新版牌力：除以15）
           const targetPower = duelTarget.duelPower || Math.round((duelTarget.power || duelTarget.basePower || 1000) / (targetSource === 'opponent' ? 1 : 15));
-          const customOpponent = { id: duelTarget.id, name: duelTarget.name, power: targetPower, difficulty: duelTarget.difficulty || 5, rewards: duelTarget.rewards || {} };
+          const customOpponent = { id: duelTarget.id, name: duelTarget.name, power: targetPower, difficulty: duelTarget.difficulty || 5, rewards: duelTarget.rewards || {}, stats: duelTarget.stats, playStyle: duelTarget.playStyle };
           result.displayItems.push({ name: `与 ${duelTarget.name} 决斗` });
           // 支持winEffects：决斗胜利后执行额外效果
           const winEffects = ef.winEffects || [];
@@ -10324,7 +10438,7 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     const modeBonus = modeConfig.modeBonus || 1.0;
 
     const opponentPower = Math.round((opponentTemplate.basePower + rand(0, opponentTemplate.variance)) * weekBonus * modeBonus);
-    opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty, id: opponentTemplate.id };
+    opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty, id: opponentTemplate.id, stats: opponentTemplate.stats, playStyle: opponentTemplate.playStyle };
   }
 
   // 计算玩家初始牌力（生命值）= 主页显示牌力 + 天赋/精灵力加成
@@ -10332,6 +10446,16 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   const winRateBonus = getTalentBonus('winRateBonus', 0);
   const basePlayerPower = getDuelPower();
   const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100) * (1 + getSpiritPowerBonus()));
+
+  // 计算初始胜率（局内隐藏属性，受双方牌力和天赋成就影响）
+  // 基础胜率 = 玩家牌力 / (玩家牌力 + 对手牌力) * 100%
+  const baseWinRate = (playerPowerWithBonus / (playerPowerWithBonus + opponent.power)) * 100;
+  // 天赋胜率加成
+  const talentWinRate = winRateBonus;
+  // 成就胜率加成（预留接口）
+  const achievementWinRate = getAchievementWinRateBonus();
+  // 初始胜率 = 基础胜率 + 天赋加成 + 成就加成，最高99%（避免开局直接100%）
+  const initialWinRate = Math.min(99, baseWinRate + talentWinRate + achievementWinRate);
 
   currentDuel = {
     mode,
@@ -10346,6 +10470,7 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     finished: false,
     onFinish: onFinish || null,
     noReward: noReward || false,
+    winRate: initialWinRate, // 局内隐藏胜率属性
   };
 
   // 自动切换到决斗页面
@@ -10389,10 +10514,10 @@ function runDuelTurn() {
   const subTagBonus = getSubTagBonus();
 
   // ===== 牌力差距系数：局外牌力差距影响战局内表现 =====
-  // 用平方根缩放，避免小差距就碾压；最高100倍上限
+  // 用0.3次方缩放，避免小差距就碾压；最高10倍上限（比之前的100倍更合理）
   const powerRatio = currentDuel.playerMaxPower / Math.max(1, currentDuel.opponentMaxPower);
-  const playerPowerFactor = Math.min(Math.pow(Math.max(0.0001, powerRatio), 0.5), 100);
-  const opponentPowerFactor = Math.min(Math.pow(Math.max(0.0001, 1 / powerRatio), 0.5), 100);
+  const playerPowerFactor = Math.min(Math.pow(Math.max(0.0001, powerRatio), 0.3), 10);
+  const opponentPowerFactor = Math.min(Math.pow(Math.max(0.0001, 1 / powerRatio), 0.3), 10);
   // 牌力差距提示（仅第一回合显示）
   if (currentDuel.turn === 1 && (playerPowerFactor > 1.2 || opponentPowerFactor > 1.2)) {
     setTimeout(() => {
@@ -10408,12 +10533,14 @@ function runDuelTurn() {
     // ===== 玩家回合：检索+展开产生本回合牌力（受对手干扰/压制影响）=====
     addDuelLog(`第${currentDuel.turn}回合——你的回合`, 'turn');
 
-    // 根据对手牌力反推对手属性（用于对手干扰/压制）
+    // 优先使用对手自身的stats属性，如果没有则根据牌力反推
+    const oppStats = currentDuel.opponent.stats || {};
     const oppTotal = currentDuel.opponent.power / 3;
-    const oppDisrupt = oppTotal * 0.12;
-    const oppSuppress = oppTotal * 0.1;
-    const oppResist = oppTotal * 0.15;
-    const oppPower = oppTotal * 0.15;
+    const oppDisrupt = oppStats.disrupt !== undefined ? oppStats.disrupt : oppTotal * 0.008;
+    const oppSuppress = oppStats.suppress !== undefined ? oppStats.suppress : oppTotal * 0.007;
+    const oppResist = oppStats.resist !== undefined ? oppStats.resist : oppTotal * 0.010;
+    const oppPower = oppStats.power !== undefined ? oppStats.power : oppTotal * 0.012;
+    const oppSoul = oppTotal * 0.005; // 反推魂度，小幅影响干扰压制
 
     // 对手行为模式（expand展开型/disrupt干扰型/beat防御型/balance均衡型）
     const playStyle = currentDuel.opponent.playStyle || 'balance';
@@ -10422,9 +10549,9 @@ function runDuelTurn() {
     else if (playStyle === 'disrupt') { styleExpandMult = 0.8; styleDisruptMult = 1.3; styleSuppressMult = 1.3; }
     else if (playStyle === 'beat') { styleExpandMult = 0.8; styleDisruptMult = 1.1; styleSuppressMult = 1.1; styleResistMult = 1.3; }
 
-    // 对手干扰：小幅削弱玩家检索和展开
-    const oppDisruptPower = oppDisrupt * styleDisruptMult * opponentPowerFactor;
-    const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01);
+    // 对手干扰：小幅削弱玩家检索和展开（魂度小幅加成）
+    const oppDisruptPower = (oppDisrupt + oppSoul * 0.3) * styleDisruptMult * opponentPowerFactor;
+    const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01 + oppSoul * 0.005);
     let playerSearchMult = 1.0, playerExpandMult = 1.0;
     if (oppDisruptSuccess) {
       // 玩家抗性降低对手干扰效果（副属性标签抗性加成）
@@ -10436,9 +10563,9 @@ function runDuelTurn() {
       addDuelLog(`⚡ 对方干扰！你的检索削弱${Math.round(disruptFactor * 50)}%，展开削弱${Math.round(disruptFactor * 100)}%！`);
     }
 
-    // 对手压制：大幅削弱玩家展开
-    const oppSuppressPower = oppSuppress * styleSuppressMult * opponentPowerFactor;
-    const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01);
+    // 对手压制：大幅削弱玩家展开（魂度小幅加成）
+    const oppSuppressPower = (oppSuppress + oppSoul * 0.3) * styleSuppressMult * opponentPowerFactor;
+    const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01 + oppSoul * 0.005);
     if (oppSuppressSuccess) {
       const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
       const suppressDenom = 1 + playerResist * 0.025 + (stats.power || 0) * 0.015;
@@ -10452,16 +10579,16 @@ function runDuelTurn() {
     const pStyleBonus = getPlayerStyleBonus(playerStyle);
 
     // ===== 核心改动：牌力作为基础输出，牌力差距会明显体现 =====
-    // 基础输出：最大牌力 × 4%，40000牌力每回合基础输出1600，14000牌力每回合560
-    const baseOutput = currentDuel.playerMaxPower * 0.04;
+    // 基础输出：最大牌力 × 2.5%，80000牌力每回合基础输出2000，20000牌力每回合500
+    const baseOutput = currentDuel.playerMaxPower * 0.025;
     // 强度提升基础输出（每点强度+0.8%）
     const powerFactor = 1 + (stats.power || 0) * 0.008;
-    // 检索+展开影响输出倍率（受对手干扰/压制影响）
-    const searchExpandFactor = 1 + ((stats.search || 0) * 0.004 + (stats.expand || 0) * 0.006) * pStyleBonus.expandMult * playerExpandMult * playerSearchMult;
+    // 检索+展开影响输出倍率（检索中幅影响，掏度小幅影响，受对手干扰/压制影响）
+    const searchExpandFactor = 1 + ((stats.search || 0) * 0.006 + (stats.expand || 0) * 0.006 + (stats.luck || 0) * 0.003) * pStyleBonus.expandMult * playerExpandMult * playerSearchMult;
     // 熟练度影响展开效率
     const proficiencyFactor = 1 + (stats.proficiency || 0) * 0.003;
-    // 掏度和魂度小幅影响输出
-    const luckSoulFactor = 1 + (stats.luck || 0) * 0.002 + (stats.soul || 0) * 0.0015;
+    // 魂度小幅影响输出和干扰压制
+    const luckSoulFactor = 1 + (stats.soul || 0) * 0.0015;
     // 计算玩家本回合输出（牌力差距系数影响）
     let playerGen = baseOutput * powerFactor * searchExpandFactor * proficiencyFactor * luckSoulFactor * subTagBonus.powerGrowthMult * playerPowerFactor;
 
@@ -10503,12 +10630,14 @@ function runDuelTurn() {
       // ===== 对手回合：产生牌力，受玩家干扰/压制影响 =====
       addDuelLog(`对方回合——${currentDuel.opponent.name}的操作！`, 'turn');
 
-      // 根据对手牌力反推属性
+      // 优先使用对手自身的stats属性，如果没有则根据牌力反推（调整比例，避免高牌力输出爆炸，强度保持合理水平）
+      const oppStats = currentDuel.opponent.stats || {};
       const oppTotal = currentDuel.opponent.power / 3;
-      const oppSearch = oppTotal * 0.15;
-      const oppExpand = oppTotal * 0.2;
-      const oppResist = oppTotal * 0.15 * styleResistMult; // 防御型提高抗性
-      const oppPower = oppTotal * 0.15;
+      const oppSearch = oppStats.search !== undefined ? oppStats.search : oppTotal * 0.010;
+      const oppExpand = oppStats.expand !== undefined ? oppStats.expand : oppTotal * 0.012;
+      const oppResistBase = oppStats.resist !== undefined ? oppStats.resist : oppTotal * 0.010;
+      const oppResist = oppResistBase * styleResistMult; // 防御型提高抗性
+      const oppPower = oppStats.power !== undefined ? oppStats.power : oppTotal * 0.012;
 
       // 玩家行为类型加成（纯正面加成）
       const pStyle = getPlayerPlayStyle();
@@ -10517,9 +10646,9 @@ function runDuelTurn() {
       // 副属性标签加成（可与行为类型叠加）
       const pSubBonus = getSubTagBonus();
 
-      // 玩家干扰：小幅影响对方检索和展开（行为类型+情报玩家标签加成+牌力差距系数）
-      const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4) * pBonus.disruptMult * pSubBonus.disruptEffectMult * playerPowerFactor;
-      const disruptSuccessRate = Math.min(0.95, 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
+      // 玩家干扰：小幅影响对方检索和展开（行为类型+情报玩家标签加成+魂度小幅加成+牌力差距系数）
+      const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4 + (stats.soul || 0) * 0.3) * pBonus.disruptMult * pSubBonus.disruptEffectMult * playerPowerFactor;
+      const disruptSuccessRate = Math.min(0.95, 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008 + (stats.soul || 0) * 0.005);
       const disruptSuccess = Math.random() < disruptSuccessRate;
 
       let effectiveOppSearch = oppSearch;
@@ -10535,9 +10664,9 @@ function runDuelTurn() {
         addDuelLog(`⚡ 干扰成功！对方检索削弱${Math.round(disruptFactor * 50)}%，展开削弱${Math.round(disruptFactor * 100)}%！`);
       }
 
-      // 玩家压制：大幅影响对方展开（行为类型+情报玩家标签加成+牌力差距系数）
-      const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4) * pBonus.suppressMult * pSubBonus.suppressEffectMult * playerPowerFactor;
-      const suppressSuccessRate = Math.min(0.95, 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
+      // 玩家压制：大幅影响对方展开（行为类型+情报玩家标签加成+魂度小幅加成+牌力差距系数）
+      const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4 + (stats.soul || 0) * 0.3) * pBonus.suppressMult * pSubBonus.suppressEffectMult * playerPowerFactor;
+      const suppressSuccessRate = Math.min(0.95, 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008 + (stats.soul || 0) * 0.005);
       const suppressSuccess = Math.random() < suppressSuccessRate;
 
       if (suppressSuccess) {
@@ -10547,15 +10676,41 @@ function runDuelTurn() {
         addDuelLog(`🔥 压制成功！对方展开被大幅削弱${Math.round(suppressFactor * 100)}%！`);
       }
 
-      // ===== 对手输出：牌力作为基础输出 =====
-      const oppBaseOutput = currentDuel.opponentMaxPower * 0.04;
+      // ===== 对手输出：和玩家一致的计算方式 =====
+      const oppBaseOutput = currentDuel.opponentMaxPower * 0.025;
       // 对手强度系数
       const oppPowerFactor = 1 + oppPower * 0.008;
-      // 对手展开效率（受玩家干扰/压制影响，防御型提高抗性）
+      // 反推对手的副属性（优先使用对手自身属性，调整比例）
+      const oppProficiency = oppStats.proficiency !== undefined ? oppStats.proficiency : oppTotal * 0.008;
+      const oppLuck = oppStats.luck !== undefined ? oppStats.luck : oppTotal * 0.006;
+      const oppSoul = oppStats.soul !== undefined ? oppStats.soul : oppTotal * 0.005;
+      // 对手展开效率（受玩家干扰/压制影响）
       const oppExpandEfficiency = oppExpand > 0 ? (effectiveOppExpand / oppExpand) : 1;
       const oppStyleExpandMult = playStyle === 'expand' ? 1.25 : (playStyle === 'beat' ? 0.85 : 1.0);
-      // 对手输出 = 基础输出 × 强度 × (0.6 + 展开效率×0.4×风格倍率) × 牌力差距系数
-      let opponentGen = oppBaseOutput * oppPowerFactor * (0.6 + oppExpandEfficiency * 0.4 * oppStyleExpandMult) * opponentPowerFactor;
+      // 检索+展开系数（和玩家一致：检索中幅影响，掏度小幅影响）
+      const oppSearchExpandFactor = 1 + (oppSearch * 0.006 + oppExpand * 0.006 + oppLuck * 0.003) * oppExpandEfficiency * oppStyleExpandMult;
+      // 熟练度系数
+      const oppProficiencyFactor = 1 + oppProficiency * 0.003;
+      // 掏度+魂度系数
+      const oppLuckSoulFactor = 1 + oppLuck * 0.002 + oppSoul * 0.0015;
+      // 对手展开成功率判定（和玩家一致）
+      const oppExpandRoll = Math.random();
+      const oppExpandGreat = oppExpandRoll < 0.1 + oppExpand * 0.008 + oppProficiency * 0.005 + oppLuck * 0.005 + oppSoul * 0.003;
+      const oppExpandSuccess = oppExpandRoll < 0.5 + oppExpand * 0.015 + oppProficiency * 0.008 + oppLuck * 0.004 + oppSoul * 0.002;
+
+      // 计算对手本回合输出（牌力差距系数影响）
+      let opponentGen = oppBaseOutput * oppPowerFactor * oppSearchExpandFactor * oppProficiencyFactor * oppLuckSoulFactor * opponentPowerFactor;
+
+      if (oppExpandGreat) {
+        opponentGen *= 2.0;
+        addDuelLog(`✨ ${currentDuel.opponent.name}完美展开！核心Combo全部达成，场面优势巨大！`);
+      } else if (oppExpandSuccess) {
+        opponentGen *= 1.0;
+        addDuelLog(`${currentDuel.opponent.name}完成了常规展开，场面稳步建立。`);
+      } else {
+        opponentGen *= 0.3;
+        addDuelLog(`${currentDuel.opponent.name}的展开受到一些干扰，但还是做出了场面。`);
+      }
 
       // 压制小幅提高结算时我方产生数值
       if (suppressSuccess) {
@@ -10564,26 +10719,80 @@ function runDuelTurn() {
         addDuelLog(`压制带来额外 ${Math.round(suppressBonus)} 点结算优势！`);
       }
 
-      // ===== 差值结算：双方产生值之差转化为牌力削减 =====
-      const diff = playerGen - opponentGen;
-      const damageCoeff = 1.0;
+      // ===== 双方各自造成伤害：抗性减免，伤害上限防止秒杀，差距特别大可秒杀 =====
+      // 输出上限：每回合输出最高不超过双方最大牌力的50%
+      const maxOutput = Math.max(currentDuel.playerMaxPower, currentDuel.opponentMaxPower) * 0.50;
+      playerGen = Math.min(playerGen, maxOutput);
+      opponentGen = Math.min(opponentGen, maxOutput);
 
-      if (diff > 0) {
-        const damage = Math.round(diff * damageCoeff);
-        currentDuel.opponentPower -= damage;
-        addDuelLog(`结算：你产生 ${Math.round(playerGen)}，对方产生 ${Math.round(opponentGen)}，差值 ${damage}，对方牌力 -${damage}！`);
-      } else if (diff < 0) {
-        const damage = Math.round(Math.abs(diff) * damageCoeff);
-        currentDuel.playerPower -= damage;
-        addDuelLog(`结算：你产生 ${Math.round(playerGen)}，对方产生 ${Math.round(opponentGen)}，差值 ${damage}，你的牌力 -${damage}！`);
-      } else {
-        addDuelLog(`结算：双方均产生 ${Math.round(playerGen)} 牌力，势均力敌！`);
+      // 计算双方有效抗性（作为防御属性，减免受到的伤害）
+      const playerEffectiveResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      const opponentEffectiveResist = oppResist;
+
+      // 压制穿透：压制属性降低对方有效抗性（相当于护甲穿透）
+      const playerPenetration = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4) * pBonus.suppressMult * pSubBonus.suppressEffectMult;
+      const opponentPenetration = oppSuppress * styleSuppressMult * opponentPowerFactor;
+
+      // 应用穿透后的有效抗性（最低为0）
+      const playerResistAfterPen = Math.max(0, playerEffectiveResist - opponentPenetration);
+      const opponentResistAfterPen = Math.max(0, opponentEffectiveResist - playerPenetration);
+
+      // 抗性减免公式：减免系数 = 100 / (100 + 抗性)，最高减免85%
+      const playerDamageReduction = Math.max(0.15, 100 / (100 + playerResistAfterPen));
+      const opponentDamageReduction = Math.max(0.15, 100 / (100 + opponentResistAfterPen));
+
+      // 最低伤害 = 双方最大牌力的4%，保证低牌力对局不会太长
+      const minDamage = Math.max(currentDuel.playerMaxPower, currentDuel.opponentMaxPower) * 0.04;
+
+      // 玩家对对手造成伤害（抗性减免前的原始伤害）
+      const playerRawDamage = Math.max(minDamage, playerGen);
+      // 抗性减免后的伤害
+      let playerDamage = playerRawDamage * opponentDamageReduction;
+      // 伤害上限：正常不超过对手最大牌力的30%，但原始伤害超过对手牌力3倍时可秒杀
+      const opponentDamageCap = currentDuel.opponentMaxPower * 0.30;
+      const playerCanOtk = playerRawDamage >= currentDuel.opponentMaxPower * 3;
+      if (!playerCanOtk) {
+        playerDamage = Math.min(playerDamage, opponentDamageCap);
       }
+      playerDamage = Math.round(playerDamage);
+      currentDuel.opponentPower -= playerDamage;
+
+      // 对手对玩家造成伤害（抗性减免前的原始伤害）
+      const opponentRawDamage = Math.max(minDamage, opponentGen);
+      let opponentDamage = opponentRawDamage * playerDamageReduction;
+      const playerDamageCap = currentDuel.playerMaxPower * 0.30;
+      const opponentCanOtk = opponentRawDamage >= currentDuel.playerMaxPower * 3;
+      if (!opponentCanOtk) {
+        opponentDamage = Math.min(opponentDamage, playerDamageCap);
+      }
+      opponentDamage = Math.round(opponentDamage);
+      currentDuel.playerPower -= opponentDamage;
+
+      // 战斗日志
+      const playerPenInfo = playerPenetration > 0 ? `，穿透减免${Math.round(playerPenetration)}点抗性` : '';
+      const oppPenInfo = opponentPenetration > 0 ? `，穿透减免${Math.round(opponentPenetration)}点抗性` : '';
+      const playerOtkInfo = playerCanOtk ? '（秒杀！）' : '';
+      const oppOtkInfo = opponentCanOtk ? '（秒杀！）' : '';
+      addDuelLog(`结算：你产生 ${Math.round(playerGen)} 输出${playerPenInfo}，对对方造成 ${playerDamage} 伤害${playerOtkInfo}；对方产生 ${Math.round(opponentGen)} 输出${oppPenInfo}，对你造成 ${opponentDamage} 伤害${oppOtkInfo}！`);
 
       // 更新显示
       currentDuel.turn++;
       document.getElementById('duel-player-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.playerPower));
       document.getElementById('duel-opponent-power').textContent = '牌力 ' + Math.max(0, Math.round(currentDuel.opponentPower));
+
+      // ===== 胜率检测：局内隐藏属性，受双方当前牌力和天赋成就影响 =====
+      const currentPowerRatio = currentDuel.playerPower / Math.max(1, currentDuel.playerPower + currentDuel.opponentPower);
+      const currentBaseWinRate = currentPowerRatio * 100;
+      const currentTalentWinRate = getTalentBonus('winRateBonus', 0);
+      const currentAchievementWinRate = getAchievementWinRateBonus();
+      currentDuel.winRate = currentBaseWinRate + currentTalentWinRate + currentAchievementWinRate;
+
+      // 胜率达到100%直接赢得对局
+      if (currentDuel.winRate >= 100 && currentDuel.playerPower > 0) {
+        addDuelLog(`🏆 胜率达到100%！对手已无翻盘可能，你赢得了这场决斗！（当前胜率：${currentDuel.winRate.toFixed(1)}%）`, 'win');
+        finishDuel();
+        return;
+      }
 
       // 胜负判定：牌力归零即败；同时归零时牌力更高（更接近0）者胜
       if (currentDuel.playerPower <= 0 && currentDuel.opponentPower <= 0) {
@@ -11329,7 +11538,7 @@ function interactCharacter(c) {
       action: () => {
         showEventModal(c.name, `${c.challengeDesc || ''}\n\n对手牌力：${charPower}`, null, [
           { name: '开始决斗', action: () => {
-            const opponent = { id: c.id, name: c.name, power: charPower, difficulty: 5 };
+            const opponent = { id: c.id, name: c.name, power: charPower, difficulty: 5, stats: c.stats, playStyle: c.playStyle };
             startDuel('master', false, opponent, (result) => {
               if (result.won) {
                 if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
@@ -11511,7 +11720,17 @@ function runTournamentRound(state) {
   const opponentName = state.opponentNames[roundIdx] || `第${state.currentRound}轮对手`;
   // 每轮对手牌力递增
   const opponentPower = Math.round(state.basePower * (1 + state.powerGrowth * roundIdx) + rand(-10, 10));
-  const opponent = { id: `${state.tournament.id}_round${state.currentRound}`, name: opponentName, power: opponentPower, difficulty: state.tournament.difficulty };
+  // 根据牌力自动分配对手主属性（达到相同牌力玩家的80%水平）
+  const statBase = Math.round(opponentPower / 70);
+  const statVariance = state.tournament.difficulty * 3;
+  const opponentStats = {
+    search: Math.max(1, statBase + rand(-statVariance, statVariance)),
+    expand: Math.max(1, statBase + rand(-statVariance, statVariance)),
+    disrupt: Math.max(1, statBase + rand(-statVariance, statVariance)),
+    resist: Math.max(1, statBase + rand(-statVariance, statVariance)),
+    suppress: Math.max(1, statBase + rand(-statVariance, statVariance))
+  };
+  const opponent = { id: `${state.tournament.id}_round${state.currentRound}`, name: opponentName, power: opponentPower, difficulty: state.tournament.difficulty, stats: opponentStats };
 
   const roundNames = ['初赛', '半决赛', '决赛', '八强赛', '四强赛'];
   const roundName = roundNames[roundIdx] || `第${state.currentRound}轮`;
@@ -13073,6 +13292,7 @@ function showCardDetail(cardId) {
   if (awakenBtn && gameState.cardSpiritSystemUnlocked) {
     const check = canAwakenCard(cardId);
     const isAwakened = gameState.awakenedCards && gameState.awakenedCards.includes(cardId);
+    const hasEveryoneDragon = gameState.talents && gameState.talents.includes('everyone_dragon');
     if (isAwakened) {
       awakenBtn.style.display = 'block';
       awakenBtn.textContent = `✨ 已觉醒（属性×${getAwakenMultiplier(card)}）`;
@@ -13089,7 +13309,7 @@ function showCardDetail(cardId) {
         awakenCard(cardId);
         closeCardDetail();
       };
-    } else if (card.rarity === 'SR' || card.rarity === 'UR' || isSpecialCard(card)) {
+    } else if (card.rarity === 'SR' || card.rarity === 'UR' || isSpecialCard(card) || hasEveryoneDragon) {
       awakenBtn.style.display = 'block';
       awakenBtn.textContent = `✨ 卡灵觉醒（${check.reason}）`;
       awakenBtn.disabled = true;
