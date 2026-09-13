@@ -3064,7 +3064,7 @@ const OPPONENTS = [
     },
     "enabled": true,
     "deckArchetype": "真红眼",
-    "playStyle": "beat"
+    "playStyle": "expand"
   },
   {
     "id": "spirit_elf",
@@ -5847,6 +5847,10 @@ const EVENTS = {
               "type": "characterDuel",
               "charId": "ts002",
               "mode": "dark"
+            },
+            {
+              "type": "unlockAchievement",
+              "achievementId": "noone"
             }
           ]
         },
@@ -6859,13 +6863,24 @@ const REDEEM_CODES = [
   },
   {
     "id": "yh001",
-    "name": "新兑换码",
-    "desc": "",
+    "name": "希望的使者",
+    "desc": "V3.9版本的优化补偿",
     "reward": {
       "duelPoints": 100,
       "achievement": "NO39",
       "cards": [
         "e039"
+      ]
+    }
+  },
+  {
+    "id": "yh002",
+    "name": "LV来袭",
+    "desc": "V4.0修复补偿",
+    "reward": {
+      "duelPoints": 400,
+      "cards": [
+        "m061"
       ]
     }
   }
@@ -10244,6 +10259,9 @@ function runDuelTurn() {
   if (currentDuel.finished) return;
 
   const stats = getTotalStats();
+  
+  // 副属性标签加成（提前声明，避免暂时性死区）
+  const subTagBonus = getSubTagBonus();
 
   setTimeout(() => {
     // ===== 玩家回合：检索+展开产生本回合牌力（受对手干扰/压制影响）=====
@@ -10291,9 +10309,6 @@ function runDuelTurn() {
     // 玩家行为类型（根据卡组属性自动分配，纯正面加成）
     const playerStyle = getPlayerPlayStyle();
     const pStyleBonus = getPlayerStyleBonus(playerStyle);
-    
-    // 副属性标签加成（可与行为类型叠加）
-    const subTagBonus = getSubTagBonus();
 
     // 检索辅助展开，熟练度影响展开和检索，强度提升基础值
     // 掏度小幅影响检索，魂度小幅影响检索
