@@ -560,16 +560,18 @@ body::before {
   border: 1px solid var(--border-subtle);
   border-radius: 6px; padding: 10px 12px;
 }
-.rank-item.player { border-color: var(--accent-gold); background: rgba(212, 175, 55, 0.05); }
+.rank-item.player { border-color: var(--accent-gold); background: rgba(212, 175, 55, 0.08); }
+.rank-item.save { border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.05); }
 .rank-number {
-  font-family: var(--font-serif); font-size: 16px; font-weight: 900;
-  width: 28px; text-align: center; flex-shrink: 0;
+  font-family: var(--font-serif); font-size: 14px; font-weight: 900;
+  width: 26px; height: 26px; line-height: 26px; text-align: center; flex-shrink: 0;
+  border-radius: 50%;
 }
-.rank-item:nth-child(1) .rank-number { color: var(--accent-gold); }
-.rank-item:nth-child(2) .rank-number { color: #c0c0c0; }
-.rank-item:nth-child(3) .rank-number { color: #cd7f32; }
-.rank-name { flex: 1; font-size: 13px; font-weight: 500; }
-.rank-score { font-size: 12px; color: var(--accent-gold); font-weight: 700; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.rank-sub { display: flex; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--text-muted); }
+.rank-title { color: var(--accent-gold); font-weight: 500; }
+.rank-score { font-size: 13px; color: var(--accent-gold); font-weight: 700; flex-shrink: 0; }
 
 /* ===== 事件弹窗 ===== */
 .event-modal-overlay {
@@ -5127,7 +5129,8 @@ const TASKS = [
       "duelPoints": 1000,
       "talent": "citywork",
       "achievement": "citywork",
-      "duelMode": "dark"
+      "duelMode": "dark",
+      "spiritPower": 500
     },
     "conditions": [
       {
@@ -5157,7 +5160,7 @@ const TASKS = [
       "stats": {
         "power": 10
       },
-      "spiritPower": 100
+      "spiritPower": 200
     },
     "conditions": [
       {
@@ -5214,7 +5217,7 @@ const TASKS = [
       {
         "type": "affinity",
         "value": 80,
-        "target": "yogi"
+        "target": "yugi"
       },
       {
         "type": "affinity",
@@ -5246,7 +5249,7 @@ const TASKS = [
       {
         "type": "complete_task",
         "value": 1,
-        "target": "star_004"
+        "target": "star_003"
       }
     ]
   },
@@ -6944,7 +6947,32 @@ function getRandomOpponent(mode) {
   });
   if (pool.length === 0) pool = OPPONENTS.filter(op => op.enabled !== false);
   if (pool.length === 0) return null;
-  return pool[Math.floor(Math.random() * pool.length)];
+  
+  // 难度权重系统：难度越高，权重越低，匹配概率越低
+  // 可在决斗配置中自定义：difficultyWeightEnabled、difficultyWeightBase、difficultyWeightMin
+  const weightEnabled = config.difficultyWeightEnabled !== false; // 默认启用
+  const weightBase = config.difficultyWeightBase || 11;
+  const weightMin = config.difficultyWeightMin || 0.5;
+  
+  if (weightEnabled) {
+    const weightedPool = pool.map(op => {
+      const diff = op.difficulty || 1;
+      const weight = Math.max(weightMin, weightBase - diff);
+      return { opponent: op, weight };
+    });
+    
+    // 加权随机选择
+    const totalWeight = weightedPool.reduce((sum, item) => sum + item.weight, 0);
+    let randVal = Math.random() * totalWeight;
+    for (const item of weightedPool) {
+      randVal -= item.weight;
+      if (randVal <= 0) return item.opponent;
+    }
+    return weightedPool[0].opponent;
+  } else {
+    // 完全随机匹配
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
 }
 function getAllDuelModes() {
   if (DUEL_CONFIG.modes) {
@@ -7152,7 +7180,7 @@ function exportSaveCode() {
   } catch(e) { return null; }
 }
 
-// 从标识码导入存档（兼容新旧两种格式）
+// 从标识码导入存档（兼容新旧两种格式）- 只解析不覆盖，返回解析后的state
 function importSaveCode(code) {
   try {
     if (!code || typeof code !== 'string') return { success: false, error: '标识码为空' };
@@ -7204,71 +7232,64 @@ function importSaveCode(code) {
     if (!state || typeof state !== 'object') {
       return { success: false, error: '存档数据解析失败' };
     }
-    gameState = state;
-    // 兼容性检查
-    if (!gameState.week) gameState.week = 1;
-    if (!gameState.age) gameState.age = 18;
-    if (!gameState.talents) gameState.talents = [];
-    if (!gameState.mainDeck) gameState.mainDeck = [];
-    if (!gameState.extraDeck) gameState.extraDeck = [];
-    if (!gameState.collection) gameState.collection = [];
-    if (!gameState.collectionCount) gameState.collectionCount = {};
-    if (gameState.collection.length > 0 && Object.keys(gameState.collectionCount).length === 0) {
-      gameState.collection.forEach(id => { gameState.collectionCount[id] = 1; });
+    // 兼容性检查（不覆盖gameState，只处理返回的state）
+    if (!state.week) state.week = 1;
+    if (!state.age) state.age = 18;
+    if (!state.talents) state.talents = [];
+    if (!state.mainDeck) state.mainDeck = [];
+    if (!state.extraDeck) state.extraDeck = [];
+    if (!state.collection) state.collection = [];
+    if (!state.collectionCount) state.collectionCount = {};
+    if (state.collection.length > 0 && Object.keys(state.collectionCount).length === 0) {
+      state.collection.forEach(id => { state.collectionCount[id] = 1; });
     }
     // 兼容性：初始化获得时间记录
-    if (!gameState.collectionObtainTime) gameState.collectionObtainTime = {};
+    if (!state.collectionObtainTime) state.collectionObtainTime = {};
     const importNow = Date.now();
-    gameState.collection.forEach((id, idx) => {
-      if (!gameState.collectionObtainTime[id]) {
-        gameState.collectionObtainTime[id] = importNow - idx * 1000;
+    state.collection.forEach((id, idx) => {
+      if (!state.collectionObtainTime[id]) {
+        state.collectionObtainTime[id] = importNow - idx * 1000;
       }
     });
-    if (!gameState.affinity) gameState.affinity = {};
-    if (!gameState.wins) gameState.wins = 0;
-    if (!gameState.losses) gameState.losses = 0;
-    if (!gameState.achievements) gameState.achievements = [];
-    if (!gameState.recentEvents) gameState.recentEvents = [];
-    if (!gameState.triggeredEvents) gameState.triggeredEvents = [];
-    if (!gameState.eventCooldowns) gameState.eventCooldowns = {};
-    if (!gameState.bonusStats) gameState.bonusStats = {};
-    if (!gameState.duelPoints) gameState.duelPoints = 0;
-    if (!gameState.cardPoints) gameState.cardPoints = 0;
-    if (!gameState.masterDuelCount) gameState.masterDuelCount = 0;
-    if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
-    if (!gameState.locationVisits) gameState.locationVisits = {};
-    if (!gameState.completedTasks) gameState.completedTasks = [];
-    if (!gameState.claimableTasks) gameState.claimableTasks = [];
-    if (!gameState.titles) gameState.titles = [];
-    if (!gameState.defeatedCharacters) gameState.defeatedCharacters = {};
-    if (!gameState.unlockedLocations) gameState.unlockedLocations = [];
+    if (!state.affinity) state.affinity = {};
+    if (!state.wins) state.wins = 0;
+    if (!state.losses) state.losses = 0;
+    if (!state.achievements) state.achievements = [];
+    if (!state.recentEvents) state.recentEvents = [];
+    if (!state.triggeredEvents) state.triggeredEvents = [];
+    if (!state.eventCooldowns) state.eventCooldowns = {};
+    if (!state.bonusStats) state.bonusStats = {};
+    if (!state.duelPoints) state.duelPoints = 0;
+    if (!state.cardPoints) state.cardPoints = 0;
+    if (!state.masterDuelCount) state.masterDuelCount = 0;
+    if (!state.resonanceBonus) state.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+    if (!state.locationVisits) state.locationVisits = {};
+    if (!state.completedTasks) state.completedTasks = [];
+    if (!state.claimableTasks) state.claimableTasks = [];
+    if (!state.titles) state.titles = [];
+    if (!state.defeatedCharacters) state.defeatedCharacters = {};
+    if (!state.unlockedLocations) state.unlockedLocations = [];
     // 新增系统兼容性初始化
-    if (!gameState.spiritPower) gameState.spiritPower = 0;
-    if (!gameState.spiritLevel) gameState.spiritLevel = 0;
-    if (!gameState.awakeningShards) gameState.awakeningShards = 0;
-    if (!gameState.spiritSystemUnlocked) gameState.spiritSystemUnlocked = false;
-    if (!gameState.awakenedCards) gameState.awakenedCards = {};
-    if (!gameState.cardSpiritSystemUnlocked) gameState.cardSpiritSystemUnlocked = false;
-    if (!gameState.unlockedDuelModes) gameState.unlockedDuelModes = ['quick', 'master'];
-    if (!gameState.usedRedeemCodes) gameState.usedRedeemCodes = [];
-    if (!gameState.specialCards) gameState.specialCards = [];
-    if (!gameState.playerName) gameState.playerName = '决斗者';
-    if (!gameState.playerSignature) gameState.playerSignature = '';
-    if (!gameState.activeTitle) gameState.activeTitle = '';
-    if (!gameState.talentRerollCount) gameState.talentRerollCount = 0;
-    if (!gameState.currentDeckSort) gameState.currentDeckSort = 'rarity';
-    if (!gameState.currentDeckFilter) gameState.currentDeckFilter = 'all';
-    if (!gameState.bonusDays) gameState.bonusDays = 0;
-    if (!gameState.unlockedTalents) gameState.unlockedTalents = [];
-    if (!gameState.tournamentWins) gameState.tournamentWins = [];
-    if (!gameState.cardResonance) gameState.cardResonance = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
-    // 保存到自动存档（添加错误保护，防止保存失败导致卡死）
-    try {
-      saveGame();
-    } catch(saveErr) {
-      console.warn('保存存档出错，但不影响导入:', saveErr);
-    }
-    return { success: true, state: gameState };
+    if (!state.spiritPower) state.spiritPower = 0;
+    if (!state.spiritLevel) state.spiritLevel = 0;
+    if (!state.awakeningShards) state.awakeningShards = 0;
+    if (!state.spiritSystemUnlocked) state.spiritSystemUnlocked = false;
+    if (!state.awakenedCards) state.awakenedCards = {};
+    if (!state.cardSpiritSystemUnlocked) state.cardSpiritSystemUnlocked = false;
+    if (!state.unlockedDuelModes) state.unlockedDuelModes = ['quick', 'master'];
+    if (!state.usedRedeemCodes) state.usedRedeemCodes = [];
+    if (!state.specialCards) state.specialCards = [];
+    if (!state.playerName) state.playerName = '决斗者';
+    if (!state.playerSignature) state.playerSignature = '';
+    if (!state.activeTitle) state.activeTitle = '';
+    if (!state.talentRerollCount) state.talentRerollCount = 0;
+    if (!state.currentDeckSort) state.currentDeckSort = 'rarity';
+    if (!state.currentDeckFilter) state.currentDeckFilter = 'all';
+    if (!state.bonusDays) state.bonusDays = 0;
+    if (!state.unlockedTalents) state.unlockedTalents = [];
+    if (!state.tournamentWins) state.tournamentWins = [];
+    if (!state.cardResonance) state.cardResonance = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+    return { success: true, state: state };
   } catch(e) {
     console.error('导入存档出错:', e);
     return { success: false, error: '标识码解析失败：' + e.message };
@@ -7295,7 +7316,7 @@ function renderSaveManager() {
   const content = document.getElementById('save-manager-content');
   if (!content) return;
   
-  const titleMap = { save: '保存游戏', load: '读取存档', export: '导出标识码', import: '导入标识码' };
+  const titleMap = { save: '保存游戏', load: '读取存档', export: '导出标识码', import: '导入标识码', saveAndExit: '保存并返回主菜单' };
   document.getElementById('save-manager-title').textContent = titleMap[saveModalMode] || '存档管理';
   
   if (saveModalMode === 'export') {
@@ -7328,10 +7349,11 @@ function renderSaveManager() {
     return;
   }
   
-  // save / load 模式：显示槽位列表
+  // save / load / saveAndExit 模式：显示槽位列表
   const slots = getSaveSlots();
+  const isSaveMode = saveModalMode === 'save' || saveModalMode === 'saveAndExit';
   content.innerHTML = `
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${saveModalMode === 'save' ? '选择一个槽位保存当前进度（覆盖原有存档）' : '选择一个存档槽位读取（将覆盖当前进度）'}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${isSaveMode ? '选择一个槽位保存当前进度（覆盖原有存档）' : '选择一个存档槽位读取（将覆盖当前进度）'}</div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       ${slots.map(slot => `
         <div style="padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
@@ -7347,7 +7369,7 @@ function renderSaveManager() {
             </div>
           ` : '<div style="font-size:11px;color:var(--text-muted);">该槽位暂无存档</div>'}
           <div style="display:flex;gap:8px;margin-top:10px;">
-            ${saveModalMode === 'save' 
+            ${isSaveMode 
               ? `<button class="btn btn-primary" style="flex:1;" onclick="doSaveSlot(${slot.slot})">${slot.exists ? '覆盖保存' : '保存到此'}</button>`
               : `<button class="btn btn-gold" style="flex:1;" ${slot.exists ? '' : 'disabled style="opacity:0.5;cursor:not-allowed;"'} onclick="doLoadSlot(${slot.slot})">读取存档</button>`
             }
@@ -7365,7 +7387,21 @@ function renderSaveManager() {
 function doSaveSlot(slot) {
   if (saveToSlot(slot)) {
     showToast(`✅ 已保存到槽位 ${slot}`);
-    renderSaveManager();
+    // 如果是保存并返回主菜单模式，保存后自动返回主菜单
+    if (saveModalMode === 'saveAndExit') {
+      setTimeout(() => {
+        closeSaveManager();
+        switchView('start');
+        // 显示主菜单，隐藏天赋选择
+        document.getElementById('main-menu').style.display = 'block';
+        document.getElementById('talent-select-panel').style.display = 'none';
+        // 更新继续游戏按钮显示
+        updateContinueButton();
+        showToast('游戏已保存，返回主菜单');
+      }, 500);
+    } else {
+      renderSaveManager();
+    }
   } else {
     showToast('❌ 保存失败');
   }
@@ -7404,6 +7440,9 @@ function copyExportCode() {
   }
 }
 
+// 待导入的存档数据（临时保存，等待用户选择槽位）
+let pendingImportState = null;
+
 function doImportCode() {
   const textarea = document.getElementById('import-code-text');
   const resultEl = document.getElementById('import-result');
@@ -7419,27 +7458,95 @@ function doImportCode() {
   
   const result = importSaveCode(code);
   if (result.success) {
+    // 保存待导入的存档数据
+    pendingImportState = result.state;
     resultEl.style.display = 'block';
     resultEl.style.color = '#22c55e';
-    resultEl.textContent = '✅ 导入成功！正在加载存档...';
-    
-    setTimeout(() => {
-      try { closeSaveManager(); } catch(e) { console.error(e); }
-      try {
-        const viewStart = document.getElementById('view-start');
-        const viewGame = document.getElementById('view-game');
-        if (viewStart) viewStart.classList.remove('active');
-        if (viewGame) viewGame.classList.add('active');
-      } catch(e) { console.error(e); }
-      try { updateAllDisplays(); } catch(e) { console.error(e); }
-      try { if (typeof refreshCurrentView === 'function') refreshCurrentView(); } catch(e) { console.error(e); }
-      try { showToast('存档导入成功！'); } catch(e) { console.error(e); }
-    }, 300);
+    resultEl.textContent = '✅ 标识码解析成功！请选择要导入到的存档槽位：';
+    // 显示槽位选择界面
+    setTimeout(() => renderImportSlotSelect(), 100);
   } else {
     resultEl.style.display = 'block';
     resultEl.style.color = '#ef4444';
     resultEl.textContent = '❌ ' + result.error;
   }
+}
+
+// 渲染导入槽位选择界面
+function renderImportSlotSelect() {
+  const content = document.getElementById('save-manager-content');
+  if (!content || !pendingImportState) return;
+  
+  const slots = getSaveSlots();
+  const importState = pendingImportState;
+  
+  content.innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+      导入存档信息：<span style="color:#a8d8ea;">${importState.playerName || '无名决斗者'}</span> | 
+      年龄：${importState.age || 18}岁 | 第${importState.week || 1}天 | 
+      战绩：${importState.wins || 0}胜${importState.losses || 0}负
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">选择一个槽位导入（覆盖原有存档）：</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${slots.map(slot => `
+        <div style="padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-weight:bold;color:#fff;">存档槽位 ${slot.slot}</span>
+            ${slot.exists ? `<span style="font-size:10px;color:#10b981;">已保存</span>` : `<span style="font-size:10px;color:var(--text-muted);">空</span>`}
+          </div>
+          ${slot.exists ? `
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+              <div>决斗者：${slot.name} | 年龄：${slot.age}岁 | 第${slot.week}天</div>
+              <div>战绩：${slot.wins}胜${slot.losses}负 | 卡组：${slot.cards}张</div>
+            </div>
+          ` : '<div style="font-size:11px;color:var(--text-muted);">该槽位暂无存档</div>'}
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-gold" style="flex:1;" onclick="doImportToSlot(${slot.slot})">${slot.exists ? '覆盖并导入' : '导入到此槽位'}</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="cancelImport()">取消导入</button>
+    </div>
+  `;
+}
+
+// 导入到指定槽位
+function doImportToSlot(slot) {
+  if (!pendingImportState) return;
+  
+  try {
+    const saveData = { ...pendingImportState, savedAt: new Date().toISOString() };
+    localStorage.setItem(SAVE_SLOT_KEY + slot, JSON.stringify(saveData));
+    showToast(`✅ 已导入到槽位 ${slot}！`);
+    
+    // 询问是否立即加载该存档
+    setTimeout(() => {
+      if (confirm(`导入成功！是否立即加载槽位 ${slot} 的存档？\n（当前进度将被覆盖）`)) {
+        if (loadFromSlot(slot)) {
+          closeSaveManager();
+          // 进入游戏界面
+          document.getElementById('main-menu').style.display = 'none';
+          document.getElementById('view-home').classList.add('active');
+          updateAllDisplays();
+          refreshCurrentView();
+          showToast('存档加载成功！');
+        }
+      } else {
+        pendingImportState = null;
+        renderSaveManager();
+      }
+    }, 300);
+  } catch(e) {
+    showToast('❌ 导入失败：' + e.message);
+  }
+}
+
+// 取消导入
+function cancelImport() {
+  pendingImportState = null;
+  closeSaveManager();
 }
 
 function showToast(msg) {
@@ -8807,7 +8914,7 @@ function redeemCode() {
   if (reward.title) { if(!gameState.titles) gameState.titles=[]; if(!gameState.titles.includes(reward.title)) gameState.titles.push(reward.title); rewards.push(`称号【${reward.title}】`); }
   if (reward.achievement) { if(!gameState.achievements) gameState.achievements=[]; if(!gameState.achievements.includes(reward.achievement)) gameState.achievements.push(reward.achievement); const ach=ACHIEVEMENTS.find(a=>a.id===reward.achievement); rewards.push(`成就【${ach?ach.name:reward.achievement}】`); }
   if (reward.talent) { if(!gameState.unlockedTalents) gameState.unlockedTalents=[]; if(!gameState.unlockedTalents.includes(reward.talent)) gameState.unlockedTalents.push(reward.talent); const talent=TALENTS.find(t=>t.id===reward.talent); rewards.push(`天赋【${talent?talent.name:reward.talent}】`); }
-  if (reward.spiritPower && gameState.spiritSystemUnlocked) { addSpiritPower(reward.spiritPower); rewards.push(`精灵力+${reward.spiritPower}`); }
+  if (reward.spiritPower) { addSpiritPower(reward.spiritPower); rewards.push(`精灵力+${reward.spiritPower}`); }
   if (reward.awakeningShards) { addAwakeningShards(reward.awakeningShards); rewards.push(`觉醒碎片+${reward.awakeningShards}`); }
   if (reward.unlockLocation) { if(!gameState.unlockedLocations) gameState.unlockedLocations=[]; if(!gameState.unlockedLocations.includes(reward.unlockLocation)){ gameState.unlockedLocations.push(reward.unlockLocation); const loc=LOCATIONS.find(l=>l.id===reward.unlockLocation); rewards.push(`解锁地点【${loc?loc.name:reward.unlockLocation}】`); showToast(`🎉 解锁新地点：${loc?loc.name:reward.unlockLocation}！`); } }
   gameState.usedRedeemCodes.push(code);
@@ -9566,7 +9673,7 @@ function executeEffects(effects, event, loc) {
           } else {
             rarity = choice(['N','N','N','R','R','SR','UR']); // 概率分布
           }
-          const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+          const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
           if (pool.length) {
             const card = choice(pool);
             cards.push(card);
@@ -9677,7 +9784,7 @@ function executeEffects(effects, event, loc) {
         break;
       }
       case 'spiritPower': {
-        if (gameState.spiritSystemUnlocked && ef.amount > 0) {
+        if (ef.amount > 0) {
           addSpiritPower(ef.amount);
           result.displayItems.push({ name: `精灵力 +${ef.amount}` });
         }
@@ -9802,7 +9909,7 @@ function executeEffects(effects, event, loc) {
                 } else if (we.type === 'awakeningShards' && we.amount > 0) {
                   addAwakeningShards(we.amount);
                   addEventLog(`决斗胜利，觉醒碎片+${we.amount}`);
-                } else if (we.type === 'spiritPower' && we.amount > 0 && gameState.spiritSystemUnlocked) {
+                } else if (we.type === 'spiritPower' && we.amount > 0) {
                   addSpiritPower(we.amount);
                   addEventLog(`决斗胜利，精灵力+${we.amount}`);
                 } else if (we.type === 'cardPoints' && we.amount > 0) {
@@ -9990,7 +10097,9 @@ function getRandomCard(source) {
   }
 
   const rarity = weightedChoice(weights);
-  pool = allCards.filter(c => c.rarity === rarity);
+  // 排除sp卡（特殊卡片只能通过事件/成就/兑换码获取，不加入随机池）
+  pool = allCards.filter(c => c.rarity === rarity && !isSpecialCard(c));
+  if (pool.length === 0) pool = allCards.filter(c => !isSpecialCard(c));
   if (pool.length === 0) pool = allCards;
   return choice(pool);
 }
@@ -10279,6 +10388,22 @@ function runDuelTurn() {
   // 副属性标签加成（提前声明，避免暂时性死区）
   const subTagBonus = getSubTagBonus();
 
+  // ===== 牌力差距系数：局外牌力差距影响战局内表现 =====
+  // 用平方根缩放，避免小差距就碾压；最高100倍上限
+  const powerRatio = currentDuel.playerMaxPower / Math.max(1, currentDuel.opponentMaxPower);
+  const playerPowerFactor = Math.min(Math.pow(Math.max(0.0001, powerRatio), 0.5), 100);
+  const opponentPowerFactor = Math.min(Math.pow(Math.max(0.0001, 1 / powerRatio), 0.5), 100);
+  // 牌力差距提示（仅第一回合显示）
+  if (currentDuel.turn === 1 && (playerPowerFactor > 1.2 || opponentPowerFactor > 1.2)) {
+    setTimeout(() => {
+      if (playerPowerFactor > opponentPowerFactor) {
+        addDuelLog(`💪 你的牌力占优！局内表现提升至 ${playerPowerFactor.toFixed(2)} 倍`, 'turn');
+      } else {
+        addDuelLog(`⚠️ 对手牌力占优！对方局内表现提升至 ${opponentPowerFactor.toFixed(2)} 倍`, 'turn');
+      }
+    }, 100);
+  }
+
   setTimeout(() => {
     // ===== 玩家回合：检索+展开产生本回合牌力（受对手干扰/压制影响）=====
     addDuelLog(`第${currentDuel.turn}回合——你的回合`, 'turn');
@@ -10298,7 +10423,7 @@ function runDuelTurn() {
     else if (playStyle === 'beat') { styleExpandMult = 0.8; styleDisruptMult = 1.1; styleSuppressMult = 1.1; styleResistMult = 1.3; }
 
     // 对手干扰：小幅削弱玩家检索和展开
-    const oppDisruptPower = oppDisrupt * styleDisruptMult;
+    const oppDisruptPower = oppDisrupt * styleDisruptMult * opponentPowerFactor;
     const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01);
     let playerSearchMult = 1.0, playerExpandMult = 1.0;
     if (oppDisruptSuccess) {
@@ -10312,7 +10437,7 @@ function runDuelTurn() {
     }
 
     // 对手压制：大幅削弱玩家展开
-    const oppSuppressPower = oppSuppress * styleSuppressMult;
+    const oppSuppressPower = oppSuppress * styleSuppressMult * opponentPowerFactor;
     const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01);
     if (oppSuppressSuccess) {
       const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
@@ -10326,15 +10451,19 @@ function runDuelTurn() {
     const playerStyle = getPlayerPlayStyle();
     const pStyleBonus = getPlayerStyleBonus(playerStyle);
 
-    // 检索辅助展开，熟练度影响展开和检索，强度提升基础值
-    // 掏度小幅影响检索，魂度小幅影响检索
-    // 玩家行为类型加成 + 副属性标签加成
-    let playerGen = ((stats.search || 0) * 0.6 * playerSearchMult +
-                     (stats.expand || 0) * 1.2 * playerExpandMult * pStyleBonus.expandMult +
-                     (stats.proficiency || 0) * 0.4 +
-                     (stats.power || 0) * 0.6 +
-                     (stats.luck || 0) * 0.2 +
-                     (stats.soul || 0) * 0.15) * subTagBonus.powerGrowthMult;
+    // ===== 核心改动：牌力作为基础输出，牌力差距会明显体现 =====
+    // 基础输出：最大牌力 × 4%，40000牌力每回合基础输出1600，14000牌力每回合560
+    const baseOutput = currentDuel.playerMaxPower * 0.04;
+    // 强度提升基础输出（每点强度+0.8%）
+    const powerFactor = 1 + (stats.power || 0) * 0.008;
+    // 检索+展开影响输出倍率（受对手干扰/压制影响）
+    const searchExpandFactor = 1 + ((stats.search || 0) * 0.004 + (stats.expand || 0) * 0.006) * pStyleBonus.expandMult * playerExpandMult * playerSearchMult;
+    // 熟练度影响展开效率
+    const proficiencyFactor = 1 + (stats.proficiency || 0) * 0.003;
+    // 掏度和魂度小幅影响输出
+    const luckSoulFactor = 1 + (stats.luck || 0) * 0.002 + (stats.soul || 0) * 0.0015;
+    // 计算玩家本回合输出（牌力差距系数影响）
+    let playerGen = baseOutput * powerFactor * searchExpandFactor * proficiencyFactor * luckSoulFactor * subTagBonus.powerGrowthMult * playerPowerFactor;
 
     // 展开成功率判定（掏度和魂度提高完美展开/幸运事件概率，打牌高手标签加成）
     const expandRoll = Math.random();
@@ -10388,8 +10517,8 @@ function runDuelTurn() {
       // 副属性标签加成（可与行为类型叠加）
       const pSubBonus = getSubTagBonus();
 
-      // 玩家干扰：小幅影响对方检索和展开（行为类型+情报玩家标签加成）
-      const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4) * pBonus.disruptMult * pSubBonus.disruptEffectMult;
+      // 玩家干扰：小幅影响对方检索和展开（行为类型+情报玩家标签加成+牌力差距系数）
+      const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4) * pBonus.disruptMult * pSubBonus.disruptEffectMult * playerPowerFactor;
       const disruptSuccessRate = Math.min(0.95, 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
       const disruptSuccess = Math.random() < disruptSuccessRate;
 
@@ -10406,8 +10535,8 @@ function runDuelTurn() {
         addDuelLog(`⚡ 干扰成功！对方检索削弱${Math.round(disruptFactor * 50)}%，展开削弱${Math.round(disruptFactor * 100)}%！`);
       }
 
-      // 玩家压制：大幅影响对方展开（行为类型+情报玩家标签加成）
-      const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4) * pBonus.suppressMult * pSubBonus.suppressEffectMult;
+      // 玩家压制：大幅影响对方展开（行为类型+情报玩家标签加成+牌力差距系数）
+      const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4) * pBonus.suppressMult * pSubBonus.suppressEffectMult * playerPowerFactor;
       const suppressSuccessRate = Math.min(0.95, 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008);
       const suppressSuccess = Math.random() < suppressSuccessRate;
 
@@ -10418,9 +10547,15 @@ function runDuelTurn() {
         addDuelLog(`🔥 压制成功！对方展开被大幅削弱${Math.round(suppressFactor * 100)}%！`);
       }
 
-      // 对手本回合产生牌力
-      let opponentGen = effectiveOppSearch * 0.6 + effectiveOppExpand * 1.2 + oppPower * 0.6;
-      opponentGen *= (0.2 + Math.random() * 0.2) * styleExpandMult; // 对手展开倍率（同牌力下比玩家弱约20%）
+      // ===== 对手输出：牌力作为基础输出 =====
+      const oppBaseOutput = currentDuel.opponentMaxPower * 0.04;
+      // 对手强度系数
+      const oppPowerFactor = 1 + oppPower * 0.008;
+      // 对手展开效率（受玩家干扰/压制影响，防御型提高抗性）
+      const oppExpandEfficiency = oppExpand > 0 ? (effectiveOppExpand / oppExpand) : 1;
+      const oppStyleExpandMult = playStyle === 'expand' ? 1.25 : (playStyle === 'beat' ? 0.85 : 1.0);
+      // 对手输出 = 基础输出 × 强度 × (0.6 + 展开效率×0.4×风格倍率) × 牌力差距系数
+      let opponentGen = oppBaseOutput * oppPowerFactor * (0.6 + oppExpandEfficiency * 0.4 * oppStyleExpandMult) * opponentPowerFactor;
 
       // 压制小幅提高结算时我方产生数值
       if (suppressSuccess) {
@@ -11416,7 +11551,7 @@ function tournamentWin(t) {
   
   for (let i = 0; i < rewardCount; i++) {
     const rarity = choice(rewardRarities);
-    const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity);
+    const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
     if (pool.length > 0) {
       const card = choice(pool);
       addCardToCollection(card.id);
@@ -11957,7 +12092,7 @@ function grantTaskReward(task) {
       rewards.push('解锁精灵力系统');
     }
   }
-  if (r.spiritPower && gameState.spiritSystemUnlocked) {
+  if (r.spiritPower) {
     addSpiritPower(r.spiritPower);
     rewards.push(`精灵力+${r.spiritPower}`);
   }
@@ -11988,10 +12123,13 @@ function getSpiritExpRequired(level) {
 
 // 增加精灵力经验值并自动升级
 function addSpiritPower(amount) {
-  if (!gameState.spiritSystemUnlocked) return false;
   const config = GAME_CONFIG.spiritSystem || {};
   const maxLevel = config.maxLevel || 12;
   gameState.spiritPower = (gameState.spiritPower || 0) + amount;
+  
+  // 未解锁时只累积经验，不触发升级和解锁地点（隐藏状态）
+  if (!gameState.spiritSystemUnlocked) return false;
+  
   let leveledUp = false;
   while (gameState.spiritLevel < maxLevel) {
     const required = getSpiritExpRequired(gameState.spiritLevel);
@@ -12036,11 +12174,15 @@ function getSpiritPowerBonus() {
 function unlockSpiritSystem() {
   if (gameState.spiritSystemUnlocked) return;
   gameState.spiritSystemUnlocked = true;
-  gameState.spiritPower = 0;
-  gameState.spiritLevel = 0;
-  gameState.awakeningShards = 0;
+  // 不重置spiritPower，保留之前累积的经验（未解锁时隐藏但正常累积）
+  if (gameState.spiritLevel === undefined) gameState.spiritLevel = 0;
+  if (gameState.awakeningShards === undefined) gameState.awakeningShards = 0;
   showToast('🎉 解锁：精灵力系统！');
   addEventLog('黑暗决斗的力量唤醒了你体内的精灵之力');
+  // 解锁后立即检查是否有累积的经验可以升级
+  if ((gameState.spiritPower || 0) > 0) {
+    setTimeout(() => addSpiritPower(0), 500);
+  }
 }
 
 // 解锁卡灵觉醒系统
@@ -12688,35 +12830,174 @@ function renderTalentGrid() {
 // ===== 排行榜 =====
 function renderRanking() {
   const list = document.getElementById('rank-list');
-  const playerScore = gameState.wins * 100 + gameState.duelPoints + gameState.tournamentWins.length * 500;
+  
+  // 计算当前玩家的牌力和分数
+  const playerPower = typeof getDuelPower === 'function' ? getDuelPower() : 0;
+  const playerScore = gameState.wins * 100 + gameState.duelPoints + (gameState.tournamentWins?.length || 0) * 500 + playerPower;
 
+  // 预设NPC角色数据（包含牌力、年龄、战绩等）
   const npcs = [
-    { name:'阿图姆（暗游戏）', score: 99999 },
-    { name:'海马濑人', score: 85000 },
-    { name:'城之内克也', score: 60000 },
-    { name:'马利克', score: 55000 },
-    { name:'貘良了', score: 50000 },
-    { name:'基斯·霍华德', score: 40000 },
-    { name:'御伽龙儿', score: 30000 },
-    { name:'昆虫羽蛾', score: 25000 },
-    { name:'恐龙龙崎', score: 22000 },
-    { name:'本田广', score: 5000 },
+    { name:'阿图姆（暗游戏）', power: 15000, age: 18, wins: 999, losses: 0, cards: 60, score: 99999, title:'传说的决斗王' },
+    { name:'海马濑人', power: 12000, age: 18, wins: 800, losses: 50, cards: 55, score: 85000, title:'青眼的继承者' },
+    { name:'城之内克也', power: 8000, age: 18, wins: 600, losses: 150, cards: 50, score: 60000, title:'友情的真红眼' },
+    { name:'马利克', power: 7500, age: 17, wins: 550, losses: 80, cards: 48, score: 55000, title:'太阳神的操纵者' },
+    { name:'貘良了', power: 7000, age: 17, wins: 500, losses: 100, cards: 45, score: 50000, title:'黑暗的来访者' },
+    { name:'基斯·霍华德', power: 5500, age: 25, wins: 400, losses: 200, cards: 42, score: 40000, title:'美国冠军' },
+    { name:'御伽龙儿', power: 4500, age: 17, wins: 300, losses: 150, cards: 40, score: 30000, title:'龙门骰达人' },
+    { name:'昆虫羽蛾', power: 3500, age: 16, wins: 250, losses: 180, cards: 38, score: 25000, title:'昆虫女王' },
+    { name:'恐龙龙崎', power: 3200, age: 16, wins: 220, losses: 200, cards: 36, score: 22000, title:'恐龙战士' },
+    { name:'孔雀舞', power: 5000, age: 19, wins: 350, losses: 180, cards: 44, score: 35000, title:'神鹰女郎' },
+    { name:'本田广', power: 1500, age: 18, wins: 50, losses: 300, cards: 30, score: 5000, title:'友情的见证者' },
+    { name:'武藤游戏（表）', power: 6000, age: 18, wins: 450, losses: 120, cards: 46, score: 45000, title:'温柔的决斗者' },
+    { name:'伊西丝', power: 6500, age: 20, wins: 480, losses: 100, cards: 47, score: 48000, title:'守墓的巫女' },
+    { name:'利希德', power: 5800, age: 25, wins: 420, losses: 130, cards: 43, score: 42000, title:'陷阱大师' },
+    { name:'贝卡斯', power: 8500, age: 30, wins: 700, losses: 80, cards: 52, score: 70000, title:'决斗怪兽之父' },
   ];
 
-  const all = [...npcs, { name:'你', score: playerScore, isPlayer: true }];
+  // 读取本地存档槽位中的角色数据
+  const saveSlots = getSaveSlots();
+  const saveCharacters = [];
+  saveSlots.forEach(slot => {
+    if (slot.exists) {
+      // 从localStorage读取完整存档数据以获取牌力
+      try {
+        const data = localStorage.getItem(SAVE_SLOT_KEY + slot.slot);
+        if (data) {
+          const state = JSON.parse(data);
+          const savePower = calculateSavePower(state);
+          const saveScore = (state.wins || 0) * 100 + (state.duelPoints || 0) + ((state.tournamentWins || []).length) * 500 + savePower;
+          saveCharacters.push({
+            name: state.playerName || `存档${slot.slot}`,
+            power: savePower,
+            age: state.age || 18,
+            wins: state.wins || 0,
+            losses: state.losses || 0,
+            cards: (state.collection || []).length + (state.specialCards || []).length,
+            score: saveScore,
+            title: state.activeTitle || `存档槽位${slot.slot}`,
+            isSave: true,
+            slot: slot.slot
+          });
+        }
+      } catch(e) {}
+    }
+  });
+
+  // 当前玩家
+  const currentPlayer = {
+    name: gameState.playerName || '你',
+    power: playerPower,
+    age: gameState.age || 18,
+    wins: gameState.wins || 0,
+    losses: gameState.losses || 0,
+    cards: (gameState.collection || []).length + (gameState.specialCards || []).length,
+    score: playerScore,
+    title: gameState.activeTitle || '当前游戏',
+    isPlayer: true
+  };
+
+  // 合并所有角色并排序
+  const all = [...npcs, ...saveCharacters, currentPlayer];
   all.sort((a, b) => b.score - a.score);
 
   list.innerHTML = '';
-  all.slice(0, 15).forEach((p, i) => {
+  all.slice(0, 20).forEach((p, i) => {
     const div = document.createElement('div');
-    div.className = 'rank-item' + (p.isPlayer ? ' player' : '');
+    div.className = 'rank-item' + (p.isPlayer ? ' player' : '') + (p.isSave ? ' save' : '');
+    
+    // 排名徽章颜色
+    let rankColor = '';
+    if (i === 0) rankColor = 'background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;';
+    else if (i === 1) rankColor = 'background:linear-gradient(135deg,#d1d5db,#9ca3af);color:#000;';
+    else if (i === 2) rankColor = 'background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;';
+    else rankColor = 'background:var(--bg-input);color:var(--text-secondary);';
+    
     div.innerHTML = `
-      <div class="rank-number">${i + 1}</div>
-      <div class="rank-name">${p.name}${p.isPlayer ? '（你）' : ''}</div>
+      <div class="rank-number" style="${rankColor}">${i + 1}</div>
+      <div class="rank-info">
+        <div class="rank-name">${p.name}${p.isPlayer ? '（你）' : ''}${p.isSave ? `（存档${p.slot}）` : ''}</div>
+        <div class="rank-sub">
+          ${p.title ? `<span class="rank-title">${p.title}</span>` : ''}
+          <span>⚔ ${p.power.toLocaleString()} 牌力</span>
+          <span>📅 ${p.age}岁</span>
+          <span>🏆 ${p.wins}胜${p.losses}负</span>
+          <span>🃏 ${p.cards}张卡</span>
+        </div>
+      </div>
       <div class="rank-score">${p.score.toLocaleString()}</div>
     `;
     list.appendChild(div);
   });
+}
+
+// 计算存档的牌力（简化版，不依赖gameState）
+function calculateSavePower(state) {
+  if (!state) return 0;
+  try {
+    let power = 0;
+    // 主卡组属性加成
+    const mainDeck = state.mainDeck || [];
+    const extraDeck = state.extraDeck || [];
+    const specialCards = state.specialCards || [];
+    const allCards = [...mainDeck, ...extraDeck, ...specialCards];
+    
+    const stats = { search:0, expand:0, disrupt:0, resist:0, suppress:0, power:0, soul:0, luck:0, proficiency:0, intelligence:0 };
+    
+    allCards.forEach(cardId => {
+      const card = CARD_DB[cardId];
+      if (card) {
+        if (card.stats) {
+          Object.keys(card.stats).forEach(k => { stats[k] = (stats[k] || 0) + card.stats[k]; });
+        }
+        if (card.sub) {
+          Object.keys(card.sub).forEach(k => { stats[k] = (stats[k] || 0) + card.sub[k]; });
+        }
+      }
+    });
+    
+    // 天赋加成
+    (state.talents || []).forEach(tid => {
+      const t = TALENTS.find(x => x.id === tid);
+      if (t && t.effects) {
+        Object.keys(t.effects).forEach(k => { stats[k] = (stats[k] || 0) + t.effects[k]; });
+      }
+    });
+    
+    // 成就加成
+    (state.achievements || []).forEach(aid => {
+      const a = ACHIEVEMENTS.find(x => x.id === aid);
+      if (a && a.bonus) {
+        if (a.bonus.all) {
+          ['search','expand','disrupt','resist','suppress'].forEach(k => { stats[k] += a.bonus.all; });
+        }
+        Object.keys(a.bonus).forEach(k => {
+          if (k !== 'all') stats[k] = (stats[k] || 0) + a.bonus[k];
+        });
+      }
+    });
+    
+    // 永久属性加成
+    if (state.bonusStats) {
+      Object.keys(state.bonusStats).forEach(k => { stats[k] = (stats[k] || 0) + state.bonusStats[k]; });
+    }
+    
+    // 牌力计算（与getDuelPower一致）
+    const effectiveExpand = stats.expand + (stats.proficiency || 0) * 0.5;
+    const effectiveDisrupt = stats.disrupt + (stats.proficiency || 0) * 0.5;
+    const effectiveResist = stats.resist + (stats.intelligence || 0) * 0.5;
+    const effectiveSuppress = stats.suppress + (stats.intelligence || 0) * 0.5;
+    
+    power = stats.search * 1.0 + effectiveExpand * 1.2 + effectiveDisrupt * 1.0 + effectiveResist * 0.8 + effectiveSuppress * 1.1 + (stats.power || 0) * 2.0 + (stats.soul || 0) * 0.5 + (stats.luck || 0) * 1.5;
+    
+    // 精灵力加成
+    if (state.spiritLevel) {
+      power *= (1 + state.spiritLevel * 0.1);
+    }
+    
+    return Math.floor(power);
+  } catch(e) {
+    return 0;
+  }
 }
 
 // ===== 卡片管理系统 =====
@@ -13034,18 +13315,17 @@ document.addEventListener('DOMContentLoaded', () => {
     backToMenuBtn.addEventListener('click', () => {
       showConfirmModal(
         '返回主菜单',
-        '确定要返回主菜单吗？当前进度将自动保存。',
-        '保存并返回',
+        '确定要返回主菜单吗？请选择存档槽位保存当前进度。',
+        '选择槽位保存',
         '继续游戏',
         () => {
-          saveGame();
-          switchView('start');
-          // 显示主菜单，隐藏天赋选择
-          document.getElementById('main-menu').style.display = 'block';
-          document.getElementById('talent-select-panel').style.display = 'none';
-          // 更新继续游戏按钮显示
-          updateContinueButton();
-          showToast('游戏已保存，返回主菜单');
+          // 打开存档管理器的保存模式，保存后自动返回主菜单
+          saveModalMode = 'saveAndExit';
+          const modal = document.getElementById('save-manager-modal');
+          if (modal) {
+            renderSaveManager();
+            modal.style.display = 'flex';
+          }
         }
       );
     });
