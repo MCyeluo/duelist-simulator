@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>牌佬模拟器 - 童实野市篇 v3.9</title>
+<title>牌佬模拟器 - 童实野市篇 v4.2 次世代觉醒</title>
 <link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
 <style>
 :root {
@@ -587,7 +587,7 @@ body::before {
 /* ===== 事件弹窗 ===== */
 .event-modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.75); z-index: 1000;
+  background: rgba(0,0,0,0.75); z-index: 10010;
   display: flex; align-items: center; justify-content: center;
   padding: 20px; animation: fadeIn 0.2s;
 }
@@ -1072,7 +1072,7 @@ body::before {
     <div class="start-view">
       <div class="start-title">牌佬模拟器</div>
       <div class="start-subtitle">童 实 野 市 篇</div>
-      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v4.1 战斗重构版 | 剧情完结 | 支持DLC扩展</div>
+      <div style="text-align:center;font-size:12px;color:var(--accent-gold);margin-bottom:20px;font-weight:600;">v4.2 卡片库扩展版 | 剧情完结 | 支持DLC扩展</div>
 
       <!-- 主菜单 -->
       <div id="main-menu" class="panel" style="max-width:400px;margin:0 auto;padding:24px;">
@@ -1535,6 +1535,7 @@ body::before {
     <div class="main-nav" id="main-nav">
       <button class="nav-btn active" data-view="home">主页</button>
       <button class="nav-btn" data-view="deck">卡组</button>
+      <button class="nav-btn" data-view="cardbox">抽卡</button>
       <button class="nav-btn" data-view="duel">决斗</button>
       <button class="nav-btn" data-view="characters">角色</button>
       <button class="nav-btn" data-view="tournament">比赛</button>
@@ -1708,6 +1709,22 @@ body::before {
             点击卡片可在卡组/牌库之间移动 · 主卡组最少20张最多60张 · 额外最多15张 · 同一系列15张以上触发系列卡组加成（一张卡可属于多个系列，用/分隔，多系列加成叠加） · ⚔为单卡牌力加成
           </div>
         </div>
+      </div>
+
+      <!-- 抽卡 -->
+      <div id="subview-cardbox" class="view">
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>🎴 系列卡盒</span>
+            <span style="font-size:11px;color:var(--text-muted);">决斗点: <span id="cardbox-page-dp" style="color:#fbbf24;font-weight:bold;">0</span></span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);padding:0 8px 8px;">
+            消耗决斗点抽取系列卡包 · 每包5张 · 保底机制防止重复 · 抽完自动重置
+          </div>
+        </div>
+        <div id="cardbox-page-list" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"></div>
+        <div id="cardbox-page-detail" style="display:none;margin-bottom:12px;"></div>
+        <div id="cardbox-page-result" style="display:none;"></div>
       </div>
 
       <!-- 决斗 -->
@@ -2208,6 +2225,33 @@ body::before {
   </div>
 </div>
 
+<!-- 系列卡盒抽取弹窗 -->
+<div id="cardbox-modal" class="modal-overlay" style="display:none;z-index:10004;">
+  <div class="card-detail-box" style="max-width:560px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">
+      <div style="font-size:18px;font-weight:bold;color:#fbbf24;">🎴 系列卡盒</div>
+      <button onclick="closeCardBoxModal()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 8px;">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      当前决斗点: <span id="cardbox-dp" style="color:#fbbf24;font-weight:bold;">0</span>
+    </div>
+    <div id="cardbox-list"></div>
+    <div id="cardbox-detail" style="display:none;margin-top:16px;"></div>
+    <div id="cardbox-result" style="display:none;margin-top:16px;"></div>
+  </div>
+</div>
+
+<!-- 抽卡结果独立弹窗 -->
+<div id="cardbox-result-modal" class="modal-overlay" style="display:none;z-index:10006;">
+  <div class="card-detail-box" style="max-width:560px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);">
+      <div style="font-size:18px;font-weight:bold;color:#fbbf24;">🎉 抽卡结果</div>
+      <button onclick="hideCardBoxResult()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:0 8px;">×</button>
+    </div>
+    <div id="cardbox-result-content"></div>
+  </div>
+</div>
+
 <!-- 兑换码弹窗 -->
 <div id="redeem-modal" class="modal-overlay" style="display:none;z-index:10005;">
   <div class="card-detail-box" style="max-width:400px;">
@@ -2355,6 +2399,41 @@ let CARD_DB = {
   m062: { id:'m062', name:'沉默剑士', type:'monster', rarity:'UR', archetype:'沉默剑士', stats:{search:0,expand:8,disrupt:9,resist:7,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
   m063: { id:'m063', name:'沉默剑士·零', type:'monster', rarity:'SR', archetype:'沉默剑士/光之黄金柜', stats:{search:0,expand:0,disrupt:8,resist:8,suppress:8}, sub:{power:8,soul:8,proficiency:0,intelligence:0} },
   m064: { id:'m064', name:'沉默魔术师', type:'monster', rarity:'UR', archetype:'沉默魔术师', stats:{search:0,expand:9,disrupt:9,resist:9,suppress:9}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
+  m10178757: { id:'m10178757', name:'真次世代预言机', type:'monster', rarity:'R', archetype:'次世代', stats:{search:3,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:0,soul:0,proficiency:0,intelligence:1} },
+  m1533292: { id:'m1533292', name:'真次世代锅炉人', type:'monster', rarity:'R', archetype:'次世代', stats:{search:2,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  m15605085: { id:'m15605085', name:'次世代太阳能人', type:'monster', rarity:'UR', archetype:'次世代', stats:{search:0,expand:5,disrupt:0,resist:3,suppress:1}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  m16828633: { id:'m16828633', name:'次世代后备品', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:1,disrupt:0,resist:3,suppress:1}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  m19182751: { id:'m19182751', name:'次世代中子人', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:3,disrupt:0,resist:3,suppress:1}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m20127343: { id:'m20127343', name:'盟军·次世代转换员', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:4,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m24432029: { id:'m24432029', name:'次世代鼓风人', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:3,expand:3,disrupt:0,resist:3,suppress:0}, sub:{power:4,soul:0,proficiency:0,intelligence:1} },
+  m27827903: { id:'m27827903', name:'盟军·次世代轰击兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:5,suppress:3}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  m30399511: { id:'m30399511', name:'次世代节能员', type:'monster', rarity:'N', archetype:'次世代', stats:{search:3,expand:0,disrupt:0,resist:0,suppress:0}, sub:{power:0,soul:0,proficiency:0,intelligence:1} },
+  m32744558: { id:'m32744558', name:'真次世代协调员', type:'monster', rarity:'R', archetype:'次世代', stats:{search:1,expand:2,disrupt:0,resist:0,suppress:0}, sub:{power:0,soul:0,proficiency:0,intelligence:1} },
+  m34568783: { id:'m34568783', name:'真次世代水精灵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:3,disrupt:0,resist:2,suppress:2}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m38049541: { id:'m38049541', name:'盟军·次世代合成员', type:'monster', rarity:'R', archetype:'次世代', stats:{search:0,expand:0,disrupt:0,resist:1,suppress:1}, sub:{power:0,soul:0,proficiency:0,intelligence:0} },
+  m46572756: { id:'m46572756', name:'真次世代终极人', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:3,suppress:3}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m4904812: { id:'m4904812', name:'次世代水精灵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:2,disrupt:0,resist:1,suppress:0}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m51827737: { id:'m51827737', name:'次世代再生品', type:'monster', rarity:'R', archetype:'次世代', stats:{search:0,expand:0,disrupt:0,resist:1,suppress:1}, sub:{power:0,soul:0,proficiency:0,intelligence:0} },
+  m52222372: { id:'m52222372', name:'次世代涡轮机', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:3,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m53944920: { id:'m53944920', name:'次世代热炉人', type:'monster', rarity:'R', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:3,suppress:0}, sub:{power:5,soul:0,proficiency:0,intelligence:0} },
+  m56511382: { id:'m56511382', name:'盟军·次世代火炮兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:1,suppress:3}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m57238939: { id:'m57238939', name:'盟军·次世代遥控员', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:1,disrupt:0,resist:4,suppress:1}, sub:{power:1,soul:0,proficiency:0,intelligence:0} },
+  m61052897: { id:'m61052897', name:'真次世代图灵机', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:1,expand:2,disrupt:0,resist:1,suppress:0}, sub:{power:1,soul:0,proficiency:0,intelligence:1} },
+  m6256844: { id:'m6256844', name:'真次世代涡轮人', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:3,disrupt:0,resist:3,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m63211608: { id:'m63211608', name:'盟军·次世代再造兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:4,disrupt:2,resist:2,suppress:1}, sub:{power:5,soul:0,proficiency:0,intelligence:0} },
+  m64034255: { id:'m64034255', name:'盟军·次世代鸟人兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:1,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m64034256: { id:'m64034256', name:'盟军·次世代鸟人兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:1,suppress:3}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m65149697: { id:'m65149697', name:'真次世代破碎机', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:1,disrupt:0,resist:2,suppress:1}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  m67483216: { id:'m67483216', name:'次世代搜索员', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:1,suppress:3}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m68450517: { id:'m68450517', name:'盟军·次世代同暗兵', type:'monster', rarity:'R', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:3}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  m68505803: { id:'m68505803', name:'次世代控制员', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:3,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m73783043: { id:'m73783043', name:'真次世代加速器', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:2,expand:3,disrupt:0,resist:4,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m83500096: { id:'m83500096', name:'盟军·次世代冷冻兵', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:1,disrupt:0,resist:3,suppress:1}, sub:{power:1,soul:0,proficiency:0,intelligence:0} },
+  m89211486: { id:'m89211486', name:'次世代博士', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:1,expand:3,disrupt:0,resist:2,suppress:2}, sub:{power:3,soul:0,proficiency:0,intelligence:1} },
+  m89333528: { id:'m89333528', name:'次世代地矿人', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:4,suppress:2}, sub:{power:2,soul:0,proficiency:0,intelligence:0} },
+  m93211836: { id:'m93211836', name:'次世代军队', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:3,suppress:3}, sub:{power:5,soul:0,proficiency:0,intelligence:0} },
+  m93882364: { id:'m93882364', name:'次世代工作员', type:'monster', rarity:'SR', archetype:'次世代', stats:{search:0,expand:2,disrupt:0,resist:3,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
+  m94622638: { id:'m94622638', name:'盟军·次世代集电人', type:'monster', rarity:'R', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:0,suppress:1}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
   sp001: { id:'sp001', name:'拉之翼神龙', type:'monster', rarity:'UR', archetype:'幻神兽', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
   sp002: { id:'sp002', name:'欧贝利斯克之巨神兵', type:'monster', rarity:'UR', archetype:'幻神', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
   sp003: { id:'sp003', name:'奥西里斯之天空龙', type:'monster', rarity:'UR', archetype:'幻神', stats:{search:20,expand:20,disrupt:20,resist:20,suppress:20}, sub:{power:20,soul:20,proficiency:0,intelligence:0} },
@@ -2399,6 +2478,17 @@ let CARD_DB = {
   e037: { id:'e037', name:'黑炎之骑士', type:'extra', rarity:'R', archetype:'战士', stats:{search:0,expand:6,disrupt:0,resist:6,suppress:0}, sub:{power:4,soul:6,proficiency:0,intelligence:0} },
   e038: { id:'e038', name:'真红眼的黑龙剑', type:'extra', rarity:'R', archetype:'真红眼', stats:{search:0,expand:0,disrupt:0,resist:6,suppress:6}, sub:{power:6,soul:6,proficiency:0,intelligence:0} },
   e039: { id:'e039', name:'NO.39 希望皇霍普', type:'extra', rarity:'UR', archetype:'霍普', stats:{search:6,expand:9,disrupt:9,resist:9,suppress:7}, sub:{power:9,soul:9,proficiency:0,intelligence:0} },
+  e17760003: { id:'e17760003', name:'盟军·次世代三武人', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:3}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e33972299: { id:'e33972299', name:'次世代地热能人', type:'extra', rarity:'SR', archetype:'次世代', stats:{search:0,expand:3,disrupt:0,resist:7,suppress:1}, sub:{power:4,soul:0,proficiency:0,intelligence:0} },
+  e38354937: { id:'e38354937', name:'真次世代黑机车人', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:5,disrupt:0,resist:5,suppress:1}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e43925870: { id:'e43925870', name:'次世代风能人', type:'extra', rarity:'SR', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:3}, sub:{power:5,soul:0,proficiency:0,intelligence:0} },
+  e47421985: { id:'e47421985', name:'次世代水能人', type:'extra', rarity:'SR', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:4,suppress:3}, sub:{power:5,soul:0,proficiency:0,intelligence:0} },
+  e52709508: { id:'e52709508', name:'盟军·次世代三力人', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:5,disrupt:2,resist:5,suppress:3}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e61775475: { id:'e61775475', name:'次世代兵器 还零', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:6,disrupt:2,resist:7,suppress:3}, sub:{power:7,soul:0,proficiency:0,intelligence:0} },
+  e6588580: { id:'e6588580', name:'次世代热能人', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:4,disrupt:0,resist:3,suppress:3}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e66165755: { id:'e66165755', name:'盟军·次世代加速人', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:0,expand:5,disrupt:0,resist:5,suppress:3}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e73483491: { id:'e73483491', name:'真次世代风筝', type:'extra', rarity:'UR', archetype:'次世代', stats:{search:2,expand:4,disrupt:0,resist:2,suppress:3}, sub:{power:6,soul:0,proficiency:0,intelligence:0} },
+  e8173184: { id:'e8173184', name:'修复次世代控制员', type:'extra', rarity:'SR', archetype:'次世代', stats:{search:2,expand:2,disrupt:0,resist:0,suppress:1}, sub:{power:3,soul:0,proficiency:0,intelligence:0} },
 
   // 魔法卡
   s001: { id:'s001', name:'死者苏生', type:'spell', rarity:'UR', archetype:'泛用', stats:{search:0,expand:8,disrupt:0,resist:6,suppress:6}, sub:{power:8,soul:4,proficiency:0,intelligence:0} },
@@ -3644,8 +3734,590 @@ const GAME_CONFIG = {
     "urMultiplier": 10,
     "spMultiplier": 100,
     "spDefaultAchievement": "invigoration"
+  },
+  "cardBoxSystem": {
+    "unlockShopVisits": 10,
+    "defaultCardsPerPack": 5,
+    "defaultPackPrice": 500,
+    "defaultTenPackDiscount": 0.8,
+    "defaultCopiesPerCard": 3,
+    "rarityWeights": {
+      "N": 60,
+      "R": 25,
+      "SR": 12,
+      "UR": 3
+    }
   }
 };
+
+// ===== 系列卡盒数据 =====
+const CARD_BOXES = [
+  {
+    "id": "box_genex",
+    "name": "次世代卡盒",
+    "desc": "收录次世代系列相关卡片，次世代的力量正在觉醒。",
+    "cardIds": [
+      "m10178757",
+      "m1533292",
+      "m15605085",
+      "m16828633",
+      "m19182751",
+      "m20127343",
+      "m24432029",
+      "m27827903",
+      "m30399511",
+      "m32744558",
+      "m34568783",
+      "m38049541",
+      "m46572756",
+      "m4904812",
+      "m51827737",
+      "m52222372",
+      "m53944920",
+      "m56511382",
+      "m57238939",
+      "m61052897",
+      "m6256844",
+      "m63211608",
+      "m64034255",
+      "m64034256",
+      "m65149697",
+      "m67483216",
+      "m68450517",
+      "m68505803",
+      "m73783043",
+      "m83500096",
+      "m89211486",
+      "m89333528",
+      "m93211836",
+      "m93882364",
+      "m94622638",
+      "e17760003",
+      "e33972299",
+      "e38354937",
+      "e43925870",
+      "e47421985",
+      "e52709508",
+      "e61775475",
+      "e6588580",
+      "e66165755",
+      "e73483491",
+      "e8173184"
+    ],
+    "cardsPerPack": 5,
+    "packPrice": 500,
+    "tenPackDiscount": 0.8,
+    "defaultCopies": 3,
+    "cardCounts": {
+      "m10178757": 3,
+      "m1533292": 3,
+      "m15605085": 3,
+      "m16828633": 3,
+      "m19182751": 3,
+      "m20127343": 3,
+      "m24432029": 3,
+      "m27827903": 3,
+      "m30399511": 3,
+      "m32744558": 3,
+      "m34568783": 3,
+      "m38049541": 3,
+      "m46572756": 3,
+      "m4904812": 3,
+      "m51827737": 3,
+      "m52222372": 3,
+      "m53944920": 3,
+      "m56511382": 3,
+      "m57238939": 3,
+      "m61052897": 3,
+      "m6256844": 3,
+      "m63211608": 3,
+      "m64034255": 3,
+      "m64034256": 3,
+      "m65149697": 3,
+      "m67483216": 3,
+      "m68450517": 3,
+      "m68505803": 3,
+      "m73783043": 3,
+      "m83500096": 3,
+      "m89211486": 3,
+      "m89333528": 3,
+      "m93211836": 3,
+      "m93882364": 3,
+      "m94622638": 3,
+      "e17760003": 3,
+      "e33972299": 3,
+      "e38354937": 3,
+      "e43925870": 3,
+      "e47421985": 3,
+      "e52709508": 3,
+      "e61775475": 3,
+      "e6588580": 3,
+      "e66165755": 3,
+      "e73483491": 3,
+      "e8173184": 3
+    }
+  },
+  {
+    "id": "box_dark_magician",
+    "name": "黑魔导卡盒",
+    "desc": "收录黑魔导系列相关卡片，黑色魔术师的力量。",
+    "cardIds": [],
+    "cardsPerPack": 5,
+    "packPrice": 500,
+    "tenPackDiscount": 0.8,
+    "defaultCopies": 3
+  },
+  {
+    "id": "box_red_eyes",
+    "name": "真红眼卡盒",
+    "desc": "收录真红眼系列相关卡片，不熄的火焰。",
+    "cardIds": [],
+    "cardsPerPack": 5,
+    "packPrice": 500,
+    "tenPackDiscount": 0.8,
+    "defaultCopies": 3
+  },
+  {
+    "id": "box_elemental_hero",
+    "name": "元素英雄卡盒",
+    "desc": "收录元素英雄系列相关卡片，新宇侠的力量。",
+    "cardIds": [],
+    "cardsPerPack": 5,
+    "packPrice": 500,
+    "tenPackDiscount": 0.8,
+    "defaultCopies": 3
+  },
+  {
+    "id": "box_cyber_dragon",
+    "name": "电子龙卡盒",
+    "desc": "收录电子龙系列相关卡片，机械龙的咆哮。",
+    "cardIds": [],
+    "cardsPerPack": 5,
+    "packPrice": 500,
+    "tenPackDiscount": 0.8,
+    "defaultCopies": 3
+  }
+];
+
+// ===== 系列卡盒系统函数 =====
+function getCardBox(boxId) {
+  return CARD_BOXES.find(b => b.id === boxId);
+}
+
+function initCardBoxState(boxId) {
+  const box = getCardBox(boxId);
+  if (!box) return null;
+  if (!gameState.cardBoxState) gameState.cardBoxState = {};
+  if (!gameState.cardBoxState[boxId]) {
+    const remaining = {};
+    box.cardIds.forEach(cardId => {
+      const count = (box.cardCounts && box.cardCounts[cardId]) ? box.cardCounts[cardId] : (box.defaultCopies || 3);
+      remaining[cardId] = count;
+    });
+    gameState.cardBoxState[boxId] = {
+      remaining: remaining,
+      totalDrawn: 0,
+      totalSpent: 0
+    };
+  }
+  return gameState.cardBoxState[boxId];
+}
+
+function getCardBoxState(boxId) {
+  if (!gameState || !gameState.cardBoxState) return null;
+  return gameState.cardBoxState[boxId] || null;
+}
+
+function getCardBoxTotalRemaining(boxId) {
+  const state = getCardBoxState(boxId);
+  if (!state) return 0;
+  return Object.values(state.remaining).reduce((sum, count) => sum + count, 0);
+}
+
+function resetCardBox(boxId) {
+  const box = getCardBox(boxId);
+  if (!box) return false;
+  const remaining = {};
+  box.cardIds.forEach(cardId => {
+    const count = (box.cardCounts && box.cardCounts[cardId]) ? box.cardCounts[cardId] : (box.defaultCopies || 3);
+    remaining[cardId] = count;
+  });
+  if (!gameState.cardBoxState) gameState.cardBoxState = {};
+  gameState.cardBoxState[boxId] = {
+    remaining: remaining,
+    totalDrawn: gameState.cardBoxState[boxId]?.totalDrawn || 0,
+    totalSpent: gameState.cardBoxState[boxId]?.totalSpent || 0
+  };
+  return true;
+}
+
+function resetCardBoxConfirm(boxId) {
+  const box = getCardBox(boxId);
+  if (!box) return;
+  showEventModal('重置卡盒', `确定要重置【${box.name}】吗？\n\n所有卡片将恢复到初始数量，已抽取的卡片不会消失。`, null, [
+    { name: '取消', action: () => closeEventModal() },
+    { name: '确定重置', action: () => { resetCardBox(boxId); closeEventModal(); showCardBoxDetail(boxId); showToast('卡盒已重置'); } }
+  ]);
+}
+
+function isCardBoxUnlocked() {
+  return gameState.cardBoxUnlocked === true;
+}
+
+function unlockCardBox() {
+  gameState.cardBoxUnlocked = true;
+}
+
+function getCardBoxCardIds() {
+  const ids = new Set();
+  CARD_BOXES.forEach(box => {
+    (box.cardIds || []).forEach(id => ids.add(id));
+  });
+  return ids;
+}
+
+function drawOneCardFromBox(boxId) {
+  const box = getCardBox(boxId);
+  const state = getCardBoxState(boxId);
+  if (!box || !state) return null;
+  
+  // 检查是否还有剩余卡片
+  const totalRemaining = getCardBoxTotalRemaining(boxId);
+  if (totalRemaining <= 0) {
+    // 自动重置
+    resetCardBox(boxId);
+  }
+  
+  // 按稀有度权重从剩余卡中抽取
+  const weights = (GAME_CONFIG.cardBoxSystem && GAME_CONFIG.cardBoxSystem.rarityWeights) || {N:60, R:25, SR:12, UR:3};
+  const remainingCards = [];
+  Object.entries(state.remaining).forEach(([cardId, count]) => {
+    if (count > 0) {
+      const card = CARD_DB[cardId];
+      if (card) {
+        remainingCards.push({ id: cardId, rarity: card.rarity, count: count });
+      }
+    }
+  });
+  
+  if (remainingCards.length === 0) return null;
+  
+  // 计算加权总权重
+  let totalWeight = 0;
+  remainingCards.forEach(c => {
+    totalWeight += (weights[c.rarity] || 1) * c.count;
+  });
+  
+  // 随机抽取
+  let random = Math.random() * totalWeight;
+  for (const c of remainingCards) {
+    const cardWeight = (weights[c.rarity] || 1) * c.count;
+    random -= cardWeight;
+    if (random <= 0) {
+      state.remaining[c.id]--;
+      state.totalDrawn++;
+      return c.id;
+    }
+  }
+  
+  // 兜底返回第一张
+  const first = remainingCards[0];
+  state.remaining[first.id]--;
+  state.totalDrawn++;
+  return first.id;
+}
+
+function drawCardPack(boxId, isTenPack) {
+  const box = getCardBox(boxId);
+  if (!box) return [];
+  initCardBoxState(boxId);
+  
+  // 十连抽 = 10包，每包cardsPerPack张
+  const cardsPerPack = isTenPack ? (box.cardsPerPack || 5) * 10 : (box.cardsPerPack || 5);
+  const cards = [];
+  
+  for (let i = 0; i < cardsPerPack; i++) {
+    const cardId = drawOneCardFromBox(boxId);
+    if (cardId) cards.push(cardId);
+  }
+  
+  return cards;
+}
+
+function getPackPrice(boxId, isTenPack) {
+  const box = getCardBox(boxId);
+  if (!box) return 0;
+  const basePrice = box.packPrice || 500;
+  if (isTenPack) {
+    const discount = box.tenPackDiscount || 0.8;
+    return Math.round(basePrice * 10 * discount);
+  }
+  return basePrice;
+}
+
+function performCardDraw(boxId, isTenPack) {
+  const box = getCardBox(boxId);
+  if (!box) return { success: false, message: '卡盒不存在' };
+  
+  const price = getPackPrice(boxId, isTenPack);
+  if ((gameState.duelPoints || 0) < price) {
+    return { success: false, message: `决斗点不足，需要${price}点` };
+  }
+  
+  gameState.duelPoints -= price;
+  const state = getCardBoxState(boxId);
+  if (state) state.totalSpent += price;
+  
+  const cards = drawCardPack(boxId, isTenPack);
+  
+  // 将抽到的卡加入收藏（不触发单独的卡片获得弹窗，由抽卡结果弹窗统一展示）
+  cards.forEach(cardId => {
+    const card = CARD_DB[cardId];
+    if (!card) return;
+    if (isSpecialCard(card)) {
+      if (!gameState.specialCards) gameState.specialCards = [];
+      if (!gameState.specialCards.includes(cardId)) {
+        gameState.specialCards.push(cardId);
+      }
+      return;
+    }
+    if (!gameState.collection.includes(cardId)) {
+      gameState.collection.push(cardId);
+      gameState.collectionCount[cardId] = 1;
+      if (!gameState.collectionObtainTime) gameState.collectionObtainTime = {};
+      gameState.collectionObtainTime[cardId] = Date.now();
+    } else {
+      gameState.collectionCount[cardId] = (gameState.collectionCount[cardId] || 1) + 1;
+    }
+  });
+  
+  saveGame();
+  return { success: true, cards: cards, message: `抽到${cards.length}张卡` };
+}
+
+function openCardBoxModal() {
+  if (!isCardBoxUnlocked()) {
+    showToast('卡盒系统未解锁');
+    return;
+  }
+  document.getElementById('cardbox-modal').style.display = 'flex';
+  document.getElementById('cardbox-dp').textContent = gameState.duelPoints || 0;
+  renderCardBoxList();
+  document.getElementById('cardbox-detail').style.display = 'none';
+  document.getElementById('cardbox-result').style.display = 'none';
+}
+
+function closeCardBoxModal() {
+  document.getElementById('cardbox-modal').style.display = 'none';
+}
+
+function renderCardBoxPage() {
+  if (!isCardBoxUnlocked()) {
+    const pageList = document.getElementById('cardbox-page-list');
+    if (pageList) {
+      pageList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:40px;margin-bottom:12px;">🔒</div><div>卡盒系统未解锁</div><div style="font-size:11px;margin-top:8px;">完成引导任务「卡盒收藏家」后解锁</div></div>';
+    }
+    return;
+  }
+  const dpEl = document.getElementById('cardbox-page-dp');
+  if (dpEl) dpEl.textContent = gameState.duelPoints || 0;
+  renderCardBoxList();
+}
+
+function generateCardBoxListHtml() {
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
+  CARD_BOXES.forEach(box => {
+    initCardBoxState(box.id);
+    const remaining = getCardBoxTotalRemaining(box.id);
+    const totalCards = box.cardIds.length * (box.defaultCopies || 3);
+    const percent = totalCards > 0 ? Math.round(remaining / totalCards * 100) : 0;
+    html += `
+      <div onclick="showCardBoxDetail('${box.id}')" style="padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent-purple)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:14px;font-weight:bold;color:#fff;margin-bottom:4px;">${box.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.4;">${box.desc}</div>
+        <div style="font-size:11px;color:var(--text2);">剩余: ${remaining}/${totalCards} (${percent}%)</div>
+        <div style="height:4px;background:var(--bg-input);border-radius:2px;margin-top:4px;overflow:hidden;">
+          <div style="height:100%;width:${percent}%;background:linear-gradient(90deg,var(--accent-purple),var(--accent-blue));"></div>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderCardBoxList() {
+  const listHtml = generateCardBoxListHtml();
+  const modalList = document.getElementById('cardbox-list');
+  if (modalList) modalList.innerHTML = listHtml;
+  const pageList = document.getElementById('cardbox-page-list');
+  if (pageList) pageList.innerHTML = listHtml;
+}
+
+function showCardBoxDetail(boxId) {
+  const box = getCardBox(boxId);
+  if (!box) return;
+  initCardBoxState(boxId);
+  const state = getCardBoxState(boxId);
+  
+  // 打开弹窗
+  document.getElementById('cardbox-modal').style.display = 'flex';
+  document.getElementById('cardbox-dp').textContent = gameState.duelPoints || 0;
+  
+  const rarityGroups = { N: [], R: [], SR: [], UR: [], SP: [] };
+  let totalRemaining = 0;
+  let totalCards = 0;
+  
+  box.cardIds.forEach(cardId => {
+    const card = CARD_DB[cardId];
+    if (!card) return;
+    const maxCount = (box.cardCounts && box.cardCounts[cardId]) ? box.cardCounts[cardId] : (box.defaultCopies || 3);
+    const remaining = state.remaining[cardId] || 0;
+    totalRemaining += remaining;
+    totalCards += maxCount;
+    if (rarityGroups[card.rarity]) {
+      rarityGroups[card.rarity].push({ card, remaining, maxCount });
+    }
+  });
+  
+  const rarityColors = { N: '#9ca3af', R: '#3b82f6', SR: '#a855f7', UR: '#f59e0b', SP: '#ef4444' };
+  const rarityNames = { N: 'N', R: 'R', SR: 'SR', UR: 'UR', SP: 'SP' };
+  
+  let html = `
+    <div class="panel" style="margin-bottom:12px;">
+      <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${box.name}</span>
+        <button onclick="resetCardBoxConfirm('${box.id}')" style="padding:4px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text2);font-size:11px;cursor:pointer;">🔄 重置卡盒</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);padding:0 8px 8px;">${box.desc}</div>
+      <div style="padding:0 8px 8px;font-size:12px;color:var(--text2);">总进度: ${totalRemaining}/${totalCards} (${totalCards > 0 ? Math.round(totalRemaining/totalCards*100) : 0}%)</div>
+      <div style="height:6px;background:var(--bg-input);border-radius:3px;margin:0 8px 12px;overflow:hidden;">
+        <div style="height:100%;width:${totalCards > 0 ? (totalRemaining/totalCards*100) : 0}%;background:linear-gradient(90deg,var(--accent-purple),var(--accent-blue));"></div>
+      </div>
+  `;
+  
+  Object.entries(rarityGroups).forEach(([rarity, cards]) => {
+    if (cards.length === 0) return;
+    const rarityRemaining = cards.reduce((sum, c) => sum + c.remaining, 0);
+    const rarityTotal = cards.reduce((sum, c) => sum + c.maxCount, 0);
+    html += `
+      <div style="padding:8px;border-top:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="color:${rarityColors[rarity]};font-weight:bold;font-size:12px;">${rarityNames[rarity]}</span>
+          <span style="font-size:11px;color:var(--text-muted);">${rarityRemaining}/${rarityTotal}</span>
+        </div>
+        <div style="height:3px;background:var(--bg-input);border-radius:2px;margin-bottom:8px;overflow:hidden;">
+          <div style="height:100%;width:${rarityTotal > 0 ? (rarityRemaining/rarityTotal*100) : 0}%;background:${rarityColors[rarity]};"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          ${cards.map(c => `
+            <div style="padding:4px 6px;background:var(--bg-input);border-radius:3px;font-size:10px;display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;" title="${c.card.name}">${c.card.name}</span>
+              <span style="color:${c.remaining > 0 ? rarityColors[rarity] : '#666'};font-weight:bold;flex-shrink:0;margin-left:4px;">${c.remaining}/${c.maxCount}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  const singlePrice = getPackPrice(boxId, false);
+  const tenPrice = getPackPrice(boxId, true);
+  
+  html += `
+      <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:center;">
+        <button onclick="performCardDrawUI('${box.id}', false)" style="padding:8px 16px;background:linear-gradient(135deg,#8b5cf6,#6366f1);border:none;border-radius:4px;color:#fff;font-size:12px;cursor:pointer;font-weight:bold;">单抽 (${singlePrice}点)</button>
+        <button onclick="performCardDrawUI('${box.id}', true)" style="padding:8px 16px;background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;border-radius:4px;color:#fff;font-size:12px;cursor:pointer;font-weight:bold;">十连抽 (${tenPrice}点)</button>
+      </div>
+    </div>
+  `;
+  
+  const modalDetail = document.getElementById('cardbox-detail');
+  if (modalDetail) {
+    modalDetail.innerHTML = html;
+    modalDetail.style.display = 'block';
+  }
+  const modalResult = document.getElementById('cardbox-result');
+  if (modalResult) modalResult.style.display = 'none';
+}
+
+function renderDrawResult(cards, boxId) {
+  const rarityColors = { N: '#9ca3af', R: '#3b82f6', SR: '#a855f7', UR: '#f59e0b', SP: '#ef4444' };
+  
+  const cardCount = {};
+  const rarityCount = { N:0, R:0, SR:0, UR:0, SP:0 };
+  cards.forEach(cardId => {
+    if (!cardCount[cardId]) cardCount[cardId] = 0;
+    cardCount[cardId]++;
+    const card = CARD_DB[cardId];
+    if (card && rarityCount[card.rarity] !== undefined) rarityCount[card.rarity]++;
+  });
+  
+  let html = `
+    <div class="panel" style="margin-bottom:12px;">
+      <div class="panel-title">🎉 抽卡结果</div>
+      <div style="padding:8px;display:flex;gap:12px;justify-content:center;font-size:12px;">
+        ${Object.entries(rarityCount).filter(([r,c]) => c > 0).map(([r,c]) => `<span style="color:${rarityColors[r]};font-weight:bold;">${r}: ${c}张</span>`).join('')}
+      </div>
+  `;
+  
+  const rarityGroups = { N: [], R: [], SR: [], UR: [], SP: [] };
+  Object.entries(cardCount).forEach(([cardId, count]) => {
+    const card = CARD_DB[cardId];
+    if (card && rarityGroups[card.rarity]) {
+      rarityGroups[card.rarity].push({ card, count });
+    }
+  });
+  
+  Object.entries(rarityGroups).forEach(([rarity, cards]) => {
+    if (cards.length === 0) return;
+    html += `
+      <div style="padding:8px;border-top:1px solid var(--border);">
+        <div style="color:${rarityColors[rarity]};font-weight:bold;font-size:12px;margin-bottom:6px;">${rarity}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+          ${cards.map(c => `
+            <div style="padding:6px 8px;background:var(--bg-input);border-radius:4px;font-size:11px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ${rarityColors[rarity]};">
+              <span style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;" title="${c.card.name}">${c.card.name}</span>
+              <span style="color:${rarityColors[rarity]};font-weight:bold;flex-shrink:0;margin-left:4px;">×${c.count}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="hideCardBoxResult()" style="padding:6px 16px;background:var(--accent-purple);border:none;border-radius:4px;color:#fff;font-size:12px;cursor:pointer;">确认</button>
+      </div>
+    </div>
+  `;
+  
+  const resultModal = document.getElementById('cardbox-result-modal');
+  const resultContent = document.getElementById('cardbox-result-content');
+  if (resultModal && resultContent) {
+    resultContent.innerHTML = html;
+    resultModal.style.display = 'flex';
+  }
+}
+
+function hideCardBoxResult() {
+  const resultModal = document.getElementById('cardbox-result-modal');
+  if (resultModal) resultModal.style.display = 'none';
+}
+
+function performCardDrawUI(boxId, isTenPack) {
+  const result = performCardDraw(boxId, isTenPack);
+  if (!result.success) {
+    showToast(result.message);
+    return;
+  }
+  
+  const modalDp = document.getElementById('cardbox-dp');
+  if (modalDp) modalDp.textContent = gameState.duelPoints || 0;
+  showCardBoxDetail(boxId);
+  renderDrawResult(result.cards, boxId);
+}
 
 // ===== 地点定义 =====
 const LOCATIONS = [
@@ -4782,6 +5454,22 @@ const TASKS = [
         "intelligence": 5,
         "proficiency": 5
       }
+    }
+  },
+  {
+    "id": "guide_cardbox",
+    "name": "卡盒收藏家",
+    "type": "guide",
+    "order": 4.5,
+    "desc": "收集至少30张卡片，解锁系列卡盒抽卡系统。",
+    "story": "你的卡库已经初具规模，卡牌店店长注意到了你这位收藏爱好者。\"年轻人，我这里新到了一批系列卡盒，有没有兴趣看看？\"系列卡盒中包含特定系列的稀有卡片，通过决斗点抽取，每包5张，保底机制让你不会一直抽不到想要的卡！",
+    "condition": {
+      "type": "collect_cards",
+      "value": 30
+    },
+    "reward": {
+      "unlockCardBox": true,
+      "duelPoints": 200
     }
   },
   {
@@ -7026,370 +7714,6 @@ const EVENTS = {
   ]
 };
 
-// ===== 各地点一次性随机事件（动态添加）=====
-(function addOneTimeEvents() {
-  const oneTimeEvents = {
-    // 龟游戏屋
-    "kame": [
-      {
-        "id": "kame_ot_01",
-        "name": "千年积木的低语",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "龟游戏屋",
-        "text": "你在店里偶然触碰到了武藤游戏的千年积木，一瞬间，你仿佛听到了来自远古的低语，一股神秘的力量涌入你的身体...",
-        "effects": [
-          { "type": "bonusStat", "stat": "soul", "amount": 3 },
-          { "type": "bonusStat", "stat": "luck", "amount": 2 }
-        ],
-        "log": "触碰千年积木，魂度+3，掏度+2"
-      },
-      {
-        "id": "kame_ot_02",
-        "name": "双六的珍藏",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "龟游戏屋",
-        "text": "双六爷爷神秘兮兮地把你拉到后院，从一个老旧的保险箱里取出一张卡片：\"这是我年轻时收藏的宝贝，看你是个可造之材，就送给你了。\"",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "SR" }
-        ],
-        "log": "从双六爷爷处获得了珍藏的SR卡【{cardName}】"
-      },
-      {
-        "id": "kame_ot_03",
-        "name": "暗游戏的指点",
-        "probability": 0.08,
-        "oneTime": true,
-        "title": "龟游戏屋",
-        "text": "当你独自在店里思考卡组构筑时，一个低沉的声音在你脑海中响起：\"你的卡组还缺少关键的一环...\" 是暗游戏！他在冥冥之中给了你一些决斗上的指点。",
-        "effects": [
-          { "type": "bonusStat", "stat": "intelligence", "amount": 4 },
-          { "type": "bonusStat", "stat": "proficiency", "amount": 3 }
-        ],
-        "log": "获得暗游戏的指点，情报力+4，熟练度+3"
-      }
-    ],
-    // 童实野卡牌店
-    "cardshop": [
-      {
-        "id": "cardshop_ot_01",
-        "name": "幸运的卡包",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "童实野卡牌店",
-        "text": "你在卡店的角落里发现了一个被遗忘的旧卡包，拆开一看，竟然是一张稀有卡！店员说这是最后一包了，算你运气好。",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "UR" }
-        ],
-        "log": "在卡店发现幸运卡包，获得了UR卡【{cardName}】"
-      },
-      {
-        "id": "cardshop_ot_02",
-        "name": "卡组构筑讲座",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "童实野卡牌店",
-        "text": "卡店今天举办了一场免费的卡组构筑讲座，你认真听完了全部内容，对卡组的理解有了质的飞跃。",
-        "effects": [
-          { "type": "bonusStat", "stat": "proficiency", "amount": 5 },
-          { "type": "addDuelPoints", "amount": 100 }
-        ],
-        "log": "参加卡组构筑讲座，熟练度+5，决斗点+100"
-      },
-      {
-        "id": "cardshop_ot_03",
-        "name": "以卡会友",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "童实野卡牌店",
-        "text": "你在卡店的自由决斗区遇到了一位志同道合的决斗者，你们进行了一场深入的卡组交流，还交换了联系方式。",
-        "effects": [
-          { "type": "bonusStat", "stat": "expand", "amount": 2 },
-          { "type": "bonusStat", "stat": "disrupt", "amount": 2 },
-          { "type": "addCardPoints", "amount": 5 }
-        ],
-        "log": "在卡店以卡会友，展开+2，干扰+2，卡点+5"
-      }
-    ],
-    // 海边码头
-    "beach": [
-      {
-        "id": "beach_ot_01",
-        "name": "漂流瓶中的卡",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "海边码头",
-        "text": "你在海边散步时，发现了一个漂流瓶，里面竟然装着一张卡片！卡片虽然有些旧了，但保存完好，似乎是某位决斗者留下的纪念。",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "R" },
-          { "type": "randomCardByRarity", "rarity": "SR" }
-        ],
-        "log": "在海边发现漂流瓶，获得了【{cardName}】等卡片"
-      },
-      {
-        "id": "beach_ot_02",
-        "name": "海边的冥想",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "海边码头",
-        "text": "你坐在海边的礁石上，听着海浪声，闭上眼睛冥想。海风拂过你的脸庞，你感觉内心变得无比平静，对决斗的理解也更深了一层。",
-        "effects": [
-          { "type": "bonusStat", "stat": "resist", "amount": 3 },
-          { "type": "bonusStat", "stat": "soul", "amount": 2 }
-        ],
-        "log": "在海边冥想，抗性+3，魂度+2"
-      },
-      {
-        "id": "beach_ot_03",
-        "name": "神秘的渔夫",
-        "probability": 0.08,
-        "oneTime": true,
-        "title": "海边码头",
-        "text": "一位老渔夫叫住了你，他说他年轻时也是个决斗者，并从怀里掏出一张卡片：\"这张卡跟了我很多年，现在我把它传给你，希望你能在决斗之路上走得更远。\"",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "UR" },
-          { "type": "bonusStat", "stat": "luck", "amount": 3 }
-        ],
-        "log": "从神秘渔夫处获得了UR卡【{cardName}】，掏度+3"
-      }
-    ],
-    // 童实野高中
-    "school": [
-      {
-        "id": "school_ot_01",
-        "name": "校园决斗大赛",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "童实野高中",
-        "text": "学校举办了校园决斗大赛，你一路过关斩将，最终获得了冠军！校长亲自为你颁奖，同学们都为你欢呼。",
-        "effects": [
-          { "type": "addDuelPoints", "amount": 300 },
-          { "type": "bonusStat", "stat": "power", "amount": 3 },
-          { "type": "randomCardByRarity", "rarity": "SR" }
-        ],
-        "log": "获得校园决斗大赛冠军，决斗点+300，强度+3，获得SR卡【{cardName}】"
-      },
-      {
-        "id": "school_ot_02",
-        "name": "图书馆的发现",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "童实野高中",
-        "text": "你在学校图书馆的角落里发现了一本古旧的决斗战术书籍，里面记载了很多失传的决斗技巧。你认真研读了一下午，收获颇丰。",
-        "effects": [
-          { "type": "bonusStat", "stat": "intelligence", "amount": 5 },
-          { "type": "bonusStat", "stat": "suppress", "amount": 2 }
-        ],
-        "log": "在图书馆发现古旧战术书，情报力+5，压制+2"
-      },
-      {
-        "id": "school_ot_03",
-        "name": "放学后的约定",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "童实野高中",
-        "text": "放学后，一位同学主动找你讨论卡组，你们在教室聊了很久，从卡组构筑到决斗战术，无所不谈。你们约定以后经常一起切磋。",
-        "effects": [
-          { "type": "bonusStat", "stat": "search", "amount": 2 },
-          { "type": "bonusStat", "stat": "expand", "amount": 2 },
-          { "type": "addCardPoints", "amount": 3 }
-        ],
-        "log": "与同学讨论卡组，检索+2，展开+2，卡点+3"
-      }
-    ],
-    // 童实野广场
-    "plaza": [
-      {
-        "id": "plaza_ot_01",
-        "name": "街头决斗王",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "童实野广场",
-        "text": "广场上正在举办街头决斗大赛，你报名参加并一路获胜，最终击败了所有对手，成为了今天的街头决斗王！围观的群众为你热烈鼓掌。",
-        "effects": [
-          { "type": "addDuelPoints", "amount": 400 },
-          { "type": "bonusStat", "stat": "power", "amount": 4 },
-          { "type": "randomCardByRarity", "rarity": "UR" }
-        ],
-        "log": "成为街头决斗王，决斗点+400，强度+4，获得UR卡【{cardName}】"
-      },
-      {
-        "id": "plaza_ot_02",
-        "name": "神秘的占卜师",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "童实野广场",
-        "text": "广场角落有一位神秘的占卜师，她叫住了你并为你占卜了一卦。她说你有着非凡的决斗天赋，但前路充满挑战。她送给你一张幸运符。",
-        "effects": [
-          { "type": "bonusStat", "stat": "luck", "amount": 5 },
-          { "type": "bonusStat", "stat": "soul", "amount": 3 }
-        ],
-        "log": "神秘占卜师为你占卜，掏度+5，魂度+3"
-      },
-      {
-        "id": "plaza_ot_03",
-        "name": "卡牌展览会",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "童实野广场",
-        "text": "广场上正在举办一场卡牌展览会，展出了各种稀有卡片和决斗历史文物。你仔细参观了每一个展位，对卡片的历史和价值有了更深的理解。",
-        "effects": [
-          { "type": "bonusStat", "stat": "intelligence", "amount": 3 },
-          { "type": "addCardPoints", "amount": 8 },
-          { "type": "addDuelPoints", "amount": 150 }
-        ],
-        "log": "参观卡牌展览会，情报力+3，卡点+8，决斗点+150"
-      }
-    ],
-    // 海马乐园
-    "kaiba": [
-      {
-        "id": "kaiba_ot_01",
-        "name": "海马的挑战",
-        "probability": 0.08,
-        "oneTime": true,
-        "title": "海马乐园",
-        "text": "你在海马乐园遇到了海马濑人本人！他看了一眼你的卡组，轻蔑地说：\"就凭这样的卡组也想挑战我？\" 但他还是给了你一些建议，并留下了一张卡片作为\"鼓励\"。",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "UR" },
-          { "type": "bonusStat", "stat": "suppress", "amount": 3 },
-          { "type": "bonusStat", "stat": "power", "amount": 2 }
-        ],
-        "log": "获得海马濑人的指点和UR卡【{cardName}】，压制+3，强度+2"
-      },
-      {
-        "id": "kaiba_ot_02",
-        "name": "高科技决斗模拟器",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "海马乐园",
-        "text": "海马乐园最新引进了一台高科技决斗模拟器，可以模拟各种决斗场景。你体验了一下，在虚拟决斗中与各种AI对手对战，技术提升飞快。",
-        "effects": [
-          { "type": "bonusStat", "stat": "proficiency", "amount": 6 },
-          { "type": "bonusStat", "stat": "disrupt", "amount": 2 }
-        ],
-        "log": "使用高科技决斗模拟器训练，熟练度+6，干扰+2"
-      },
-      {
-        "id": "kaiba_ot_03",
-        "name": "青眼的传承",
-        "probability": 0.06,
-        "oneTime": true,
-        "title": "海马乐园",
-        "text": "你在海马乐园的青眼白龙展区驻足良久，仿佛感受到了青眼白龙的灵魂。一位工作人员告诉你，只有真正被青眼认可的决斗者才能感受到这种力量。你获得了青眼的祝福。",
-        "effects": [
-          { "type": "bonusStat", "stat": "expand", "amount": 4 },
-          { "type": "bonusStat", "stat": "soul", "amount": 4 },
-          { "type": "randomCardByRarity", "rarity": "SR", "pool": ["m001", "m002", "m003"] }
-        ],
-        "log": "获得青眼的传承，展开+4，魂度+4，获得青眼系列卡【{cardName}】"
-      }
-    ],
-    // 地下决斗场
-    "underground": [
-      {
-        "id": "underground_ot_01",
-        "name": "黑暗中的王者",
-        "probability": 0.08,
-        "oneTime": true,
-        "title": "地下决斗场",
-        "text": "你在地下决斗场连战连胜，最终击败了这里的王者！全场沸腾，所有人都为你欢呼。地下决斗场的老板亲自接见了你，并给了你丰厚的奖励。",
-        "effects": [
-          { "type": "addDuelPoints", "amount": 500 },
-          { "type": "addCardPoints", "amount": 10 },
-          { "type": "randomCardByRarity", "rarity": "UR" }
-        ],
-        "log": "成为地下决斗场王者，决斗点+500，卡点+10，获得UR卡【{cardName}】"
-      },
-      {
-        "id": "underground_ot_02",
-        "name": "赌徒的直觉",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "地下决斗场",
-        "text": "在地下决斗场的氛围熏陶下，你对赌卡决斗有了更深的理解。你学会了如何在高压下保持冷静，如何在关键时刻做出正确的判断。你的赌徒直觉觉醒了。",
-        "effects": [
-          { "type": "bonusStat", "stat": "luck", "amount": 6 },
-          { "type": "bonusStat", "stat": "resist", "amount": 3 }
-        ],
-        "log": "赌徒的直觉觉醒，掏度+6，抗性+3"
-      },
-      {
-        "id": "underground_ot_03",
-        "name": "黑市商人",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "地下决斗场",
-        "text": "一位神秘的黑市商人找到了你，他说他有一些\"来路不明\"的稀有卡片，价格公道。你犹豫了一下，还是买了下来。虽然来源可疑，但卡片确实是真的。",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "SR" },
-          { "type": "randomCardByRarity", "rarity": "SR" },
-          { "type": "addDuelPoints", "amount": -100 }
-        ],
-        "log": "从黑市商人处购买了两张SR卡【{cardName}】等，花费100决斗点"
-      }
-    ],
-    // 中央公园
-    "park": [
-      {
-        "id": "park_ot_01",
-        "name": "公园的奇遇",
-        "probability": 0.12,
-        "oneTime": true,
-        "title": "中央公园",
-        "text": "你在公园的长椅上整理卡组时，一只可爱的小狗跑了过来，嘴里叼着一张卡片。它的主人追了过来，连连道歉，并把那张卡片送给了你作为赔礼。",
-        "effects": [
-          { "type": "randomCardByRarity", "rarity": "R" },
-          { "type": "randomCardByRarity", "rarity": "SR" },
-          { "type": "bonusStat", "stat": "luck", "amount": 2 }
-        ],
-        "log": "在公园遇到可爱小狗，获得了【{cardName}】等卡片，掏度+2"
-      },
-      {
-        "id": "park_ot_02",
-        "name": "大自然的启示",
-        "probability": 0.15,
-        "oneTime": true,
-        "title": "中央公园",
-        "text": "你在公园的树林中漫步，感受着大自然的气息。看着树叶随风飘落，你突然对决斗中的\"节奏\"有了新的理解。决斗就像自然一样，有起有落，有张有弛。",
-        "effects": [
-          { "type": "bonusStat", "stat": "search", "amount": 3 },
-          { "type": "bonusStat", "stat": "resist", "amount": 3 },
-          { "type": "bonusStat", "stat": "soul", "amount": 2 }
-        ],
-        "log": "从大自然中获得启示，检索+3，抗性+3，魂度+2"
-      },
-      {
-        "id": "park_ot_03",
-        "name": "退休决斗者的教诲",
-        "probability": 0.1,
-        "oneTime": true,
-        "title": "中央公园",
-        "text": "一位老人在公园的角落里看着你整理卡组，主动走过来和你聊天。他说他年轻时也是个决斗者，虽然现在不打了，但对决斗的热爱从未减退。他给你讲了很多当年的故事，并传授了一些宝贵的经验。",
-        "effects": [
-          { "type": "bonusStat", "stat": "proficiency", "amount": 4 },
-          { "type": "bonusStat", "stat": "intelligence", "amount": 3 },
-          { "type": "addCardPoints", "amount": 5 }
-        ],
-        "log": "聆听退休决斗者的教诲，熟练度+4，情报力+3，卡点+5"
-      }
-    ]
-  };
-
-  // 将一次性事件添加到对应地点
-  Object.keys(oneTimeEvents).forEach(locationId => {
-    if (EVENTS[locationId] && Array.isArray(EVENTS[locationId])) {
-      oneTimeEvents[locationId].forEach(event => {
-        // 避免重复添加
-        if (!EVENTS[locationId].find(e => e.id === event.id)) {
-          EVENTS[locationId].push(event);
-        }
-      });
-    }
-  });
-})();
-
 // ===== 兑换码数据 =====
 const REDEEM_CODES = [
   {
@@ -8323,6 +8647,170 @@ function getArchetypeBonus() {
   };
 }
 
+// ===== 系列占比加成系统（仅战斗中触发）=====
+// 系列占比计算规则：分母只按主卡组总卡数，分子包含主卡组+额外卡组的系列卡
+// 计算主卡组总卡数（占比分母）
+function getDeckTotalCount() {
+  if (!gameState || !gameState.mainDeck) return 0;
+  return gameState.mainDeck.length || 0;
+}
+
+// 计算各系列在卡组中的卡数（主卡组+额外卡组，占比分子）
+function getArchetypeCountForRatio() {
+  const counts = {};
+  const allCards = [...gameState.mainDeck, ...gameState.extraDeck];
+  allCards.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (c && c.archetype) {
+      const arches = c.archetype.split('/').map(a => a.trim()).filter(a => a);
+      arches.forEach(arch => {
+        counts[arch] = (counts[arch] || 0) + 1;
+      });
+    }
+  });
+  return counts;
+}
+
+// 计算各系列在卡组中的占比（分母=主卡组，分子=主卡组+额外卡组）
+function getArchetypeRatios() {
+  const total = getDeckTotalCount();
+  if (total === 0) return {};
+  const counts = getArchetypeCountForRatio();
+  const ratios = {};
+  Object.keys(counts).forEach(arch => {
+    ratios[arch] = Math.min(1.0, counts[arch] / total); // 占比最高100%
+  });
+  return ratios;
+}
+
+// 根据占比获取加成倍率
+// 占比40% → 50%加成(1.5倍)，80% → 100%加成(2.0倍)，100% → 120%加成(2.2倍)
+function getArchetypeRatioMultiplier(archetype) {
+  const ratios = getArchetypeRatios();
+  const ratio = ratios[archetype] || 0;
+  if (ratio >= 1.0) return 2.2;  // 100% → +120%
+  if (ratio >= 0.8) return 2.0;  // 80% → +100%
+  if (ratio >= 0.4) return 1.5;  // 40% → +50%
+  return 1.0;  // 低于40%无加成
+}
+
+// 获取某张卡的系列占比加成倍率（一张卡可能有多个系列，取最高倍率）
+function getCardArchetypeRatioMultiplier(card) {
+  if (!card || !card.archetype) return 1.0;
+  const arches = card.archetype.split('/').map(a => a.trim()).filter(a => a);
+  let maxMult = 1.0;
+  arches.forEach(arch => {
+    const mult = getArchetypeRatioMultiplier(arch);
+    if (mult > maxMult) maxMult = mult;
+  });
+  return maxMult;
+}
+
+// 战斗专用：计算应用了系列占比加成的卡组属性
+function getDeckStatsInBattle() {
+  const s = { search:0, expand:0, disrupt:0, resist:0, suppress:0, power:0, soul:0, luck:0, proficiency:0, intelligence:0 };
+  const talentBonuses = [];
+  gameState.talents.forEach(tid => {
+    const t = TALENTS.find(x => x.id === tid);
+    if (t && t.cardAttributeMultiplier && t.cardAttributeMultiplier !== 1) {
+      talentBonuses.push({
+        multiplier: t.cardAttributeMultiplier,
+        scopeType: t.cardBonusType || 'all',
+        scopeValue: t.cardBonusValue || ''
+      });
+    }
+  });
+
+  function getCardMultiplier(card) {
+    let mult = 1;
+    talentBonuses.forEach(b => {
+      let match = false;
+      switch(b.scopeType) {
+        case 'all': match = true; break;
+        case 'type': match = card.type === b.scopeValue; break;
+        case 'archetype': match = card.archetype === b.scopeValue; break;
+        case 'cards': match = (b.scopeValue || '').split(',').map(s=>s.trim()).includes(card.id); break;
+      }
+      if (match) mult *= b.multiplier;
+    });
+    // 卡灵觉醒倍率
+    if (gameState.awakenedCards && gameState.awakenedCards.includes(card.id)) {
+      if (isSpecialCard(card)) mult *= 100;
+      else if (card.rarity === 'UR') mult *= 10;
+      else if (card.rarity === 'SR') mult *= 5;
+    }
+    // 系列占比加成（仅战斗中）
+    mult *= getCardArchetypeRatioMultiplier(card);
+    return mult;
+  }
+
+  gameState.mainDeck.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (!c) return;
+    const mult = getCardMultiplier(c);
+    if (c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * mult; });
+    if (c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * mult; });
+  });
+  gameState.extraDeck.forEach(cardId => {
+    const c = CARD_DB[cardId];
+    if (!c) return;
+    const mult = getCardMultiplier(c) * 0.5;
+    if (c.stats) Object.keys(c.stats).forEach(k => { s[k] += c.stats[k] * mult; });
+    if (c.sub) Object.keys(c.sub).forEach(k => { s[k] = (s[k]||0) + c.sub[k] * mult; });
+  });
+  return s;
+}
+
+// 战斗专用：计算总属性（应用系列占比加成）
+function getTotalStatsInBattle() {
+  const base = getBaseStats();
+  const deck = getDeckStatsInBattle();
+  const total = {};
+  Object.keys(base).forEach(k => { total[k] = Math.round((base[k]||0) + (deck[k]||0)); });
+  const archBonus = getArchetypeBonus();
+  if (archBonus) {
+    total.power = (total.power || 0) + archBonus.power;
+    total.soul = (total.soul || 0) + archBonus.soul;
+    total.luck = (total.luck || 0) + archBonus.luck;
+  }
+  return total;
+}
+
+// 战斗专用：计算牌力（应用系列占比加成）
+function getDuelPowerInBattle() {
+  const s = getTotalStatsInBattle();
+  const effExpand = (s.expand || 0) + (s.proficiency || 0) * 0.5;
+  const effDisrupt = (s.disrupt || 0) + (s.proficiency || 0) * 0.5;
+  const effResist = (s.resist || 0) + (s.intelligence || 0) * 0.5;
+  const effSuppress = (s.suppress || 0) + (s.intelligence || 0) * 0.5;
+  return Math.round(
+    (s.search || 0) * 1.0 +
+    effExpand * 1.2 +
+    effDisrupt * 1.0 +
+    effResist * 0.8 +
+    effSuppress * 1.1 +
+    (s.power || 0) * 2.0 +
+    (s.soul || 0) * 0.5 +
+    (s.luck || 0) * 1.5
+  );
+}
+
+// 获取当前激活的系列占比加成信息（用于战斗日志显示）
+function getActiveArchetypeRatioInfo() {
+  const ratios = getArchetypeRatios();
+  const active = [];
+  Object.keys(ratios).forEach(arch => {
+    const ratio = ratios[arch];
+    if (ratio >= 0.4) {
+      const mult = getArchetypeRatioMultiplier(arch);
+      const bonusPercent = Math.round((mult - 1) * 100);
+      active.push({ name: arch, ratio: Math.round(ratio * 100), bonus: bonusPercent });
+    }
+  });
+  active.sort((a, b) => b.ratio - a.ratio);
+  return active;
+}
+
 function updateArchetypeTag() {
   const tagEl = document.getElementById('archetype-tag');
   if (tagEl) {
@@ -9206,6 +9694,10 @@ function startGame() {
     usedRedeemCodes: [],
     name: '无名决斗者',
     activeTitle: '新手决斗者',
+    // 系列卡盒系统
+    cardBoxUnlocked: false,
+    cardBoxState: {},
+    shopVisitCount: 0,
   };
   CHARACTERS.forEach(c => { gameState.affinity[c.id] = 0; });
 
@@ -9702,6 +10194,7 @@ function redeemCode() {
   if (reward.spiritPower) { addSpiritPower(reward.spiritPower); rewards.push(`精灵力+${reward.spiritPower}`); }
   if (reward.awakeningShards) { addAwakeningShards(reward.awakeningShards); rewards.push(`觉醒碎片+${reward.awakeningShards}`); }
   if (reward.unlockLocation) { if(!gameState.unlockedLocations) gameState.unlockedLocations=[]; if(!gameState.unlockedLocations.includes(reward.unlockLocation)){ gameState.unlockedLocations.push(reward.unlockLocation); const loc=LOCATIONS.find(l=>l.id===reward.unlockLocation); rewards.push(`解锁地点【${loc?loc.name:reward.unlockLocation}】`); showToast(`🎉 解锁新地点：${loc?loc.name:reward.unlockLocation}！`); } }
+  if (reward.unlockCardBox) { if(!isCardBoxUnlocked()){ unlockCardBox(); rewards.push('解锁系列卡盒系统'); showToast('🎉 系列卡盒系统已解锁！'); } }
   gameState.usedRedeemCodes.push(code);
   resultEl.style.display='block'; resultEl.style.color='#22c55e'; resultEl.innerHTML=`✅ 兑换成功！获得：<br>${rewards.join('、')}`;
   checkAchievements(); checkTasks(); updateAllDisplays(); saveGame();
@@ -10077,6 +10570,7 @@ function switchSubView(name) {
   }
   if (name === 'ranking') renderRanking();
   if (name === 'duel') renderDuelModes();
+  if (name === 'cardbox') renderCardBoxPage();
 }
 
 // 刷新当前活动页面（用于操作后实时更新）
@@ -10207,6 +10701,7 @@ function visitLocation(loc) {
   // 记录地点访问次数
   if (!gameState.locationVisits) gameState.locationVisits = {};
   gameState.locationVisits[loc.id] = (gameState.locationVisits[loc.id] || 0) + 1;
+  
   // 数据驱动的事件系统（数据来自 EVENTS）
   runDataDrivenEvent(loc);
 }
@@ -10513,7 +11008,8 @@ function executeEffects(effects, event, loc) {
           // 如果指定卡池中没有该稀有度的卡，从指定卡池中随机选
           if (!pool.length) pool = ef.pool.map(id => CARD_DB[id]).filter(c => c);
         } else {
-          pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
+          const cardBoxIds = getCardBoxCardIds();
+          pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c) && !cardBoxIds.has(c.id));
         }
         if (pool.length) {
           const card = choice(pool);
@@ -10535,7 +11031,8 @@ function executeEffects(effects, event, loc) {
           } else {
             rarity = choice(['N','N','N','R','R','SR','UR']); // 概率分布
           }
-          const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
+          const cardBoxIds = getCardBoxCardIds();
+          const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c) && !cardBoxIds.has(c.id));
           if (pool.length) {
             const card = choice(pool);
             cards.push(card);
@@ -10936,8 +11433,18 @@ function executeEffects(effects, event, loc) {
 }
 
 // ===== 随机卡片获取 =====
+// 获取所有卡盒中的卡片ID（这些卡不加入随机卡池）
+function getCardBoxCardIds() {
+  const ids = new Set();
+  CARD_BOXES.forEach(box => {
+    (box.cardIds || []).forEach(id => ids.add(id));
+  });
+  return ids;
+}
+
 function getRandomCard(source) {
   const allCards = Object.values(CARD_DB);
+  const cardBoxIds = getCardBoxCardIds();
   let pool, weights;
   // 天赋可定义的捡卡稀有度加成（每档提升稀有度概率）
   const rarityBonus = getTalentBonus('pickupRarityBonus', 0);
@@ -10960,7 +11467,9 @@ function getRandomCard(source) {
 
   const rarity = weightedChoice(weights);
   // 排除sp卡（特殊卡片只能通过事件/成就/兑换码获取，不加入随机池）
-  pool = allCards.filter(c => c.rarity === rarity && !isSpecialCard(c));
+  // 排除卡盒中的卡片（系列卡盒专属卡，只能通过卡盒抽取获取）
+  pool = allCards.filter(c => c.rarity === rarity && !isSpecialCard(c) && !cardBoxIds.has(c.id));
+  if (pool.length === 0) pool = allCards.filter(c => !isSpecialCard(c) && !cardBoxIds.has(c.id));
   if (pool.length === 0) pool = allCards.filter(c => !isSpecialCard(c));
   if (pool.length === 0) pool = allCards;
   return choice(pool);
@@ -11189,10 +11698,11 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     opponent = { name: opponentTemplate.name, power: opponentPower, difficulty: opponentTemplate.difficulty, id: opponentTemplate.id, stats: opponentTemplate.stats, playStyle: opponentTemplate.playStyle };
   }
 
-  // 计算玩家初始牌力（生命值）= 主页显示牌力 + 天赋/精灵力加成
-  const stats = getTotalStats();
+  // 计算玩家初始牌力（生命值）= 战斗牌力 + 天赋/精灵力加成
+  // 战斗中应用系列占比加成（仅战斗中触发，不影响主页显示）
+  const stats = getTotalStatsInBattle();
   const winRateBonus = getTalentBonus('winRateBonus', 0);
-  const basePlayerPower = getDuelPower();
+  const basePlayerPower = getDuelPowerInBattle();
   const playerPowerWithBonus = Math.round(basePlayerPower * (1 + winRateBonus / 100) * (1 + getSpiritPowerBonus()));
 
   // 计算初始胜率（局内隐藏属性，受双方牌力和天赋成就影响）
@@ -11270,6 +11780,14 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   updateFieldVisual(50, 50, '势均力敌');
 
   addDuelLog(`决斗开始！对手是【${opponent.name}】（${styleNames[opponent.playStyle || 'balance'] || '均衡型'}）`, 'turn');
+
+  // 显示系列占比加成信息
+  const archRatioInfo = getActiveArchetypeRatioInfo();
+  if (archRatioInfo.length > 0) {
+    archRatioInfo.forEach(info => {
+      addDuelLog(`【${info.name}】系列占比${info.ratio}%，主属性+${info.bonus}%`, 'event');
+    });
+  }
 
   // 第一回合先让玩家选择战术
   showTacticSelect();
@@ -12724,7 +13242,8 @@ function tournamentWin(t) {
   
   for (let i = 0; i < rewardCount; i++) {
     const rarity = choice(rewardRarities);
-    const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c));
+    const cardBoxIds = getCardBoxCardIds();
+    const pool = Object.values(CARD_DB).filter(c => c.rarity === rarity && !isSpecialCard(c) && !cardBoxIds.has(c.id));
     if (pool.length > 0) {
       const card = choice(pool);
       addCardToCollection(card.id);
@@ -13280,6 +13799,13 @@ function grantTaskReward(task) {
       const loc = LOCATIONS.find(l => l.id === r.unlockLocation);
       rewards.push(`解锁地点【${loc ? loc.name : r.unlockLocation}】`);
       showToast(`🎉 解锁新地点：${loc ? loc.name : r.unlockLocation}！`);
+    }
+  }
+  if (r.unlockCardBox) {
+    if (!isCardBoxUnlocked()) {
+      unlockCardBox();
+      rewards.push('解锁系列卡盒系统');
+      showToast('🎉 系列卡盒系统已解锁！');
     }
   }
   return rewards.join('、');
