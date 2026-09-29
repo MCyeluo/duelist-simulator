@@ -1,0 +1,3033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牌佬模拟器 - 开发工具 v4.1</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0f0f1a; --bg2:#1a1a2e; --bg3:#252540; --border:#3a3a5c;
+  --text:#e8e8f0; --text2:#a0a0c0; --gold:#d4af37; --gold-light:#f0d060;
+  --purple:#8b5cf6; --purple-light:#a78bfa; --red:#ef4444; --green:#22c55e;
+  --blue:#3b82f6; --search:#3b82f6; --expand:#22c55e; --disrupt:#ef4444;
+  --resist:#8b5cf6; --suppress:#f59e0b; --power:#ec4899; --soul:#06b6d4; --luck:#fbbf24; --proficiency:#14b8a6; --intelligence:#a855f7;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* 顶部栏 */
+.topbar { background:linear-gradient(135deg,var(--bg2),var(--bg3)); border-bottom:2px solid var(--gold); padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; position:sticky; top:0; z-index:100; }
+.topbar-title { font-size:16px; font-weight:bold; color:var(--gold); display:flex; align-items:center; gap:8px; }
+.topbar-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.btn { padding:7px 14px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; transition:all .2s; display:inline-flex; align-items:center; gap:5px; }
+.btn:hover { transform:translateY(-1px); filter:brightness(1.15); }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#b8941f); color:#1a1a2e; }
+.btn-primary { background:var(--blue); color:white; }
+.btn-success { background:var(--green); color:white; }
+.btn-danger { background:var(--red); color:white; }
+.btn-secondary { background:var(--bg3); color:var(--text); border:1px solid var(--border); }
+.btn-sm { padding:4px 8px; font-size:11px; }
+
+/* 主体布局 */
+.main { display:flex; height:calc(100vh - 52px); }
+.sidebar { width:140px; min-width:120px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:8px 0; overflow-y:auto; }
+.nav-item { padding:12px 16px; cursor:pointer; font-size:13px; color:var(--text2); border-left:3px solid transparent; transition:all .15s; display:flex; align-items:center; gap:8px; }
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:rgba(212,175,55,.1); color:var(--gold); border-left-color:var(--gold); font-weight:600; }
+.nav-icon { font-size:16px; }
+.nav-category { padding:10px 16px 4px; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; font-weight:600; opacity:.7; }
+
+.content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.content-header { padding:12px 20px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; justify-content:space-between; }
+.content-title { font-size:15px; font-weight:bold; color:var(--gold); }
+.content-body { flex:1; display:flex; overflow:hidden; }
+
+/* 列表 */
+.list-panel { width:280px; min-width:240px; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg2); }
+.list-filters { padding:10px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+.list-filters input, .list-filters select { padding:6px 8px; background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:12px; outline:none; }
+.card-type-filters { display:flex; gap:4px; padding:0 10px 8px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.type-filter-btn { flex:1; min-width:40px; padding:5px 4px; background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--text2); font-size:11px; cursor:pointer; transition:all 0.2s; }
+.type-filter-btn:hover { background:var(--bg-hover); color:var(--text); }
+.type-filter-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.list-count { font-size:11px; color:var(--text2); text-align:center; padding:4px; }
+.list-items { flex:1; overflow-y:auto; padding:6px; }
+.list-item { padding:8px 10px; margin-bottom:4px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:6px; font-size:12px; }
+.list-item:hover { border-color:var(--gold); }
+.list-item.active { border-color:var(--gold); background:rgba(212,175,55,.1); }
+.list-item-name { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.list-item-del { color:var(--red); cursor:pointer; padding:0 4px; opacity:.6; font-size:14px; }
+.list-item-del:hover { opacity:1; }
+.rarity-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.rarity-dot.UR { background:linear-gradient(135deg,#ffd700,#ff8c00); }
+.rarity-dot.SR { background:linear-gradient(135deg,#c0c0ff,#8080ff); }
+.rarity-dot.R { background:#a0a0a0; }
+.rarity-dot.N { background:#666; }
+
+/* 编辑区 */
+.edit-panel { flex:1; overflow-y:auto; padding:16px 20px; }
+.edit-section { margin-bottom:20px; }
+.edit-section-title { font-size:13px; font-weight:bold; color:var(--purple-light); margin-bottom:10px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+.form-row { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.form-group { flex:1; min-width:120px; display:flex; flex-direction:column; gap:3px; }
+.form-group label { font-size:11px; color:var(--text2); font-weight:500; }
+.form-group input, .form-group select, .form-group textarea { padding:7px 9px; background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:12px; outline:none; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--gold); }
+.form-group textarea { resize:vertical; min-height:50px; font-family:inherit; }
+
+/* 属性滑块 */
+.stat-group { margin-bottom:10px; }
+.stat-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px; }
+.stat-slider { -webkit-appearance:none; width:100%; height:5px; border-radius:3px; background:var(--bg3); outline:none; cursor:pointer; }
+.stat-slider::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; cursor:pointer; border:2px solid white; }
+.stat-slider.search::-webkit-slider-thumb { background:var(--search); }
+.stat-slider.expand::-webkit-slider-thumb { background:var(--expand); }
+.stat-slider.disrupt::-webkit-slider-thumb { background:var(--disrupt); }
+.stat-slider.resist::-webkit-slider-thumb { background:var(--resist); }
+.stat-slider.suppress::-webkit-slider-thumb { background:var(--suppress); }
+.stat-slider.power::-webkit-slider-thumb { background:var(--power); }
+.stat-slider.soul::-webkit-slider-thumb { background:var(--soul); }
+.stat-slider.luck::-webkit-slider-thumb { background:var(--luck); }
+
+/* 效果/选项列表 */
+.dyn-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+.dyn-item { background:var(--bg3); border:1px solid var(--border); border-radius:5px; padding:8px 10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.dyn-item select, .dyn-item input { padding:5px 7px; background:var(--bg); border:1px solid var(--border); border-radius:3px; color:var(--text); font-size:11px; outline:none; }
+.dyn-del { color:var(--red); cursor:pointer; padding:0 4px; font-size:14px; opacity:.6; }
+.dyn-del:hover { opacity:1; }
+.add-btn { padding:5px 12px; background:var(--bg3); border:1px dashed var(--border); border-radius:4px; color:var(--text2); cursor:pointer; font-size:11px; width:100%; }
+.add-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+/* 空状态 */
+.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:var(--text2); gap:10px; }
+.empty-icon { font-size:40px; opacity:.5; }
+
+/* Toast */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--bg3); border:1px solid var(--gold); color:var(--text); padding:8px 16px; border-radius:6px; font-size:12px; z-index:1000; animation:toastIn .3s ease; }
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(10px);} to{opacity:1;transform:translateX(-50%) translateY(0);} }
+
+/* 滚动条 */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* 响应式 */
+@media (max-width:900px) {
+  .main { flex-direction:column; height:auto; }
+  .sidebar { width:100%; flex-direction:row; overflow-x:auto; padding:4px; }
+  .nav-item { padding:8px 12px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+  .nav-item.active { border-bottom-color:var(--gold); border-left-color:transparent; }
+  .content { min-height:70vh; }
+  .content-body { flex-direction:column; }
+  .list-panel { width:100%; max-height:35vh; border-right:none; border-bottom:1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">⚔️ 牌佬模拟器 - 开发工具 <span style="font-size:11px;color:var(--text2);font-weight:normal;">v4.1 适配版</span></div>
+  <div class="topbar-actions">
+    <input type="file" id="load-card" accept=".js" style="display:none" onchange="loadFile(event,'card')">
+    <input type="file" id="load-game" accept=".js" style="display:none" onchange="loadFile(event,'game')">
+    <input type="file" id="load-html" accept=".html" style="display:none" onchange="loadGameFile(event)">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('load-card').click()">📂 卡片数据</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('load-game').click()">📂 游戏数据</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('load-html').click()">🎮 导入游戏本体</button>
+    <button class="btn btn-gold btn-sm" onclick="saveAll()">💾 保存数据文件</button>
+    <button class="btn btn-gold btn-sm" onclick="exportGameFile()" id="export-btn" style="display:none">🚀 导出游戏本体</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content">
+    <div class="content-header">
+      <div class="content-title" id="content-title">选择数据类型</div>
+      <div id="content-actions"></div>
+    </div>
+    <div class="content-body" id="content-body">
+      <div class="empty"><div class="empty-icon">📋</div><div>从左侧选择要编辑的数据类型</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 数据存储 =====
+let cardDB = {};
+let gameData = { talents:[], opponents:[], duelConfig:{}, gameConfig:{}, locations:[], characters:[], tournaments:[], achievements:[], tasks:[], events:{}, redeemCodes:[] };
+let currentType = null;
+let currentId = null;
+let cardFilterType = 'all'; // 卡片类型筛选：all/monster/spell/trap/extra
+let cardRarityFilter = 'all'; // 卡片稀有度筛选：all/N/R/SR/UR
+let talentFilter = 'all'; // 天赋品质筛选：all/N/R/SR/UR/hidden
+let opponentFilter = 'all'; // 对手类型筛选：all/normal/event/tournament/story/special/自定义类型
+let tournamentFilter = 'all'; // 比赛级别筛选：all/入门/中级/高级/官方
+let characterFilter = 'all'; // 角色筛选：all/challenge/gift
+let originalGameFile = null; // 保存原始游戏本体文件内容，用于导出
+
+const TYPES = [
+  { id:'card', name:'卡片', icon:'🎴', category:'核心数据' },
+  { id:'talent', name:'天赋', icon:'⭐', category:'核心数据' },
+  { id:'achievement', name:'成就', icon:'🏆', category:'核心数据' },
+  { id:'task', name:'任务', icon:'📋', category:'核心数据' },
+  { id:'gameConfig', name:'核心配置', icon:'🔧', category:'核心数据' },
+  { id:'redeemCode', name:'兑换码', icon:'🎁', category:'核心数据' },
+  { id:'opponent', name:'对手', icon:'⚔️', category:'决斗系统' },
+  { id:'duelConfig', name:'决斗配置', icon:'⚙️', category:'决斗系统' },
+  { id:'tournament', name:'比赛', icon:'🎯', category:'决斗系统' },
+  { id:'location', name:'地点', icon:'📍', category:'世界与角色' },
+  { id:'character', name:'角色', icon:'👤', category:'世界与角色' },
+  { id:'event', name:'事件', icon:'📜', category:'剧情事件' },
+];
+
+const STAT_KEYS = ['search','expand','disrupt','resist','suppress'];
+const STAT_NAMES = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+const TYPE_LABELS = { monster:'怪兽', spell:'魔法', trap:'陷阱', extra:'额外' };
+const RARITIES = ['N','R','SR','UR'];
+
+// ===== 导航 =====
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  const categories = {};
+  TYPES.forEach(t => {
+    if (!categories[t.category]) categories[t.category] = [];
+    categories[t.category].push(t);
+  });
+  sb.innerHTML = Object.entries(categories).map(([cat, types]) => `
+    <div class="nav-category">${cat}</div>
+    ${types.map(t => `
+      <div class="nav-item ${currentType===t.id?'active':''}" onclick="selectType('${t.id}')">
+        <span class="nav-icon">${t.icon}</span>${t.name}
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+function selectType(type) {
+  currentType = type;
+  currentId = null;
+  // 重置所有筛选条件
+  cardFilterType = 'all';
+  cardRarityFilter = 'all';
+  talentFilter = 'all';
+  opponentFilter = 'all';
+  tournamentFilter = 'all';
+  characterFilter = 'all';
+  renderSidebar();
+  const t = TYPES.find(x => x.id === type);
+  document.getElementById('content-title').textContent = t.icon + ' ' + t.name + '管理';
+  // 决斗配置是全局单例，不需要新建按钮，自动选中
+  if (type === 'duelConfig') {
+    document.getElementById('content-actions').innerHTML = '';
+    currentId = 'duelConfig';
+  } else if (type === 'gameConfig') {
+    document.getElementById('content-actions').innerHTML = '';
+    currentId = 'gameConfig';
+  } else {
+    document.getElementById('content-actions').innerHTML = `<button class="btn btn-gold btn-sm" onclick="addNew()">➕ 新建</button>`;
+  }
+  renderList();
+  renderEditor();
+}
+
+// ===== 数据加载/保存 =====
+function loadFile(event, type) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    if (type === 'card') {
+      const match = text.match(/window\.CARD_DB\s*=\s*(\{[\s\S]*?\});?\s*$/);
+      if (match) { try { cardDB = new Function('return ' + match[1])(); showToast('卡片数据加载成功，共 ' + Object.keys(cardDB).length + ' 张'); renderList(); } catch(err) { showToast('解析失败：' + err.message); } }
+      else showToast('无法识别卡片数据格式');
+    } else {
+      // 解析 game-data.js 中的多个变量
+      try {
+        const talentMatch = text.match(/window\.TALENTS\s*=\s*(\[[\s\S]*?\]);/);
+        const locMatch = text.match(/window\.LOCATIONS\s*=\s*(\[[\s\S]*?\]);/);
+        const charMatch = text.match(/window\.CHARACTERS\s*=\s*(\[[\s\S]*?\]);/);
+        const tourMatch = text.match(/window\.TOURNAMENTS\s*=\s*(\[[\s\S]*?\]);/);
+        const achMatch = text.match(/window\.ACHIEVEMENTS\s*=\s*(\[[\s\S]*?\]);/);
+        const evMatch = text.match(/window\.EVENTS\s*=\s*(\{[\s\S]*?\});\s*$/);
+        if (talentMatch) gameData.talents = new Function('return ' + talentMatch[1])();
+        if (locMatch) gameData.locations = new Function('return ' + locMatch[1])();
+        if (charMatch) gameData.characters = new Function('return ' + charMatch[1])();
+        if (tourMatch) gameData.tournaments = new Function('return ' + tourMatch[1])();
+        if (achMatch) gameData.achievements = new Function('return ' + achMatch[1])();
+        if (evMatch) gameData.events = new Function('return ' + evMatch[1])();
+        showToast('游戏数据加载成功');
+        renderList();
+      } catch(err) { showToast('解析失败：' + err.message); }
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function saveAll() {
+  // 保存卡片数据
+  let cardOut = '/* 牌佬模拟器 - 卡片数据库 */\n\nwindow.CARD_DB = {\n\n';
+  const groups = { monster:'怪兽卡', extra:'额外卡组', spell:'魔法卡', trap:'陷阱卡' };
+  for (const [type, label] of Object.entries(groups)) {
+    const cards = Object.values(cardDB).filter(c => c.type === type);
+    if (!cards.length) continue;
+    cardOut += '  // ' + label + '\n';
+    cards.sort((a,b) => a.id.localeCompare(b.id));
+    for (const c of cards) {
+      cardOut += '  ' + c.id + ": { id:'" + c.id + "', name:'" + esc(c.name) +
+        "', type:'" + c.type + "', rarity:'" + c.rarity +
+        "', archetype:'" + esc(c.archetype||'') +
+        "', stats:{search:" + (c.stats?.search||0) + ",expand:" + (c.stats?.expand||0) +
+        ",disrupt:" + (c.stats?.disrupt||0) + ",resist:" + (c.stats?.resist||0) +
+        ",suppress:" + (c.stats?.suppress||0) + "}, sub:{power:" + (c.sub?.power||0) +
+        ",soul:" + (c.sub?.soul||0) + ",proficiency:" + (c.sub?.proficiency||0) + ",intelligence:" + (c.sub?.intelligence||0) + "} },\n";
+    }
+    cardOut += '\n';
+  }
+  cardOut += '};\n';
+  download('card-data.js', cardOut);
+
+  // 保存游戏数据
+  let gameOut = '/* 牌佬模拟器 - 游戏数据配置 */\n\n';
+  gameOut += 'window.TALENTS = ' + JSON.stringify(gameData.talents, null, 2) + ';\n\n';
+  gameOut += 'window.LOCATIONS = ' + JSON.stringify(gameData.locations, null, 2) + ';\n\n';
+  gameOut += 'window.CHARACTERS = ' + JSON.stringify(gameData.characters, null, 2) + ';\n\n';
+  gameOut += 'window.TOURNAMENTS = ' + JSON.stringify(gameData.tournaments, null, 2) + ';\n\n';
+  gameOut += 'window.ACHIEVEMENTS = ' + JSON.stringify(gameData.achievements, null, 2) + ';\n\n';
+  gameOut += 'window.EVENTS = ' + JSON.stringify(gameData.events, null, 2) + ';\n';
+  download('game-data.js', gameOut);
+
+  showToast('已保存 card-data.js 和 game-data.js');
+}
+
+function download(name, content) {
+  const blob = new Blob([content], { type:'text/javascript;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadHTML(name, content) {
+  const blob = new Blob([content], { type:'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== 导入游戏本体 =====
+function loadGameFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    originalGameFile = text;
+
+    // 提取 GAME_DATA_START 和 GAME_DATA_END 之间的数据区域
+    const startMarker = '/* === GAME_DATA_START ===';
+    const endMarker = '/* === GAME_DATA_END ===';
+    const startIdx = text.indexOf(startMarker);
+    const endIdx = text.indexOf(endMarker);
+
+    if (startIdx === -1 || endIdx === -1) {
+      showToast('无法识别游戏本体格式，请确保文件包含 GAME_DATA 标记');
+      return;
+    }
+
+    const dataSection = text.substring(startIdx, endIdx + endMarker.length);
+
+    try {
+      // 提取 CARD_DB
+      const cardMatch = dataSection.match(/let CARD_DB\s*=\s*(\{[\s\S]*?\});/);
+      if (cardMatch) {
+        cardDB = new Function('return ' + cardMatch[1])();
+      }
+
+      // 提取 TALENTS
+      const talentMatch = dataSection.match(/const TALENTS\s*=\s*(\[[\s\S]*?\]);/);
+      if (talentMatch) gameData.talents = new Function('return ' + talentMatch[1])();
+
+      // 提取 LOCATIONS
+      const locMatch = dataSection.match(/const LOCATIONS\s*=\s*(\[[\s\S]*?\]);/);
+      if (locMatch) gameData.locations = new Function('return ' + locMatch[1])();
+
+      // 提取 CHARACTERS
+      const charMatch = dataSection.match(/const CHARACTERS\s*=\s*(\[[\s\S]*?\]);/);
+      if (charMatch) gameData.characters = new Function('return ' + charMatch[1])();
+
+      // 提取 OPPONENTS
+      const opMatch = dataSection.match(/const OPPONENTS\s*=\s*(\[[\s\S]*?\]);/);
+      if (opMatch) gameData.opponents = new Function('return ' + opMatch[1])();
+
+      // 提取 DUEL_CONFIG
+      const dcMatch = dataSection.match(/const DUEL_CONFIG\s*=\s*(\{[\s\S]*?\});/);
+      if (dcMatch) gameData.duelConfig = new Function('return ' + dcMatch[1])();
+
+      // 提取 GAME_CONFIG
+      const gcMatch = dataSection.match(/const GAME_CONFIG\s*=\s*(\{[\s\S]*?\});/);
+      if (gcMatch) gameData.gameConfig = new Function('return ' + gcMatch[1])();
+
+      // 提取 TOURNAMENTS
+      const tourMatch = dataSection.match(/const TOURNAMENTS\s*=\s*(\[[\s\S]*?\]);/);
+      if (tourMatch) gameData.tournaments = new Function('return ' + tourMatch[1])();
+
+      // 提取 ACHIEVEMENTS
+      const achMatch = dataSection.match(/const ACHIEVEMENTS\s*=\s*(\[[\s\S]*?\]);/);
+      if (achMatch) gameData.achievements = new Function('return ' + achMatch[1])();
+
+      // 提取 TASKS
+      const taskMatch = dataSection.match(/const TASKS\s*=\s*(\[[\s\S]*?\]);/);
+      if (taskMatch) gameData.tasks = new Function('return ' + taskMatch[1])();
+
+      // 提取 EVENTS
+      const evMatch = dataSection.match(/const EVENTS\s*=\s*(\{[\s\S]*?\});/);
+      if (evMatch) gameData.events = new Function('return ' + evMatch[1])();
+
+      // 提取 REDEEM_CODES
+      const rcMatch = dataSection.match(/const REDEEM_CODES\s*=\s*(\[[\s\S]*?\]);/);
+      if (rcMatch) gameData.redeemCodes = new Function('return ' + rcMatch[1])();
+
+      // 显示导出按钮
+      document.getElementById('export-btn').style.display = 'inline-block';
+
+      showToast('游戏本体导入成功！卡片 ' + Object.keys(cardDB).length + ' 张，天赋 ' + gameData.talents.length + ' 个');
+      renderList();
+    } catch(err) {
+      showToast('解析失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ===== 导出游戏本体 =====
+function exportGameFile() {
+  if (!originalGameFile) {
+    showToast('请先导入游戏本体文件');
+    return;
+  }
+
+  // 生成新的数据区域
+  let newDataSection = '/* === GAME_DATA_START === 以下数据可由 dev-tool.html 直接编辑 === */\n\n';
+
+  // CARD_DB
+  newDataSection += '// ===== 卡片数据库 =====\nlet CARD_DB = {\n\n';
+  const groups = { monster:'怪兽卡', extra:'额外卡组', spell:'魔法卡', trap:'陷阱卡' };
+  for (const [type, label] of Object.entries(groups)) {
+    const cards = Object.values(cardDB).filter(c => c.type === type);
+    if (!cards.length) continue;
+    newDataSection += '  // ' + label + '\n';
+    cards.sort((a,b) => a.id.localeCompare(b.id));
+    for (const c of cards) {
+      newDataSection += '  ' + c.id + ": { id:'" + c.id + "', name:'" + esc(c.name) +
+        "', type:'" + c.type + "', rarity:'" + c.rarity +
+        "', archetype:'" + esc(c.archetype||'') +
+        "', stats:{search:" + (c.stats?.search||0) + ",expand:" + (c.stats?.expand||0) +
+        ",disrupt:" + (c.stats?.disrupt||0) + ",resist:" + (c.stats?.resist||0) +
+        ",suppress:" + (c.stats?.suppress||0) + "}, sub:{power:" + (c.sub?.power||0) +
+        ",soul:" + (c.sub?.soul||0) + ",proficiency:" + (c.sub?.proficiency||0) + ",intelligence:" + (c.sub?.intelligence||0) + "} },\n";
+    }
+    newDataSection += '\n';
+  }
+  newDataSection += '};\n\n';
+
+  // TALENTS
+  newDataSection += '// ===== 天赋定义 =====\nconst TALENTS = ' + JSON.stringify(gameData.talents, null, 2) + ';\n\n';
+
+  // OPPONENTS
+  newDataSection += '// ===== 对手/NPC数据库（可由开发工具编辑）=====\nconst OPPONENTS = ' + JSON.stringify(gameData.opponents, null, 2) + ';\n\n';
+
+  // DUEL_CONFIG
+  newDataSection += '// ===== 决斗配置（可由开发工具编辑）=====\nconst DUEL_CONFIG = ' + JSON.stringify(gameData.duelConfig, null, 2) + ';\n\n';
+
+  // GAME_CONFIG
+  newDataSection += '// ===== 核心数据配置（全局设置 + 精灵力系统）=====\nconst GAME_CONFIG = ' + JSON.stringify(gameData.gameConfig, null, 2) + ';\n\n';
+
+  // LOCATIONS
+  newDataSection += '// ===== 地点定义 =====\nconst LOCATIONS = ' + JSON.stringify(gameData.locations, null, 2) + ';\n\n';
+
+  // CHARACTERS
+  newDataSection += '// ===== 角色定义 =====\nconst CHARACTERS = ' + JSON.stringify(gameData.characters, null, 2) + ';\n\n';
+
+  // TOURNAMENTS
+  newDataSection += '// ===== 比赛定义 =====\nconst TOURNAMENTS = ' + JSON.stringify(gameData.tournaments, null, 2) + ';\n\n';
+
+  // ACHIEVEMENTS
+  newDataSection += '// ===== 成就定义 =====\nconst ACHIEVEMENTS = ' + JSON.stringify(gameData.achievements, null, 2) + ';\n\n';
+
+  // TASKS
+  newDataSection += '// ===== 任务定义 =====\nconst TASKS = ' + JSON.stringify(gameData.tasks || [], null, 2) + ';\n\n';
+
+  // EVENTS
+  newDataSection += '// ===== 事件定义 =====\nconst EVENTS = ' + JSON.stringify(gameData.events, null, 2) + ';\n\n';
+
+  // REDEEM_CODES
+  newDataSection += '// ===== 兑换码数据 =====\nconst REDEEM_CODES = ' + JSON.stringify(gameData.redeemCodes || [], null, 2) + ';\n\n';
+
+  newDataSection += '/* === GAME_DATA_END === 以上数据可由 dev-tool.html 直接编辑 === */';
+
+  // 替换原始文件中的数据区域
+  const startMarker = '/* === GAME_DATA_START ===';
+  const endMarker = '/* === GAME_DATA_END ===';
+  const startIdx = originalGameFile.indexOf(startMarker);
+  const endIdx = originalGameFile.indexOf(endMarker);
+
+  if (startIdx === -1 || endIdx === -1) {
+    showToast('原始文件格式错误，无法导出');
+    return;
+  }
+
+  // 找到 endMarker 所在注释块的结束位置（包含 */ 和后面的换行）
+  let endPos = endIdx + endMarker.length;
+  // 找到注释结束符 */ 的位置
+  const commentEnd = originalGameFile.indexOf('*/', endPos);
+  if (commentEnd !== -1) {
+    endPos = commentEnd + 2;
+  }
+  // 跳过后面的换行符
+  while (endPos < originalGameFile.length && (originalGameFile[endPos] === '\n' || originalGameFile[endPos] === '\r')) {
+    endPos++;
+  }
+
+  const newFile = originalGameFile.substring(0, startIdx) + newDataSection + '\n' + originalGameFile.substring(endPos);
+
+  downloadHTML('duelist-simulator.html', newFile);
+  showToast('游戏本体已导出！请覆盖原文件');
+}
+
+function esc(s) { return (s||'').replace(/'/g,"\\'"); }
+
+// ===== 列表渲染 =====
+function getList() {
+  switch(currentType) {
+    case 'card': return Object.values(cardDB);
+    case 'talent': return gameData.talents;
+    case 'opponent': return gameData.opponents;
+    case 'duelConfig': return [{ id:'duelConfig', name:'决斗模式配置' }];
+    case 'gameConfig': return [{ id:'gameConfig', name:'核心全局配置' }];
+    case 'achievement': return gameData.achievements;
+    case 'task': return gameData.tasks || [];
+    case 'location': return gameData.locations;
+    case 'character': return gameData.characters;
+    case 'tournament': return gameData.tournaments;
+    case 'redeemCode': return gameData.redeemCodes || [];
+    case 'event':
+      // 事件按地点分组，展平成列表
+      const evs = [];
+      for (const [loc, list] of Object.entries(gameData.events)) {
+        list.forEach(e => evs.push({...e, _location:loc}));
+      }
+      return evs;
+  }
+  return [];
+}
+
+function renderList() {
+  if (!currentType) return;
+  const items = getList();
+  const body = document.getElementById('content-body');
+
+  // 类型筛选按钮（根据数据类型显示不同筛选）
+  let typeFilters = '';
+  if (currentType === 'card') {
+    typeFilters = `
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${cardFilterType==='all'?'active':''}" onclick="setCardFilter('all')">全部</button>
+        <button class="type-filter-btn ${cardFilterType==='monster'?'active':''}" onclick="setCardFilter('monster')">怪兽</button>
+        <button class="type-filter-btn ${cardFilterType==='spell'?'active':''}" onclick="setCardFilter('spell')">魔法</button>
+        <button class="type-filter-btn ${cardFilterType==='trap'?'active':''}" onclick="setCardFilter('trap')">陷阱</button>
+        <button class="type-filter-btn ${cardFilterType==='extra'?'active':''}" onclick="setCardFilter('extra')">额外</button>
+      </div>
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${cardRarityFilter==='all'?'active':''}" onclick="setCardRarityFilter('all')">全部稀有度</button>
+        <button class="type-filter-btn ${cardRarityFilter==='N'?'active':''}" onclick="setCardRarityFilter('N')">N</button>
+        <button class="type-filter-btn ${cardRarityFilter==='R'?'active':''}" onclick="setCardRarityFilter('R')">R</button>
+        <button class="type-filter-btn ${cardRarityFilter==='SR'?'active':''}" onclick="setCardRarityFilter('SR')">SR</button>
+        <button class="type-filter-btn ${cardRarityFilter==='UR'?'active':''}" onclick="setCardRarityFilter('UR')">UR</button>
+      </div>
+      <div class="card-type-filters" style="background:rgba(59,130,246,0.08);border-radius:6px;padding:8px;">
+        <span style="font-size:12px;font-weight:bold;color:var(--accent-blue-light);margin-right:8px;">📥 卡片导入：</span>
+        <input type="file" id="import-card-files" accept=".json" multiple style="display:none" onchange="handleCardFileImport(event)">
+        <input type="file" id="import-card-folder" webkitdirectory directory multiple style="display:none" onchange="handleCardFileImport(event)">
+        <button class="type-filter-btn" onclick="document.getElementById('import-card-files').click()" style="background:var(--accent);color:white;">选择文件</button>
+        <button class="type-filter-btn" onclick="document.getElementById('import-card-folder').click()" style="background:var(--accent);color:white;">选择文件夹</button>
+        <button class="type-filter-btn" onclick="clearImportList()" style="background:#ef4444;color:white;">清空列表</button>
+        <span id="import-status" style="font-size:11px;color:var(--text2);margin-left:8px;">待导入: 0 张</span>
+      </div>
+      <div id="import-list-panel" style="display:none;margin-bottom:8px;padding:10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:bold;">待导入卡片列表</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleSelectAllImport(true)" style="padding:2px 8px;font-size:10px;">全选</button>
+            <button class="btn btn-secondary btn-sm" onclick="toggleSelectAllImport(false)" style="padding:2px 8px;font-size:10px;">全不选</button>
+            <button class="btn btn-primary btn-sm" onclick="executeCardImport()" style="padding:2px 10px;font-size:10px;">导入选中</button>
+          </div>
+        </div>
+        <div id="import-list-items" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+    `;
+  } else if (currentType === 'talent') {
+    typeFilters = `
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${talentFilter==='all'?'active':''}" onclick="setTalentFilter('all')">全部</button>
+        <button class="type-filter-btn ${talentFilter==='N'?'active':''}" onclick="setTalentFilter('N')">N</button>
+        <button class="type-filter-btn ${talentFilter==='R'?'active':''}" onclick="setTalentFilter('R')">R</button>
+        <button class="type-filter-btn ${talentFilter==='SR'?'active':''}" onclick="setTalentFilter('SR')">SR</button>
+        <button class="type-filter-btn ${talentFilter==='UR'?'active':''}" onclick="setTalentFilter('UR')">UR</button>
+        <button class="type-filter-btn ${talentFilter==='hidden'?'active':''}" onclick="setTalentFilter('hidden')">隐藏</button>
+      </div>
+    `;
+  } else if (currentType === 'opponent') {
+    // 从对手数据中提取所有类型
+    const allCategories = [...new Set(gameData.opponents.map(o => o.category || 'normal'))];
+    const categoryLabels = { normal:'普通对手', event:'事件专用', tournament:'比赛专用', story:'剧情角色', special:'特殊分类' };
+    typeFilters = `
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${opponentFilter==='all'?'active':''}" onclick="setOpponentFilter('all')">全部</button>
+        ${allCategories.map(cat => `<button class="type-filter-btn ${opponentFilter===cat?'active':''}" onclick="setOpponentFilter('${cat}')">${categoryLabels[cat] || cat}</button>`).join('')}
+        <button class="type-filter-btn" onclick="addOpponentCategory()" style="background:var(--accent);color:white;">+ 类型</button>
+      </div>
+    `;
+  } else if (currentType === 'tournament') {
+    typeFilters = `
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${tournamentFilter==='all'?'active':''}" onclick="setTournamentFilter('all')">全部</button>
+        <button class="type-filter-btn ${tournamentFilter==='入门'?'active':''}" onclick="setTournamentFilter('入门')">入门</button>
+        <button class="type-filter-btn ${tournamentFilter==='中级'?'active':''}" onclick="setTournamentFilter('中级')">中级</button>
+        <button class="type-filter-btn ${tournamentFilter==='高级'?'active':''}" onclick="setTournamentFilter('高级')">高级</button>
+        <button class="type-filter-btn ${tournamentFilter==='官方'?'active':''}" onclick="setTournamentFilter('官方')">官方</button>
+      </div>
+    `;
+  } else if (currentType === 'character') {
+    typeFilters = `
+      <div class="card-type-filters">
+        <button class="type-filter-btn ${characterFilter==='all'?'active':''}" onclick="setCharacterFilter('all')">全部</button>
+        <button class="type-filter-btn ${characterFilter==='challenge'?'active':''}" onclick="setCharacterFilter('challenge')">可挑战</button>
+        <button class="type-filter-btn ${characterFilter==='gift'?'active':''}" onclick="setCharacterFilter('gift')">有赠礼</button>
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    <div class="list-panel">
+      <div class="list-filters">
+        <input type="text" id="list-search" placeholder="搜索名称或ID..." oninput="renderListItems()">
+      </div>
+      ${typeFilters}
+      <div class="list-count" id="list-count">共 ${items.length} 条</div>
+      <div class="list-items" id="list-items"></div>
+    </div>
+    <div class="edit-panel" id="edit-panel"></div>
+  `;
+  renderListItems();
+  renderEditor();
+}
+
+function setCardFilter(type) {
+  cardFilterType = type;
+  renderList();
+}
+function setCardRarityFilter(rarity) {
+  cardRarityFilter = rarity;
+  renderList();
+}
+
+// ===== 卡片导入功能 =====
+let importCardList = []; // 待导入的卡片列表
+
+function handleCardFileImport(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  
+  let processed = 0;
+  let errors = 0;
+  
+  for (const file of files) {
+    if (!file.name.endsWith('.json')) continue;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const card = JSON.parse(e.target.result);
+        if (card.id && card.name && card.type) {
+          // 检查是否已存在
+          const exists = cardDB[card.id] ? '已存在(覆盖)' : '新卡';
+          importCardList.push({
+            ...card,
+            _importSelected: true,
+            _importStatus: exists
+          });
+        } else {
+          errors++;
+        }
+      } catch(err) {
+        errors++;
+      }
+      processed++;
+      if (processed >= files.length) {
+        updateImportStatus();
+        renderImportList();
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+  
+  // 重置input，允许重复选择同一文件
+  event.target.value = '';
+}
+
+function updateImportStatus() {
+  const status = document.getElementById('import-status');
+  if (status) {
+    const selected = importCardList.filter(c => c._importSelected).length;
+    status.textContent = `待导入: ${importCardList.length} 张 (已选 ${selected})`;
+  }
+}
+
+function renderImportList() {
+  const panel = document.getElementById('import-list-panel');
+  const container = document.getElementById('import-list-items');
+  if (!panel || !container) return;
+  
+  if (importCardList.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+  
+  panel.style.display = 'block';
+  
+  const typeLabels = { monster:'怪兽', spell:'魔法', trap:'陷阱', extra:'额外' };
+  
+  container.innerHTML = importCardList.map((card, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px solid var(--border);font-size:11px;">
+      <input type="checkbox" ${card._importSelected?'checked':''} onchange="toggleImportSelect(${i})" style="margin:0;">
+      <span class="rarity-dot ${card.rarity}" style="width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+      <span style="font-weight:bold;min-width:120px;">${card.name}</span>
+      <span style="color:var(--text2);min-width:50px;">[${typeLabels[card.type]||card.type}]</span>
+      <span style="color:var(--text2);min-width:40px;">${card.rarity}</span>
+      <span style="color:var(--text2);flex:1;">${card.archetype||''}</span>
+      <span style="color:${card._importStatus==='新卡'?'#22c55e':'#f59e0b'};font-weight:bold;">${card._importStatus}</span>
+    </div>
+  `).join('');
+}
+
+function toggleImportSelect(index) {
+  if (importCardList[index]) {
+    importCardList[index]._importSelected = !importCardList[index]._importSelected;
+    updateImportStatus();
+  }
+}
+
+function toggleSelectAllImport(select) {
+  importCardList.forEach(c => c._importSelected = select);
+  renderImportList();
+  updateImportStatus();
+}
+
+async function executeCardImport() {
+  const selected = importCardList.filter(c => c._importSelected);
+  if (selected.length === 0) {
+    showToast('请先选择要导入的卡片');
+    return;
+  }
+  
+  // 检查哪些会被覆盖
+  const overwriteCards = selected.filter(c => cardDB[c.id]);
+  const newCards = selected.filter(c => !cardDB[c.id]);
+  
+  if (overwriteCards.length > 0) {
+    // 弹出确认对话框
+    const confirmResult = await confirmImportOverwrite(overwriteCards.length, newCards.length);
+    if (confirmResult === 'cancel') return;
+    if (confirmResult === 'onlyNew') {
+      // 只导入新卡，跳过已存在的
+      selected.forEach(c => {
+        if (cardDB[c.id]) c._importSelected = false;
+      });
+    }
+    // 'overwrite' 继续执行覆盖
+  }
+  
+  let newCount = 0;
+  let overwriteCount = 0;
+  
+  for (const card of selected) {
+    if (!card._importSelected) continue;
+    const isNew = !cardDB[card.id];
+    const { _importSelected, _importStatus, ...cleanCard } = card;
+    cardDB[cleanCard.id] = cleanCard;
+    if (isNew) newCount++;
+    else overwriteCount++;
+  }
+  
+  importCardList = importCardList.filter(c => !c._importSelected);
+  
+  showToast(`导入成功！新增 ${newCount} 张，覆盖 ${overwriteCount} 张`);
+  renderImportList();
+  updateImportStatus();
+  renderList();
+}
+
+function confirmImportOverwrite(overwriteCount, newCount) {
+  // 创建自定义确认对话框
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;';
+  
+  modal.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border-accent);border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:18px;font-weight:bold;margin-bottom:16px;color:var(--accent-orange);">⚠️ 发现重复卡片</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.8;margin-bottom:20px;">
+        待导入的卡片中，有 <span style="color:var(--accent-orange);font-weight:bold;">${overwriteCount}</span> 张已存在于数据库中。
+        <br>新增卡片: <span style="color:var(--accent-green);font-weight:bold;">${newCount}</span> 张
+        <br><br>
+        已存在的卡片将被覆盖，是否继续？
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button id="import-cancel" style="padding:8px 16px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;font-size:13px;">取消</button>
+        <button id="import-only-new" style="padding:8px 16px;background:var(--accent-green);border:none;border-radius:6px;color:white;cursor:pointer;font-size:13px;">仅导入新卡</button>
+        <button id="import-overwrite" style="padding:8px 16px;background:var(--accent-orange);border:none;border-radius:6px;color:white;cursor:pointer;font-size:13px;">全部覆盖</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  return new Promise((resolve) => {
+    document.getElementById('import-cancel').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('cancel');
+    };
+    document.getElementById('import-only-new').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('onlyNew');
+    };
+    document.getElementById('import-overwrite').onclick = () => {
+      document.body.removeChild(modal);
+      resolve('overwrite');
+    };
+  });
+}
+
+function clearImportList() {
+  importCardList = [];
+  renderImportList();
+  updateImportStatus();
+}
+
+function setTalentFilter(type) {
+  talentFilter = type;
+  renderList();
+}
+function setOpponentFilter(range) {
+  opponentFilter = range;
+  renderList();
+}
+function addOpponentCategory() {
+  const name = prompt('请输入新类型名称（英文标识，如 custom）：');
+  if (!name) return;
+  const label = prompt('请输入类型显示名称（中文，如 自定义类型）：') || name;
+  // 创建一个使用新类型的示例对手
+  const newId = 'op' + Date.now();
+  gameData.opponents.push({
+    id: newId,
+    name: '新对手',
+    category: name,
+    categoryLabel: label,
+    specialTag: '',
+    basePower: 1000,
+    variance: 200,
+    difficulty: 1,
+    desc: '',
+    stats: {},
+    deckArchetype: '',
+    rewards: {},
+    enabled: true
+  });
+  opponentFilter = name;
+  renderList();
+  showToast('已添加新类型：' + label);
+}
+function setTournamentFilter(tier) {
+  tournamentFilter = tier;
+  renderList();
+}
+function setCharacterFilter(type) {
+  characterFilter = type;
+  renderList();
+}
+
+function renderListItems() {
+  const search = (document.getElementById('list-search')?.value || '').toLowerCase();
+  let items = getList();
+  // 卡片类型筛选
+  if (currentType === 'card' && cardFilterType !== 'all') {
+    items = items.filter(i => i.type === cardFilterType);
+  }
+  // 卡片稀有度筛选
+  if (currentType === 'card' && cardRarityFilter !== 'all') {
+    items = items.filter(i => i.rarity === cardRarityFilter);
+  }
+  // 天赋品质筛选
+  if (currentType === 'talent' && talentFilter !== 'all') {
+    if (talentFilter === 'hidden') {
+      items = items.filter(i => i.hidden === true);
+    } else {
+      items = items.filter(i => (i.rarity || 'N') === talentFilter);
+    }
+  }
+  // 对手类型筛选
+  if (currentType === 'opponent' && opponentFilter !== 'all') {
+    items = items.filter(i => (i.category || 'normal') === opponentFilter);
+  }
+  // 比赛级别筛选
+  if (currentType === 'tournament' && tournamentFilter !== 'all') {
+    items = items.filter(i => i.tier === tournamentFilter);
+  }
+  // 角色筛选
+  if (currentType === 'character' && characterFilter !== 'all') {
+    if (characterFilter === 'challenge') {
+      items = items.filter(i => i.canChallenge === true);
+    } else if (characterFilter === 'gift') {
+      items = items.filter(i => i.giftCard);
+    }
+  }
+  // 搜索（同时支持名称和ID，以及描述等字段）
+  if (search) {
+    const s = search.toLowerCase();
+    items = items.filter(i => {
+      const name = (i.name||'').toLowerCase();
+      const id = (i.id||'').toLowerCase();
+      const desc = (i.desc||'').toLowerCase();
+      const archetype = (i.archetype||'').toLowerCase();
+      return name.includes(s) || id.includes(s) || desc.includes(s) || archetype.includes(s);
+    });
+  }
+  document.getElementById('list-count').textContent = '共 ' + items.length + ' 条';
+  const el = document.getElementById('list-items');
+  if (!items.length) { el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:12px;">暂无数据</div>'; return; }
+  el.innerHTML = items.map(item => {
+    const dot = currentType==='card' ? `<div class="rarity-dot ${item.rarity}"></div>` : '';
+    const loc = currentType==='event' ? `<span style="font-size:10px;color:var(--text2);">[${item._location}]</span>` : '';
+    // 根据数据类型显示额外信息
+    let extraInfo = '';
+    if (currentType === 'card') {
+      extraInfo = `<span style="font-size:10px;color:var(--text2);">[${item.rarity}]</span>`;
+    } else if (currentType === 'talent') {
+      const typeLabel = item.hidden ? '隐藏' : (item.rarity || 'N');
+      extraInfo = `<span style="font-size:10px;color:var(--text2);">[${typeLabel}]</span>`;
+    } else if (currentType === 'opponent') {
+      const catLabels = { normal:'普通对手', event:'事件专用', tournament:'比赛专用', story:'剧情角色', special:'特殊分类' };
+      const catLabel = catLabels[item.category] || item.category || '普通对手';
+      const styleLabel = item.playStyle === 'expand' ? '展开型' : item.playStyle === 'disrupt' ? '干扰型' : item.playStyle === 'beat' ? '防御型' : '均衡型';
+      extraInfo = `<span style="font-size:10px;color:var(--accent-blue);">[${catLabel}]</span> <span style="font-size:10px;color:var(--text2);">[${styleLabel} · 难度${item.difficulty} · ${item.basePower}±${item.variance}]</span>`;
+    } else if (currentType === 'tournament') {
+      extraInfo = `<span style="font-size:10px;color:var(--text2);">[${item.tier} · ${item.rounds||3}轮]</span>`;
+    } else if (currentType === 'character') {
+      const tags = [];
+      if (item.canChallenge) tags.push('可挑战');
+      if (item.giftCard) tags.push('有赠礼');
+      extraInfo = tags.length ? `<span style="font-size:10px;color:var(--text2);">[${tags.join('/')}]</span>` : '';
+    } else if (currentType === 'achievement') {
+      extraInfo = `<span style="font-size:10px;color:var(--text2);">[${item.condition?.type || ''}]</span>`;
+    } else if (currentType === 'redeemCode') {
+      const reward = item.reward || {};
+      const parts = [];
+      if (reward.duelPoints) parts.push(`${reward.duelPoints}点`);
+      if (reward.cards) parts.push(`${reward.cards.length}卡`);
+      if (reward.title) parts.push('称号');
+      if (reward.achievement) parts.push('成就');
+      if (reward.talent) parts.push('天赋');
+      if (reward.spiritPower) parts.push('精灵力');
+      extraInfo = parts.length ? `<span style="font-size:10px;color:var(--text2);">[${parts.join('/')}]</span>` : '';
+    }
+    return `<div class="list-item ${currentId===item.id?'active':''}" onclick="selectItem('${item.id}')">
+      ${dot}<div class="list-item-name">${item.name||item.id}</div>${extraInfo}${loc}
+      <div class="list-item-del" onclick="event.stopPropagation();deleteItem('${item.id}')">×</div>
+    </div>`;
+  }).join('');
+}
+
+function selectItem(id) {
+  currentId = id;
+  renderListItems();
+  renderEditor();
+}
+
+function deleteItem(id) {
+  if (currentType === 'duelConfig') { showToast('决斗配置为全局配置，不可删除'); return; }
+  if (currentType === 'gameConfig') { showToast('核心配置为全局配置，不可删除'); return; }
+  if (!confirm('确定删除？此操作不可恢复。')) return;
+  if (currentType === 'card') { delete cardDB[id]; }
+  else if (currentType === 'event') {
+    for (const loc of Object.keys(gameData.events)) {
+      gameData.events[loc] = gameData.events[loc].filter(e => e.id !== id);
+    }
+  }
+  else {
+    const key = currentType + 's';
+    const arrKey = currentType === 'talent' ? 'talents' : currentType === 'achievement' ? 'achievements' : currentType + 's';
+    gameData[arrKey] = gameData[arrKey].filter(i => i.id !== id);
+  }
+  if (currentId === id) currentId = null;
+  renderList();
+  showToast('已删除');
+}
+
+function addNew() {
+  const id = prompt('请输入ID（英文/数字，唯一）：');
+  if (!id) return;
+  let newItem;
+  switch(currentType) {
+    case 'card':
+      if (cardDB[id]) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新卡片', type:'monster', rarity:'N', archetype:'', stats:{search:0,expand:0,disrupt:0,resist:0,suppress:0}, sub:{power:0,soul:0,proficiency:0,intelligence:0} };
+      cardDB[id] = newItem; break;
+    case 'talent':
+      if (gameData.talents.find(t=>t.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新天赋', rarity:'N', desc:'', effects:{}, bonus:{} };
+      gameData.talents.push(newItem); break;
+    case 'opponent':
+      if (gameData.opponents.find(o=>o.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新对手', basePower:100, variance:50, difficulty:1, desc:'' };
+      gameData.opponents.push(newItem); break;
+    case 'achievement':
+      if (gameData.achievements.find(a=>a.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新成就', desc:'', condition:{type:'collection_count',value:1}, bonus:{} };
+      gameData.achievements.push(newItem); break;
+    case 'task':
+      if (!gameData.tasks) gameData.tasks = [];
+      if (gameData.tasks.find(t=>t.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新任务', type:'guide', order:1, desc:'', story:'', condition:{type:'collect_cards',value:10}, reward:{} };
+      gameData.tasks.push(newItem); break;
+    case 'location':
+      if (gameData.locations.find(l=>l.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新地点', desc:'', tags:[] };
+      gameData.locations.push(newItem); break;
+    case 'character':
+      if (gameData.characters.find(c=>c.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新角色', desc:'', avatar:'?', giftCard:'', canChallenge:false, power:100, challengeReward:'', challengeDesc:'' };
+      gameData.characters.push(newItem); break;
+    case 'tournament':
+      if (gameData.tournaments.find(t=>t.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新比赛', tier:'入门', duelMode:'quick', desc:'', entryCost:0, requirement:{mainDeck:20}, conditions:[{type:'collect_cards',operator:'>=',value:10}], rounds:3, opponentNames:['初赛对手','半决赛对手','决赛对手'], opponentBasePower:60, opponentPowerGrowth:0.25, rewardRarities:['N','R'], rewardCardCount:1, duelPointsWin:500, duelPointsLose:50, rewards:'', bonusStats:{}, difficulty:1 };
+      gameData.tournaments.push(newItem); break;
+    case 'redeemCode':
+      if (!gameData.redeemCodes) gameData.redeemCodes = [];
+      if (gameData.redeemCodes.find(r=>r.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新兑换码', desc:'', reward:{ duelPoints:100 } };
+      gameData.redeemCodes.push(newItem); break;
+    case 'event':
+      const loc = prompt('请输入地点ID（如 kame/cardshop/beach）：');
+      if (!loc) return;
+      if (!gameData.events[loc]) gameData.events[loc] = [];
+      newItem = { id, name:'新事件', probability:0.5, title:'', text:'', effects:[{type:'text'}], log:'' };
+      gameData.events[loc].push(newItem); break;
+  }
+  currentId = id;
+  renderList();
+  showToast('已创建');
+}
+
+// ===== 编辑器 =====
+function getItem() {
+  if (!currentId) return null;
+  switch(currentType) {
+    case 'card': return cardDB[currentId];
+    case 'talent': return gameData.talents.find(t=>t.id===currentId);
+    case 'opponent': return gameData.opponents.find(o=>o.id===currentId);
+    case 'duelConfig': return gameData.duelConfig;
+    case 'gameConfig': return gameData.gameConfig;
+    case 'achievement': return gameData.achievements.find(a=>a.id===currentId);
+    case 'task': return (gameData.tasks||[]).find(t=>t.id===currentId);
+    case 'location': return gameData.locations.find(l=>l.id===currentId);
+    case 'character': return gameData.characters.find(c=>c.id===currentId);
+    case 'tournament': return gameData.tournaments.find(t=>t.id===currentId);
+    case 'redeemCode': return (gameData.redeemCodes||[]).find(r=>r.id===currentId);
+    case 'event':
+      for (const list of Object.values(gameData.events)) {
+        const e = list.find(x=>x.id===currentId);
+        if (e) return e;
+      }
+      return null;
+  }
+}
+
+function renderEditor() {
+  const panel = document.getElementById('edit-panel');
+  if (!panel) return;
+  const item = getItem();
+  if (!item) {
+    panel.innerHTML = '<div class="empty"><div class="empty-icon">✏️</div><div>从左侧选择要编辑的项目</div></div>';
+    return;
+  }
+  switch(currentType) {
+    case 'card': panel.innerHTML = renderCardEditor(item); bindCardEvents(item); break;
+    case 'talent': panel.innerHTML = renderTalentEditor(item); bindTalentEvents(item); break;
+    case 'opponent': panel.innerHTML = renderOpponentEditor(item); bindOpponentEvents(item); break;
+    case 'duelConfig': panel.innerHTML = renderDuelConfigEditor(item); bindDuelConfigEvents(item); break;
+    case 'gameConfig': panel.innerHTML = renderGameConfigEditor(item); bindGameConfigEvents(item); break;
+    case 'achievement': panel.innerHTML = renderAchievementEditor(item); bindAchievementEvents(item); break;
+    case 'task': panel.innerHTML = renderTaskEditor(item); bindTaskEvents(item); break;
+    case 'location': panel.innerHTML = renderLocationEditor(item); bindLocationEvents(item); break;
+    case 'character': panel.innerHTML = renderCharacterEditor(item); bindCharacterEvents(item); break;
+    case 'tournament': panel.innerHTML = renderTournamentEditor(item); bindTournamentEvents(item); break;
+    case 'redeemCode': panel.innerHTML = renderRedeemCodeEditor(item); bindRedeemCodeEvents(item); break;
+    case 'event': panel.innerHTML = renderEventEditor(item); bindEventEvents(item); break;
+  }
+}
+
+// ===== 卡片编辑器 =====
+function renderCardEditor(c) {
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${c.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${c.id}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>类型</label><select id="f-type">
+          ${Object.entries(TYPE_LABELS).map(([k,v])=>`<option value="${k}" ${c.type===k?'selected':''}>${v}</option>`).join('')}
+        </select></div>
+        <div class="form-group"><label>稀有度</label><select id="f-rarity">
+          ${RARITIES.map(r=>`<option value="${r}" ${c.rarity===r?'selected':''}>${r}</option>`).join('')}
+        </select></div>
+        <div class="form-group"><label>系列（多个用/分隔）</label><input type="text" id="f-archetype" value="${c.archetype||''}" placeholder="如 青眼/龙/传说"></div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="f-special" ${c.special?'checked':''} style="width:16px;height:16px;">
+        <label for="f-special" style="margin:0;cursor:pointer;">✨ 特殊卡片（仅事件获取，不加入卡池，不可加入卡组，但提供属性加成）</label>
+      </div>
+      <div class="form-group" id="f-awaken-ach-group" style="${c.special?'':'display:none;'}">
+        <label>SP卡觉醒所需成就ID（默认invigoration）</label>
+        <input type="text" id="f-awaken-ach" value="${c.awakenAchievement||'invigoration'}" placeholder="如 invigoration">
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">卡灵觉醒配置（留空则使用全局默认）</div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="f-can-awaken" ${c.canAwaken===true?'checked':''} style="width:16px;height:16px;">
+        <label for="f-can-awaken" style="margin:0;cursor:pointer;">强制允许觉醒（覆盖品质限制）</label>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="f-no-awaken" ${c.canAwaken===false?'checked':''} style="width:16px;height:16px;">
+        <label for="f-no-awaken" style="margin:0;cursor:pointer;">禁止觉醒（即使有天赋也不可觉醒）</label>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>觉醒消耗（碎片）</label><input type="number" id="f-awaken-cost" value="${c.awakenCost!==undefined?c.awakenCost:''}" placeholder="留空用全局默认" min="0"></div>
+        <div class="form-group"><label>觉醒成功率</label><input type="number" id="f-awaken-rate" value="${c.awakenRate!==undefined?c.awakenRate:''}" placeholder="0-1，留空用全局默认" step="0.05" min="0" max="1"></div>
+        <div class="form-group"><label>觉醒倍率</label><input type="number" id="f-awaken-mult" value="${c.awakenMultiplier!==undefined?c.awakenMultiplier:''}" placeholder="留空用全局默认" step="0.5" min="1"></div>
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">主属性加成（0-20）</div>
+      ${STAT_KEYS.map(k=>`
+        <div class="stat-group">
+          <div class="stat-label"><span>${STAT_NAMES[k]}</span><span id="val-${k}">${c.stats?.[k]||0}</span></div>
+          <input type="range" class="stat-slider ${k}" min="0" max="20" value="${c.stats?.[k]||0}" id="s-${k}">
+        </div>
+      `).join('')}
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">次属性（0-20）</div>
+      ${['power','soul','proficiency','intelligence'].map(k=>`
+        <div class="stat-group">
+          <div class="stat-label"><span>${STAT_NAMES[k]}</span><span id="val-${k}">${c.sub?.[k]||0}</span></div>
+          <input type="range" class="stat-slider ${k}" min="0" max="20" value="${c.sub?.[k]||0}" id="s-${k}">
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+function bindCardEvents(c) {
+  ['name','id','archetype'].forEach(f => {
+    document.getElementById('f-'+f).oninput = e => {
+      if (f === 'id') {
+        if (cardDB[e.target.value] && e.target.value !== c.id) { showToast('ID已存在'); e.target.value=c.id; return; }
+        delete cardDB[c.id]; c.id = e.target.value; cardDB[c.id] = c; currentId = c.id;
+      } else c[f] = e.target.value;
+      renderListItems();
+    };
+  });
+  document.getElementById('f-type').onchange = e => { c.type = e.target.value; renderListItems(); };
+  document.getElementById('f-rarity').onchange = e => { c.rarity = e.target.value; renderListItems(); };
+  const specialEl = document.getElementById('f-special');
+  if (specialEl) specialEl.onchange = e => {
+    c.special = e.target.checked;
+    const group = document.getElementById('f-awaken-ach-group');
+    if (group) group.style.display = c.special ? '' : 'none';
+    renderListItems();
+  };
+  const awakenAchEl = document.getElementById('f-awaken-ach');
+  if (awakenAchEl) awakenAchEl.oninput = e => {
+    const val = e.target.value.trim();
+    if (val) c.awakenAchievement = val; else delete c.awakenAchievement;
+  };
+  // 卡灵觉醒配置
+  const canAwakenEl = document.getElementById('f-can-awaken');
+  if (canAwakenEl) canAwakenEl.onchange = e => {
+    if (e.target.checked) { c.canAwaken = true; delete c.canAwakenFalse; }
+    else delete c.canAwaken;
+    renderListItems();
+  };
+  const noAwakenEl = document.getElementById('f-no-awaken');
+  if (noAwakenEl) noAwakenEl.onchange = e => {
+    if (e.target.checked) { c.canAwaken = false; }
+    else delete c.canAwaken;
+    renderListItems();
+  };
+  const awakenCostEl = document.getElementById('f-awaken-cost');
+  if (awakenCostEl) awakenCostEl.oninput = e => {
+    const val = e.target.value.trim();
+    if (val !== '') c.awakenCost = parseInt(val); else delete c.awakenCost;
+  };
+  const awakenRateEl = document.getElementById('f-awaken-rate');
+  if (awakenRateEl) awakenRateEl.oninput = e => {
+    const val = e.target.value.trim();
+    if (val !== '') c.awakenRate = parseFloat(val); else delete c.awakenRate;
+  };
+  const awakenMultEl = document.getElementById('f-awaken-mult');
+  if (awakenMultEl) awakenMultEl.oninput = e => {
+    const val = e.target.value.trim();
+    if (val !== '') c.awakenMultiplier = parseFloat(val); else delete c.awakenMultiplier;
+  };
+  STAT_KEYS.forEach(k => {
+    document.getElementById('s-'+k).oninput = e => {
+      if (!c.stats) c.stats = {};
+      c.stats[k] = parseInt(e.target.value);
+      document.getElementById('val-'+k).textContent = e.target.value;
+    };
+  });
+  ['power','soul','proficiency','intelligence'].forEach(k => {
+    document.getElementById('s-'+k).oninput = e => {
+      if (!c.sub) c.sub = {};
+      c.sub[k] = parseInt(e.target.value);
+      document.getElementById('val-'+k).textContent = e.target.value;
+    };
+  });
+}
+
+// ===== 天赋编辑器 =====
+function renderTalentEditor(t) {
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${t.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${t.id}"></div>
+        <div class="form-group"><label>品质</label><select id="f-type">
+          <option value="N" ${(t.rarity||'N')==='N'?'selected':''}>N（普通）</option>
+          <option value="R" ${t.rarity==='R'?'selected':''}>R（稀有）</option>
+          <option value="SR" ${t.rarity==='SR'?'selected':''}>SR（超稀有）</option>
+          <option value="UR" ${t.rarity==='UR'?'selected':''}>UR（究极稀有）</option>
+        </select></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${t.desc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">隐藏天赋设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>是否为隐藏天赋</label><select id="f-hidden">
+          <option value="0">否（普通天赋）</option>
+          <option value="1" ${t.hidden?'selected':''}>是（隐藏天赋）</option>
+        </select></div>
+        <div class="form-group"><label>解锁所需成就</label><select id="f-unlockach">
+          <option value="">-- 无 --</option>
+          ${(gameData.achievements || []).map(a => `<option value="${a.id}" ${t.unlockAchievement===a.id?'selected':''}>${a.name}</option>`).join('')}
+        </select></div>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+        隐藏天赋默认不在随机天赋池中出现，玩家达成指定成就后永久解锁，下次开局可选择
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">属性加成（-20 ~ 20）</div>
+      ${[...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].map(k=>`
+        <div class="stat-group">
+          <div class="stat-label"><span>${STAT_NAMES[k]}</span><span id="val-${k}">${t.effects?.[k]||0}</span></div>
+          <input type="range" class="stat-slider ${k}" min="-20" max="20" value="${t.effects?.[k]||0}" id="s-${k}">
+        </div>
+      `).join('')}
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">可定义特殊效果</div>
+      <div class="form-row">
+        <div class="form-group"><label>开局获得卡片ID（逗号分隔）</label><input type="text" id="f-startcards" value="${(t.startCards||[]).join(',')}"></div>
+        <div class="form-group"><label>开局决斗点</label><input type="number" id="f-startdp" value="${t.startDuelPoints||0}"></div>
+        <div class="form-group"><label>初始年龄</label><input type="number" id="f-startage" value="${t.startAge||0}"></div>
+        <div class="form-group"><label>解锁成就</label><select id="f-unlockachievement">
+          <option value="">不解锁成就</option>
+          ${(gameData.achievements || []).map(a => `<option value="${a.id}" ${t.unlockAchievement===a.id?'selected':''}>${a.name}</option>`).join('')}
+        </select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>捡卡数量倍率</label><input type="number" id="f-pickup" value="${t.pickupBonus||1}" step="0.5" min="0.5" max="3"></div>
+        <div class="form-group"><label>捡卡稀有度加成（档）</label><input type="number" id="f-pickuprarity" value="${t.pickupRarityBonus||0}" step="1" min="0" max="5"></div>
+        <div class="form-group"><label>决斗胜率加成(%)</label><input type="number" id="f-winrate" value="${t.winRateBonus||0}" step="5" min="-50" max="50"></div>
+        <div class="form-group"><label>赌卡收益倍率</label><input type="number" id="f-gamble" value="${t.gambleBonus||1}" step="0.5" min="0.5" max="3"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>好感度倍率</label><input type="number" id="f-affmult" value="${t.affinityMultiplier||1}" step="0.1" min="0" max="3"></div>
+        <div class="form-group"><label>卡片属性倍率</label><input type="number" id="f-cardmult" value="${t.cardAttributeMultiplier||1}" step="0.1" min="0" max="3"></div>
+        <div class="form-group"><label>加成范围</label><select id="f-cardbonus-type">
+          <option value="all" ${(t.cardBonusType||'all')==='all'?'selected':''}>全卡</option>
+          <option value="type" ${t.cardBonusType==='type'?'selected':''}>按类型</option>
+          <option value="archetype" ${t.cardBonusType==='archetype'?'selected':''}>按系列</option>
+          <option value="cards" ${t.cardBonusType==='cards'?'selected':''}>指定卡片</option>
+        </select></div>
+        <div class="form-group"><label>范围值（类型:monster/spell/trap/extra，系列:龙/黑魔术，指定卡:ID逗号分隔）</label><input type="text" id="f-cardbonus-value" value="${t.cardBonusValue||''}"></div>
+        <div class="form-group"><label>主卡组上限调整</label><input type="number" id="f-maxmain" value="${t.maxMainDeck||0}" min="-20" max="20"></div>
+        <div class="form-group"><label>额外卡组上限调整</label><input type="number" id="f-maxextra" value="${t.maxExtraDeck||0}" min="-10" max="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>卡组限制类型（monster/spell/trap/extra）</label><input type="text" id="f-deckrestrict" value="${t.deckRestriction||''}"></div>
+        <div class="form-group"><label>卡组限制系列</label><input type="text" id="f-deckarchetype" value="${t.deckArchetype||''}"></div>
+        <div class="form-group"><label>互斥天赋ID（逗号分隔）</label><input type="text" id="f-exclusive" value="${(t.exclusive||[]).join(',')}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>开局随机获卡数量</label><input type="number" id="f-startcardcount" value="${t.startCardCount||0}" step="1" min="0" max="20"></div>
+        <div class="form-group"><label>决斗点收益倍率</label><input type="number" id="f-dpmult" value="${t.duelPointMultiplier||1}" step="0.1" min="0.5" max="3"></div>
+        <div class="form-group"><label>赌卡失败保护(%)</label><input type="number" id="f-lossprotect" value="${t.cardLossProtection||0}" step="5" min="0" max="100"></div>
+        <div class="form-group"><label>事件冷却缩减(%)</label><input type="number" id="f-cdreduce" value="${t.eventCooldownReduction||0}" step="5" min="0" max="80"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>幸运事件概率加成(%)</label><input type="number" id="f-luckevent" value="${t.luckEventBonus||0}" step="5" min="0" max="60"></div>
+        <div class="form-group"><label>战斗事件概率加成(%)</label><input type="number" id="f-battleevent" value="${t.battleEventBonus||0}" step="5" min="0" max="60"></div>
+        <div class="form-group"><label>比赛奖励加成(%)</label><input type="number" id="f-tourreward" value="${t.tournamentRewardBonus||0}" step="5" min="0" max="100"></div>
+        <div class="form-group"><label>赠礼互动好感倍率</label><input type="number" id="f-giftmult" value="${t.giftEffectMultiplier||1}" step="0.1" min="0.5" max="3"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>成就奖励属性倍率</label><input type="number" id="f-achmult" value="${t.achievementBonusMultiplier||1}" step="0.1" min="0.5" max="3"></div>
+        <div class="form-group"><label>系列卡组加成倍率</label><input type="number" id="f-archmult" value="${t.archetypeBonusMultiplier||1}" step="0.1" min="0.5" max="3"></div>
+        <div class="form-group"><label>事件好结果加成(%)</label><input type="number" id="f-eventbonus" value="${t.eventBonus||0}" step="5" min="-50" max="50"></div>
+        <div class="form-group"><label>隐藏事件概率加成(%)</label><input type="number" id="f-hiddenevent" value="${t.hiddenEventBonus||0}" step="5" min="0" max="100"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>比赛作弊风险（0否1是）</label><input type="number" id="f-cheatrisk" value="${t.tournamentCheatRisk?1:0}" step="1" min="0" max="1"></div>
+        <div class="form-group"><label>作弊基础被发现概率(%)</label><input type="number" id="f-cheatbase" value="${t.tournamentCheatBaseRate||0}" step="1" min="0" max="100"></div>
+        <div class="form-group"><label>每次失败增加概率(%)</label><input type="number" id="f-cheatincrease" value="${t.tournamentCheatIncreaseRate||0}" step="1" min="0" max="50"></div>
+      </div>
+      <div style="font-size:11px; color:var(--text-secondary); margin-top:6px;">
+        作弊风险：启用后，每次参加比赛有概率被发现，被发现后直接结束游戏。失败次数越多概率越高。
+      </div>
+    </div>
+  `;
+}
+function bindTalentEvents(t) {
+  document.getElementById('f-name').oninput = e => { t.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { t.id=e.target.value; renderListItems(); };
+  document.getElementById('f-type').onchange = e => { t.rarity=e.target.value; renderListItems(); };
+  document.getElementById('f-desc').oninput = e => { t.desc=e.target.value; };
+  document.getElementById('f-hidden').onchange = e => {
+    t.hidden = e.target.value === '1';
+    if (!t.hidden) delete t.unlockAchievement;
+  };
+  document.getElementById('f-unlockach').onchange = e => {
+    if (e.target.value) {
+      t.unlockAchievement = e.target.value;
+      t.hidden = true;
+    } else {
+      delete t.unlockAchievement;
+    }
+  };
+  [...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].forEach(k => {
+    document.getElementById('s-'+k).oninput = e => {
+      if (!t.effects) t.effects = {};
+      t.effects[k] = parseInt(e.target.value);
+      document.getElementById('val-'+k).textContent = e.target.value;
+    };
+  });
+  document.getElementById('f-startcards').oninput = e => { t.startCards = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); };
+  document.getElementById('f-startdp').oninput = e => { t.startDuelPoints = parseInt(e.target.value) || 0; };
+  document.getElementById('f-startage').oninput = e => { t.startAge = parseInt(e.target.value) || 0; };
+  document.getElementById('f-unlockachievement').onchange = e => {
+    if (e.target.value) {
+      t.unlockAchievement = e.target.value;
+    } else {
+      delete t.unlockAchievement;
+    }
+  };
+  document.getElementById('f-pickup').oninput = e => { t.pickupBonus = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-pickuprarity').oninput = e => { t.pickupRarityBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-winrate').oninput = e => { t.winRateBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-gamble').oninput = e => { t.gambleBonus = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-eventbonus').oninput = e => { t.eventBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-affmult').oninput = e => { t.affinityMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-cardmult').oninput = e => { t.cardAttributeMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-cardbonus-type').onchange = e => { t.cardBonusType = e.target.value; };
+  document.getElementById('f-cardbonus-value').oninput = e => { t.cardBonusValue = e.target.value; };
+  document.getElementById('f-maxmain').oninput = e => { t.maxMainDeck = parseInt(e.target.value) || 0; };
+  document.getElementById('f-maxextra').oninput = e => { t.maxExtraDeck = parseInt(e.target.value) || 0; };
+  document.getElementById('f-deckrestrict').oninput = e => { t.deckRestriction = e.target.value; };
+  document.getElementById('f-deckarchetype').oninput = e => { t.deckArchetype = e.target.value; };
+  document.getElementById('f-exclusive').oninput = e => {
+    t.exclusive = e.target.value.split(',').map(s=>s.trim()).filter(Boolean);
+  };
+  // 新增可定义特殊效果
+  document.getElementById('f-startcardcount').oninput = e => { t.startCardCount = parseInt(e.target.value) || 0; };
+  document.getElementById('f-dpmult').oninput = e => { t.duelPointMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-lossprotect').oninput = e => { t.cardLossProtection = parseInt(e.target.value) || 0; };
+  document.getElementById('f-cdreduce').oninput = e => { t.eventCooldownReduction = parseInt(e.target.value) || 0; };
+  document.getElementById('f-luckevent').oninput = e => { t.luckEventBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-battleevent').oninput = e => { t.battleEventBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-tourreward').oninput = e => { t.tournamentRewardBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-giftmult').oninput = e => { t.giftEffectMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-achmult').oninput = e => { t.achievementBonusMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-archmult').oninput = e => { t.archetypeBonusMultiplier = parseFloat(e.target.value) || 1; };
+  document.getElementById('f-hiddenevent').oninput = e => { t.hiddenEventBonus = parseInt(e.target.value) || 0; };
+  document.getElementById('f-cheatrisk').oninput = e => { t.tournamentCheatRisk = parseInt(e.target.value) === 1; };
+  document.getElementById('f-cheatbase').oninput = e => { t.tournamentCheatBaseRate = parseInt(e.target.value) || 0; };
+  document.getElementById('f-cheatincrease').oninput = e => { t.tournamentCheatIncreaseRate = parseInt(e.target.value) || 0; };
+}
+
+// ===== 对手编辑器 =====
+const OPPONENT_CATEGORIES = [
+  {v:'normal', l:'普通对手'},
+  {v:'event', l:'事件专用'},
+  {v:'tournament', l:'比赛专用'},
+  {v:'story', l:'剧情角色'},
+  {v:'special', l:'特殊分类'}
+];
+
+function renderOpponentEditor(o) {
+  if (!o.category) o.category = 'normal';
+  if (!o.specialTag) o.specialTag = '';
+  if (!o.stats) o.stats = {};
+  if (!o.rewards) o.rewards = {};
+  if (o.enabled === undefined) o.enabled = true;
+
+  // 合并预定义分类和自定义分类
+  const defaultCats = OPPONENT_CATEGORIES.map(c => c.v);
+  const customCats = [...new Set(gameData.opponents.map(op => op.category).filter(c => c && !defaultCats.includes(c)))];
+  const allCategoryOptions = [
+    ...OPPONENT_CATEGORIES,
+    ...customCats.map(c => ({v: c, l: gameData.opponents.find(op => op.category === c)?.categoryLabel || c}))
+  ];
+
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${o.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${o.id}"></div>
+        <div class="form-group"><label>分类</label><select id="f-category">
+          ${allCategoryOptions.map(c=>`<option value="${c.v}" ${o.category===c.v?'selected':''}>${c.l}</option>`).join('')}
+        </select></div>
+        <div class="form-group"><label>启用</label><select id="f-enabled">
+          <option value="true" ${o.enabled?'selected':''}>启用</option>
+          <option value="false" ${!o.enabled?'selected':''}>禁用</option>
+        </select></div>
+      </div>
+      <div class="form-group"><label>特殊标签（可被事件/比赛单独调用，如 gambler/legend/mysterious）</label><input type="text" id="f-specialtag" value="${o.specialTag||''}" placeholder="如 gambler"></div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${o.desc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">牌力设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>基础牌力</label><input type="number" id="f-basepower" value="${o.basePower||0}" step="10" min="0" max="10000"></div>
+        <div class="form-group"><label>牌力波动（随机+0~波动值）</label><input type="number" id="f-variance" value="${o.variance||0}" step="10" min="0" max="5000"></div>
+        <div class="form-group"><label>难度等级（1-10）</label><input type="number" id="f-difficulty" value="${o.difficulty||1}" step="1" min="1" max="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>行为模式</label><select id="f-playstyle">
+          <option value="balance" ${o.playStyle==='balance'?'selected':''}>均衡型</option>
+          <option value="expand" ${o.playStyle==='expand'?'selected':''}>展开型（展开+20%，干扰压制-30%）</option>
+          <option value="disrupt" ${o.playStyle==='disrupt'?'selected':''}>干扰型（展开-20%，干扰压制+30%）</option>
+          <option value="beat" ${o.playStyle==='beat'?'selected':''}>防御型（展开-20%，干扰压制+10%，抗性+30%）</option>
+        </select></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">
+        实际牌力 = 基础牌力 + 随机(0~波动值) × 时间增长倍率 × 模式倍率
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">卡组与属性（可选，用于特殊对手）</div>
+      <div class="form-row">
+        <div class="form-group"><label>卡组系列</label><input type="text" id="f-archetype" value="${o.deckArchetype||''}" placeholder="如 青眼/黑魔术"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">对手属性（影响决斗行为，可选填）</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+        ${[['search','检索'],['expand','展开'],['disrupt','干扰'],['resist','抗性'],['suppress','压制']].map(([k,n])=>`
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:10px;color:var(--text2);">${n}</span>
+            <input type="number" id="op-stat-${k}" value="${o.stats[k]||0}" min="0" style="width:100%;">
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">击败奖励（可选，用于特殊对手）</div>
+      <div class="form-row">
+        <div class="form-group"><label>胜利决斗点</label><input type="number" id="op-reward-dp" value="${o.rewards.duelPoints||0}" min="0"></div>
+        <div class="form-group"><label>胜利卡点</label><input type="number" id="op-reward-cp" value="${o.rewards.cardPoints||0}" min="0"></div>
+        <div class="form-group"><label>寿命奖励（天）</label><input type="number" id="op-reward-days" value="${o.rewards.days||0}" min="0" placeholder="击败后增加寿命"></div>
+        <div class="form-group"><label>奖励卡片ID</label><input type="text" id="op-reward-card" value="${o.rewards.cardId||''}" placeholder="如 m001"></div>
+      </div>
+    </div>
+  `;
+}
+function bindOpponentEvents(o) {
+  document.getElementById('f-name').oninput = e => { o.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { o.id=e.target.value; renderListItems(); };
+  document.getElementById('f-category').onchange = e => { o.category=e.target.value; };
+  document.getElementById('f-enabled').onchange = e => { o.enabled = e.target.value === 'true'; };
+  document.getElementById('f-specialtag').oninput = e => { o.specialTag=e.target.value; };
+  document.getElementById('f-desc').oninput = e => { o.desc=e.target.value; };
+  document.getElementById('f-basepower').oninput = e => { o.basePower = parseInt(e.target.value) || 0; };
+  document.getElementById('f-variance').oninput = e => { o.variance = parseInt(e.target.value) || 0; };
+  document.getElementById('f-difficulty').oninput = e => { o.difficulty = parseInt(e.target.value) || 1; };
+  document.getElementById('f-playstyle').onchange = e => { o.playStyle = e.target.value; };
+  document.getElementById('f-archetype').oninput = e => { o.deckArchetype=e.target.value; };
+  ['search','expand','disrupt','resist','suppress'].forEach(k => {
+    document.getElementById('op-stat-'+k).oninput = e => {
+      if (!o.stats) o.stats = {};
+      o.stats[k] = parseInt(e.target.value) || 0;
+    };
+  });
+  document.getElementById('op-reward-dp').oninput = e => {
+    if (!o.rewards) o.rewards = {};
+    o.rewards.duelPoints = parseInt(e.target.value) || 0;
+  };
+  document.getElementById('op-reward-cp').oninput = e => {
+    if (!o.rewards) o.rewards = {};
+    o.rewards.cardPoints = parseInt(e.target.value) || 0;
+  };
+  document.getElementById('op-reward-days').oninput = e => {
+    if (!o.rewards) o.rewards = {};
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) o.rewards.days = val; else delete o.rewards.days;
+  };
+  document.getElementById('op-reward-card').oninput = e => {
+    if (!o.rewards) o.rewards = {};
+    o.rewards.cardId = e.target.value;
+  };
+}
+
+// ===== 决斗配置编辑器 =====
+let currentDuelMode = 'quick'; // 当前编辑的决斗模式
+
+function renderDuelConfigEditor(dc) {
+  // 确保modes存在
+  if (!dc.modes) dc.modes = {};
+  if (!dc.modes.quick) dc.modes.quick = {
+    name: '快速决斗', enabled: true, maxTurns: 30, playerBasePower: 100, modeBonus: 1.2,
+    opponentMinDifficulty: 0, opponentMaxDifficulty: 3, opponentCategory: 'normal',
+    mainDeckMin: 20, mainDeckMax: 60, extraDeckMin: 0, extraDeckMax: 15, gambleEnabled: true,
+    winDuelPoints: 200, loseDuelPoints: 50, winCardPoints: 0, loseCardPoints: 0,
+    winStats: {}, loseStats: {}, battleEventBaseRate: 0.3, archetypeEventBonus: 0.15
+  };
+  if (!dc.modes.master) dc.modes.master = {
+    name: '大师决斗', enabled: true, maxTurns: 60, playerBasePower: 100, modeBonus: 1.4,
+    opponentMinDifficulty: 3, opponentMaxDifficulty: 6, opponentCategory: 'normal',
+    mainDeckMin: 40, mainDeckMax: 60, extraDeckMin: 0, extraDeckMax: 15, gambleEnabled: true,
+    winDuelPoints: 800, loseDuelPoints: 200, winCardPoints: 0, loseCardPoints: 0,
+    winStats: {}, loseStats: {}, battleEventBaseRate: 0.3, archetypeEventBonus: 0.15
+  };
+
+  const mode = dc.modes[currentDuelMode] || dc.modes.quick;
+  const modeIds = Object.keys(dc.modes);
+
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>决斗模式管理</span>
+        <button class="btn btn-primary btn-sm" onclick="addDuelMode()">+ 添加新模式</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+        ${modeIds.map(id => `
+          <button class="btn ${currentDuelMode===id?'btn-gold':'btn-secondary'} btn-sm" onclick="switchDuelMode('${id}')" style="padding:6px 12px;">
+            ${dc.modes[id].name || id}${dc.modes[id].enabled===false?' (禁用)':''}
+          </button>
+        `).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);">点击上方按钮切换编辑不同决斗模式，每个模式可以单独配置所有参数。添加新模式后会自动出现在游戏的决斗页面。</div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">【${mode.name || currentDuelMode}】基本设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>模式名称</label><input type="text" id="dm-name" value="${mode.name||''}"></div>
+        <div class="form-group"><label>模式ID</label><input type="text" id="dm-id" value="${currentDuelMode}" disabled></div>
+        <div class="form-group"><label>启用状态</label><select id="dm-enabled">
+          <option value="true" ${mode.enabled!==false?'selected':''}>启用</option>
+          <option value="false" ${mode.enabled===false?'selected':''}>禁用</option>
+        </select></div>
+        <div class="form-group"><label>最大回合数</label><input type="number" id="dm-maxturns" value="${mode.maxTurns||30}" min="3" max="200"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>玩家基础牌力</label><input type="number" id="dm-playerbase" value="${mode.playerBasePower||100}" min="0" max="1000"></div>
+        <div class="form-group"><label>对手牌力倍率</label><input type="number" id="dm-modebonus" value="${mode.modeBonus||1.0}" step="0.1" min="0.5" max="3"></div>
+        <div class="form-group"><label>允许赌卡</label><select id="dm-gamble">
+          <option value="true" ${mode.gambleEnabled!==false?'selected':''}>允许</option>
+          <option value="false" ${mode.gambleEnabled===false?'selected':''}>禁止</option>
+        </select></div>
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">【${mode.name || currentDuelMode}】对手匹配</div>
+      <div class="form-row">
+        <div class="form-group"><label>对手分类</label><select id="dm-oppcategory">
+          ${OPPONENT_CATEGORIES.map(c=>`<option value="${c.v}" ${mode.opponentCategory===c.v?'selected':''}>${c.l}</option>`).join('')}
+        </select></div>
+        <div class="form-group"><label>最小难度</label><input type="number" id="dm-oppmin" value="${mode.opponentMinDifficulty||0}" min="0" max="10"></div>
+        <div class="form-group"><label>最大难度</label><input type="number" id="dm-oppmax" value="${mode.opponentMaxDifficulty||3}" min="0" max="10"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>启用难度权重匹配</label><select id="dm-difficultyweight">
+          <option value="true" ${mode.difficultyWeightEnabled!==false?'selected':''}>启用</option>
+          <option value="false" ${mode.difficultyWeightEnabled===false?'selected':''}>禁用（完全随机）</option>
+        </select></div>
+        <div class="form-group"><label>权重基础值</label><input type="number" id="dm-weightbase" value="${mode.difficultyWeightBase||11}" min="2" max="20" step="0.5"></div>
+        <div class="form-group"><label>权重最小值</label><input type="number" id="dm-weightmin" value="${mode.difficultyWeightMin||0.5}" min="0.1" max="5" step="0.1"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+        难度权重公式：权重 = max(最小值, 基础值 - 难度)。<br>
+        例如基础值11、最小值0.5：难度1=10，难度5=6，难度10=1。难度越高匹配概率越低。
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">【${mode.name || currentDuelMode}】卡组要求</div>
+      <div class="form-row">
+        <div class="form-group"><label>主卡组最少</label><input type="number" id="dm-mainmin" value="${mode.mainDeckMin||20}" min="1" max="60"></div>
+        <div class="form-group"><label>主卡组最多</label><input type="number" id="dm-mainmax" value="${mode.mainDeckMax||60}" min="1" max="100"></div>
+        <div class="form-group"><label>额外卡组最少</label><input type="number" id="dm-extramin" value="${mode.extraDeckMin||0}" min="0" max="15"></div>
+        <div class="form-group"><label>额外卡组最多</label><input type="number" id="dm-extramax" value="${mode.extraDeckMax||15}" min="0" max="30"></div>
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">【${mode.name || currentDuelMode}】奖励与惩罚</div>
+      <div class="form-row">
+        <div class="form-group"><label>胜利决斗点</label><input type="number" id="dm-windp" value="${mode.winDuelPoints||0}" min="0"></div>
+        <div class="form-group"><label>失败决斗点</label><input type="number" id="dm-losedp" value="${mode.loseDuelPoints||0}" min="0"></div>
+        <div class="form-group"><label>胜利卡点</label><input type="number" id="dm-wincp" value="${mode.winCardPoints||0}" min="0"></div>
+        <div class="form-group"><label>失败卡点</label><input type="number" id="dm-losecp" value="${mode.loseCardPoints||0}" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>胜利寿命（天）</label><input type="number" id="dm-windays" value="${mode.winDays||0}" min="0" placeholder="如 365"></div>
+        <div class="form-group"><label>失败寿命（天）</label><input type="number" id="dm-losedays" value="${mode.loseDays||0}" min="0" placeholder="如 365"></div>
+        <div class="form-group"><label>游戏结束年龄</label><input type="number" id="dm-gameoverage" value="${mode.gameOverAge||25}" min="0" placeholder="如 25"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">寿命奖励/惩罚：胜利增加天数，失败减少天数。失败后年龄达到"游戏结束年龄"则直接游戏结束。普通模式留空即可。</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">胜利属性加成（永久加成，可选填）</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;">
+        ${[['search','检索'],['expand','展开'],['disrupt','干扰'],['resist','抗性'],['suppress','压制'],['power','强度'],['soul','魂度'],['luck','掏度'],['proficiency','熟练度'],['intelligence','情报力']].map(([k,n])=>`
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:10px;color:var(--text2);">${n}</span>
+            <input type="number" id="dm-winstat-${k}" value="${mode.winStats?.[k]||0}" min="0" style="width:100%;">
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">失败属性惩罚（永久减少，可选填）</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+        ${[['search','检索'],['expand','展开'],['disrupt','干扰'],['resist','抗性'],['suppress','压制'],['power','强度'],['soul','魂度'],['luck','掏度'],['proficiency','熟练度'],['intelligence','情报力']].map(([k,n])=>`
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:10px;color:var(--text2);">${n}</span>
+            <input type="number" id="dm-losestat-${k}" value="${mode.loseStats?.[k]||0}" min="0" style="width:100%;">
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">【${mode.name || currentDuelMode}】战斗事件</div>
+      <div class="form-row">
+        <div class="form-group"><label>战斗事件基础触发率</label><input type="number" id="dm-eventrate" value="${mode.battleEventBaseRate||0.3}" step="0.05" min="0" max="1"></div>
+        <div class="form-group"><label>系列卡组事件加成</label><input type="number" id="dm-archetypebonus" value="${mode.archetypeEventBonus||0.15}" step="0.05" min="0" max="0.5"></div>
+      </div>
+    </div>
+  `;
+}
+
+function switchDuelMode(modeId) {
+  currentDuelMode = modeId;
+  renderEditor();
+}
+
+function addDuelMode() {
+  const dc = gameData.duelConfig;
+  if (!dc.modes) dc.modes = {};
+  let newId = 'custom1';
+  let idx = 1;
+  while (dc.modes[newId]) {
+    idx++;
+    newId = 'custom' + idx;
+  }
+  dc.modes[newId] = {
+    name: '自定义决斗', enabled: true, maxTurns: 30, playerBasePower: 100, modeBonus: 1.0,
+    opponentMinDifficulty: 0, opponentMaxDifficulty: 5, opponentCategory: 'normal',
+    mainDeckMin: 20, mainDeckMax: 60, extraDeckMin: 0, extraDeckMax: 15, gambleEnabled: true,
+    winDuelPoints: 300, loseDuelPoints: 100, winCardPoints: 0, loseCardPoints: 0,
+    winStats: {}, loseStats: {}, battleEventBaseRate: 0.3, archetypeEventBonus: 0.15
+  };
+  currentDuelMode = newId;
+  renderEditor();
+  showToast('已添加新决斗模式：' + newId);
+}
+
+function bindDuelConfigEvents(dc) {
+  const mode = dc.modes[currentDuelMode];
+  if (!mode) return;
+
+  document.getElementById('dm-name').oninput = e => { mode.name = e.target.value; };
+  document.getElementById('dm-enabled').onchange = e => { mode.enabled = e.target.value === 'true'; };
+  document.getElementById('dm-maxturns').oninput = e => { mode.maxTurns = parseInt(e.target.value) || 30; };
+  document.getElementById('dm-playerbase').oninput = e => { mode.playerBasePower = parseInt(e.target.value) || 100; };
+  document.getElementById('dm-modebonus').oninput = e => { mode.modeBonus = parseFloat(e.target.value) || 1.0; };
+  document.getElementById('dm-gamble').onchange = e => { mode.gambleEnabled = e.target.value === 'true'; };
+  document.getElementById('dm-oppcategory').onchange = e => { mode.opponentCategory = e.target.value; };
+  document.getElementById('dm-oppmin').oninput = e => { mode.opponentMinDifficulty = parseInt(e.target.value) || 0; };
+  document.getElementById('dm-oppmax').oninput = e => { mode.opponentMaxDifficulty = parseInt(e.target.value) || 3; };
+  // 难度权重匹配配置
+  const diffWeightEl = document.getElementById('dm-difficultyweight');
+  if (diffWeightEl) diffWeightEl.onchange = e => { mode.difficultyWeightEnabled = e.target.value === 'true'; };
+  const weightBaseEl = document.getElementById('dm-weightbase');
+  if (weightBaseEl) weightBaseEl.oninput = e => { mode.difficultyWeightBase = parseFloat(e.target.value) || 11; };
+  const weightMinEl = document.getElementById('dm-weightmin');
+  if (weightMinEl) weightMinEl.oninput = e => { mode.difficultyWeightMin = parseFloat(e.target.value) || 0.5; };
+  document.getElementById('dm-mainmin').oninput = e => { mode.mainDeckMin = parseInt(e.target.value) || 20; };
+  document.getElementById('dm-mainmax').oninput = e => { mode.mainDeckMax = parseInt(e.target.value) || 60; };
+  document.getElementById('dm-extramin').oninput = e => { mode.extraDeckMin = parseInt(e.target.value) || 0; };
+  document.getElementById('dm-extramax').oninput = e => { mode.extraDeckMax = parseInt(e.target.value) || 15; };
+  document.getElementById('dm-windp').oninput = e => { mode.winDuelPoints = parseInt(e.target.value) || 0; };
+  document.getElementById('dm-losedp').oninput = e => { mode.loseDuelPoints = parseInt(e.target.value) || 0; };
+  document.getElementById('dm-wincp').oninput = e => { mode.winCardPoints = parseInt(e.target.value) || 0; };
+  document.getElementById('dm-losecp').oninput = e => { mode.loseCardPoints = parseInt(e.target.value) || 0; };
+  // 寿命奖励/惩罚
+  const winDaysEl = document.getElementById('dm-windays');
+  if (winDaysEl) winDaysEl.oninput = e => {
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) mode.winDays = val; else delete mode.winDays;
+  };
+  const loseDaysEl = document.getElementById('dm-losedays');
+  if (loseDaysEl) loseDaysEl.oninput = e => {
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) mode.loseDays = val; else delete mode.loseDays;
+  };
+  const gameOverAgeEl = document.getElementById('dm-gameoverage');
+  if (gameOverAgeEl) gameOverAgeEl.oninput = e => {
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) mode.gameOverAge = val; else delete mode.gameOverAge;
+  };
+  document.getElementById('dm-eventrate').oninput = e => { mode.battleEventBaseRate = parseFloat(e.target.value) || 0.3; };
+  document.getElementById('dm-archetypebonus').oninput = e => { mode.archetypeEventBonus = parseFloat(e.target.value) || 0.15; };
+
+  ['search','expand','disrupt','resist','suppress','power','soul','luck','proficiency','intelligence'].forEach(k => {
+    const winEl = document.getElementById('dm-winstat-'+k);
+    if (winEl) winEl.oninput = e => {
+      if (!mode.winStats) mode.winStats = {};
+      mode.winStats[k] = parseInt(e.target.value) || 0;
+    };
+    const loseEl = document.getElementById('dm-losestat-'+k);
+    if (loseEl) loseEl.oninput = e => {
+      if (!mode.loseStats) mode.loseStats = {};
+      mode.loseStats[k] = parseInt(e.target.value) || 0;
+    };
+  });
+}
+
+// ===== 核心配置编辑器 =====
+function renderGameConfigEditor(gc) {
+  if (!gc.spiritSystem) gc.spiritSystem = {};
+  if (!gc.cardSpiritSystem) gc.cardSpiritSystem = {};
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">NPC成长设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>开始成长天数</label><input type="number" id="gc-growthstart" value="${gc.npcGrowthStartDay||365}" step="7" min="0" max="3650"></div>
+        <div class="form-group"><label>成长间隔（天）</label><input type="number" id="gc-growthinterval" value="${gc.npcGrowthInterval||70}" step="7" min="7" max="365"></div>
+        <div class="form-group"><label>每次增长率</label><input type="number" id="gc-growthrate" value="${gc.npcGrowthRate||0.125}" step="0.01" min="0" max="0.5"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">NPC牌力会在游戏进行到指定天数后开始缓慢增长，每间隔指定天数增长指定倍率。</div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">卡片分解与卡组共鸣</div>
+      <div class="form-row">
+        <div class="form-group"><label>N卡分解卡点</label><input type="number" id="gc-dismantle-n" value="${gc.dismantlePointsN||1}" min="0"></div>
+        <div class="form-group"><label>R卡分解卡点</label><input type="number" id="gc-dismantle-r" value="${gc.dismantlePointsR||2}" min="0"></div>
+        <div class="form-group"><label>SR卡分解卡点</label><input type="number" id="gc-dismantle-sr" value="${gc.dismantlePointsSR||3}" min="0"></div>
+        <div class="form-group"><label>UR卡分解卡点</label><input type="number" id="gc-dismantle-ur" value="${gc.dismantlePointsUR||5}" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>共鸣每级消耗（卡点）</label><input type="number" id="gc-resonance-cost" value="${gc.resonanceCostPerLevel||2}" min="1"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">完成一次大师决斗后解锁卡片分解功能。多余的同名卡（3张以上）可以分解为卡点，卡点用于卡组共鸣强化主属性。</div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">精灵力系统</div>
+      <div class="form-row">
+        <div class="form-group"><label>最大等级（星）</label><input type="number" id="gc-spirit-maxlevel" value="${gc.spiritSystem.maxLevel||12}" min="1" max="20"></div>
+        <div class="form-group"><label>基础经验值</label><input type="number" id="gc-spirit-baseexp" value="${gc.spiritSystem.baseExpPerLevel||100}" min="10"></div>
+        <div class="form-group"><label>经验增长率</label><input type="number" id="gc-spirit-growth" value="${gc.spiritSystem.expGrowthRate||1.5}" step="0.1" min="1.1" max="3"></div>
+        <div class="form-group"><label>每级牌力加成</label><input type="number" id="gc-spirit-bonus" value="${gc.spiritSystem.powerBonusPerLevel||0.1}" step="0.05" min="0.05" max="0.5"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>解锁地点等级</label><input type="number" id="gc-spirit-loclevel" value="${gc.spiritSystem.unlockLocationLevel||4}" min="1" max="12"></div>
+        <div class="form-group"><label>解锁地点ID</label><input type="text" id="gc-spirit-locid" value="${gc.spiritSystem.unlockLocationId||'spirit_world'}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">精灵力系统在解锁黑暗决斗时自动开启。每提升一星，战斗中牌力增加对应百分比。达到指定等级后解锁对应地点（如精灵界）。</div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title">卡灵觉醒系统</div>
+      <div class="form-row">
+        <div class="form-group"><label>解锁成就ID</label><input type="text" id="gc-cs-unlockach" value="${gc.cardSpiritSystem.unlockAchievement||'invigoration'}"></div>
+        <div class="form-group"><label>SP卡默认觉醒成就</label><input type="text" id="gc-cs-spach" value="${gc.cardSpiritSystem.spDefaultAchievement||'invigoration'}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>SR觉醒消耗（碎片）</label><input type="number" id="gc-cs-srcost" value="${gc.cardSpiritSystem.srCost||50}" min="0"></div>
+        <div class="form-group"><label>UR觉醒消耗（碎片）</label><input type="number" id="gc-cs-urcost" value="${gc.cardSpiritSystem.urCost||100}" min="0"></div>
+        <div class="form-group"><label>SP觉醒消耗（碎片）</label><input type="number" id="gc-cs-spcost" value="${gc.cardSpiritSystem.spCost||500}" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>SR觉醒成功率</label><input type="number" id="gc-cs-srrate" value="${gc.cardSpiritSystem.srRate||0.3}" step="0.05" min="0" max="1"></div>
+        <div class="form-group"><label>UR觉醒成功率</label><input type="number" id="gc-cs-urrate" value="${gc.cardSpiritSystem.urRate||0.2}" step="0.05" min="0" max="1"></div>
+        <div class="form-group"><label>SP觉醒成功率</label><input type="number" id="gc-cs-sprate" value="${gc.cardSpiritSystem.spRate||0.1}" step="0.05" min="0" max="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>SR觉醒倍率</label><input type="number" id="gc-cs-srmult" value="${gc.cardSpiritSystem.srMultiplier||5}" min="1" step="0.5"></div>
+        <div class="form-group"><label>UR觉醒倍率</label><input type="number" id="gc-cs-urmult" value="${gc.cardSpiritSystem.urMultiplier||10}" min="1" step="0.5"></div>
+        <div class="form-group"><label>SP觉醒倍率</label><input type="number" id="gc-cs-spmult" value="${gc.cardSpiritSystem.spMultiplier||100}" min="1" step="0.5"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">完成指定成就后解锁卡灵觉醒系统。仅限SR及以上品质卡牌可觉醒，消耗觉醒碎片有概率使卡牌诞生卡灵，觉醒后属性按倍率提升。SP卡需额外完成指定成就才能觉醒。</div>
+    </div>
+  `;
+}
+
+function bindGameConfigEvents(gc) {
+  if (!gc.spiritSystem) gc.spiritSystem = {};
+  if (!gc.cardSpiritSystem) gc.cardSpiritSystem = {};
+
+  // NPC成长设置
+  document.getElementById('gc-growthstart').oninput = e => { gc.npcGrowthStartDay = parseInt(e.target.value) || 365; };
+  document.getElementById('gc-growthinterval').oninput = e => { gc.npcGrowthInterval = parseInt(e.target.value) || 70; };
+  document.getElementById('gc-growthrate').oninput = e => { gc.npcGrowthRate = parseFloat(e.target.value) || 0.125; };
+
+  // 卡片分解与共鸣
+  document.getElementById('gc-dismantle-n').oninput = e => { gc.dismantlePointsN = parseInt(e.target.value) || 1; };
+  document.getElementById('gc-dismantle-r').oninput = e => { gc.dismantlePointsR = parseInt(e.target.value) || 2; };
+  document.getElementById('gc-dismantle-sr').oninput = e => { gc.dismantlePointsSR = parseInt(e.target.value) || 3; };
+  document.getElementById('gc-dismantle-ur').oninput = e => { gc.dismantlePointsUR = parseInt(e.target.value) || 5; };
+  document.getElementById('gc-resonance-cost').oninput = e => { gc.resonanceCostPerLevel = parseInt(e.target.value) || 2; };
+
+  // 精灵力系统
+  document.getElementById('gc-spirit-maxlevel').oninput = e => { gc.spiritSystem.maxLevel = parseInt(e.target.value) || 12; };
+  document.getElementById('gc-spirit-baseexp').oninput = e => { gc.spiritSystem.baseExpPerLevel = parseInt(e.target.value) || 100; };
+  document.getElementById('gc-spirit-growth').oninput = e => { gc.spiritSystem.expGrowthRate = parseFloat(e.target.value) || 1.5; };
+  document.getElementById('gc-spirit-bonus').oninput = e => { gc.spiritSystem.powerBonusPerLevel = parseFloat(e.target.value) || 0.1; };
+  document.getElementById('gc-spirit-loclevel').oninput = e => { gc.spiritSystem.unlockLocationLevel = parseInt(e.target.value) || 4; };
+  document.getElementById('gc-spirit-locid').oninput = e => { gc.spiritSystem.unlockLocationId = e.target.value || 'spirit_world'; };
+
+  // 卡灵觉醒系统
+  document.getElementById('gc-cs-unlockach').oninput = e => { gc.cardSpiritSystem.unlockAchievement = e.target.value || 'invigoration'; };
+  document.getElementById('gc-cs-spach').oninput = e => { gc.cardSpiritSystem.spDefaultAchievement = e.target.value || 'invigoration'; };
+  document.getElementById('gc-cs-srcost').oninput = e => { gc.cardSpiritSystem.srCost = parseInt(e.target.value) || 50; };
+  document.getElementById('gc-cs-urcost').oninput = e => { gc.cardSpiritSystem.urCost = parseInt(e.target.value) || 100; };
+  document.getElementById('gc-cs-spcost').oninput = e => { gc.cardSpiritSystem.spCost = parseInt(e.target.value) || 500; };
+  document.getElementById('gc-cs-srrate').oninput = e => { gc.cardSpiritSystem.srRate = parseFloat(e.target.value) || 0.3; };
+  document.getElementById('gc-cs-urrate').oninput = e => { gc.cardSpiritSystem.urRate = parseFloat(e.target.value) || 0.2; };
+  document.getElementById('gc-cs-sprate').oninput = e => { gc.cardSpiritSystem.spRate = parseFloat(e.target.value) || 0.1; };
+  document.getElementById('gc-cs-srmult').oninput = e => { gc.cardSpiritSystem.srMultiplier = parseFloat(e.target.value) || 5; };
+  document.getElementById('gc-cs-urmult').oninput = e => { gc.cardSpiritSystem.urMultiplier = parseFloat(e.target.value) || 10; };
+  document.getElementById('gc-cs-spmult').oninput = e => { gc.cardSpiritSystem.spMultiplier = parseFloat(e.target.value) || 100; };
+}
+
+// ===== 成就编辑器 =====
+function renderAchievementEditor(a) {
+  // 兼容旧格式：单个condition转为conditions数组
+  if (!a.conditions && a.condition) {
+    a.conditions = [a.condition];
+    delete a.condition;
+  }
+  if (!a.conditions) a.conditions = [];
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${a.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${a.id}"></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${a.desc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>解锁条件</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="f-ach-condition-logic" style="padding:4px 8px;font-size:12px;">
+            <option value="and" ${(a.conditionLogic||'and')==='and'?'selected':''}>AND（全部满足）</option>
+            <option value="or" ${a.conditionLogic==='or'?'selected':''}>OR（任一满足）</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="add-ach-condition-btn" style="padding:4px 12px;">+ 添加条件</button>
+        </div>
+      </div>
+      <div id="ach-conditions-container">
+        ${renderConditions(a.conditions || [], 'ach', ACHIEVEMENT_CONDITION_TYPES)}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">提示：全部删除条件后视为无条件，无法自动解锁（可通过事件/天赋/任务奖励等其他方式手动解锁）</div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">奖励属性（0-20）</div>
+      ${[...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].map(k=>`
+        <div class="stat-group">
+          <div class="stat-label"><span>${STAT_NAMES[k]}</span><span id="val-${k}">${a.bonus?.[k]||0}</span></div>
+          <input type="range" class="stat-slider ${k}" min="0" max="20" value="${a.bonus?.[k]||0}" id="s-${k}">
+        </div>
+      `).join('')}
+      <div class="stat-group">
+        <div class="stat-label"><span>全主属性+</span><span id="val-all">${a.bonus?.all||0}</span></div>
+        <input type="range" class="stat-slider power" min="0" max="10" value="${a.bonus?.all||0}" id="s-all">
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">特殊奖励</div>
+      <div class="form-row">
+        <div class="form-group"><label>解锁卡片ID（加入收藏）</label><input type="text" id="f-reward-card" value="${a.rewardCard||''}"></div>
+        <div class="form-group"><label>奖励决斗点</label><input type="number" id="f-reward-dp" value="${a.rewardDuelPoints||0}"></div>
+        <div class="form-group"><label>解锁事件ID</label><input type="text" id="f-reward-event" value="${a.rewardEvent||''}"></div>
+      </div>
+    </div>
+  `;
+}
+function bindAchievementEvents(a) {
+  document.getElementById('f-name').oninput = e => { a.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { a.id=e.target.value; renderListItems(); };
+  document.getElementById('f-desc').oninput = e => { a.desc=e.target.value; };
+
+  // 兼容旧格式：单个condition转为conditions数组
+  if (!a.conditions && a.condition) {
+    a.conditions = [a.condition];
+    delete a.condition;
+  }
+  if (!a.conditions) a.conditions = [];
+
+  // 条件逻辑类型
+  const logicEl = document.getElementById('f-ach-condition-logic');
+  if (logicEl) {
+    logicEl.onchange = e => { a.conditionLogic = e.target.value; };
+  }
+
+  // 绑定条件事件
+  bindConditionEvents('ach', a.conditions, true);
+
+  // 添加条件按钮
+  const addBtn = document.getElementById('add-ach-condition-btn');
+  if (addBtn) {
+    addBtn.onclick = () => {
+      a.conditions.push({ type: 'collection_count', value: 10 });
+      renderEditor();
+    };
+  }
+
+  [...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].forEach(k => {
+    document.getElementById('s-'+k).oninput = e => {
+      if (!a.bonus) a.bonus = {};
+      a.bonus[k] = parseInt(e.target.value);
+      document.getElementById('val-'+k).textContent = e.target.value;
+    };
+  });
+  document.getElementById('s-all').oninput = e => {
+    if (!a.bonus) a.bonus = {};
+    a.bonus.all = parseInt(e.target.value);
+    document.getElementById('val-all').textContent = e.target.value;
+  };
+  document.getElementById('f-reward-card').oninput = e => { a.rewardCard = e.target.value; };
+  document.getElementById('f-reward-dp').oninput = e => { a.rewardDuelPoints = parseInt(e.target.value) || 0; };
+  document.getElementById('f-reward-event').oninput = e => { a.rewardEvent = e.target.value; };
+}
+
+// ===== 任务编辑器 =====
+const TASK_CONDITION_TYPES = [
+  {v:'collect_cards', l:'收集卡片数量'},
+  {v:'main_deck_size', l:'主卡组数量'},
+  {v:'extra_deck_size', l:'额外卡组数量'},
+  {v:'duel_wins', l:'决斗胜利次数'},
+  {v:'duel_losses', l:'决斗失败次数'},
+  {v:'quick_duel', l:'快速决斗次数'},
+  {v:'master_duel', l:'大师决斗次数'},
+  {v:'tournament_win', l:'赢得指定级别比赛'},
+  {v:'tournament_participate', l:'参加比赛次数'},
+  {v:'affinity', l:'与指定角色好感度'},
+  {v:'age', l:'达到指定年龄'},
+  {v:'week', l:'达到指定天数'},
+  {v:'spirit_level', l:'精灵力等级达到'},
+  {v:'spirit_power', l:'精灵力经验值达到'},
+  {v:'awakening_shards', l:'觉醒碎片数量达到'},
+  {v:'specific_card', l:'拥有指定卡片'},
+  {v:'card_rarity', l:'拥有指定稀有度卡片数'},
+  {v:'card_type', l:'拥有指定类型卡片数'},
+  {v:'card_archetype', l:'拥有指定系列卡片数'},
+  {v:'power', l:'牌力达到'},
+  {v:'complete_task', l:'完成指定任务'},
+  {v:'defeat_character', l:'战胜指定对手/角色'},
+  {v:'archetype_deck', l:'形成系列卡组'},
+  {v:'win_streak', l:'连胜次数'},
+  {v:'visit_location', l:'访问指定地点次数'},
+  {v:'visit_all_locations', l:'访问所有地点'},
+  {v:'all_card_types', l:'所有类型卡片各10张'},
+  {v:'duel_points', l:'决斗点数量'},
+  {v:'card_points', l:'卡点数量'},
+  {v:'have_talent', l:'拥有指定天赋'},
+  {v:'have_title', l:'获得指定称号'},
+  {v:'unlock_achievement', l:'解锁指定成就'},
+];
+
+// 成就条件类型（与游戏本体 checkSingleAchievementCondition 一致）
+const ACHIEVEMENT_CONDITION_TYPES = [
+  {v:'collection_count', l:'收集卡片总数'},
+  {v:'unique_cards_count', l:'不同卡片数量'},
+  {v:'maindeck_count', l:'主卡组数量'},
+  {v:'extra_deck_count', l:'额外卡组数量'},
+  {v:'wins', l:'决斗胜利次数'},
+  {v:'losses', l:'决斗失败次数'},
+  {v:'duel_count', l:'决斗总次数'},
+  {v:'win_rate', l:'胜率达到(%)'},
+  {v:'ur_count', l:'UR卡片数量'},
+  {v:'card_rarity_count', l:'指定稀有度卡片数'},
+  {v:'has_card', l:'拥有指定卡片'},
+  {v:'has_archetype', l:'拥有指定系列卡'},
+  {v:'archetype_count', l:'指定系列卡片数'},
+  {v:'affinity_count', l:'好感度达标角色数'},
+  {v:'character_affinity', l:'指定角色好感度'},
+  {v:'tournament_wins', l:'比赛胜利次数'},
+  {v:'won_tournament', l:'赢得指定比赛'},
+  {v:'tournament_tier_wins', l:'指定级别比赛胜利'},
+  {v:'location_visits', l:'访问指定地点次数'},
+  {v:'weeks', l:'天数达到'},
+  {v:'age', l:'年龄达到'},
+  {v:'spirit_level', l:'精灵力等级达到'},
+  {v:'spirit_power', l:'精灵力经验值达到'},
+  {v:'awakening_shards', l:'觉醒碎片数量达到'},
+  {v:'duel_power_threshold', l:'牌力达到'},
+  {v:'power_threshold', l:'强度达到'},
+  {v:'soul_threshold', l:'魂度达到'},
+  {v:'luck_threshold', l:'掏度达到'},
+  {v:'proficiency_threshold', l:'熟练度达到'},
+  {v:'intelligence_threshold', l:'情报力达到'},
+  {v:'all_main_stats_threshold', l:'全主属性达到'},
+  {v:'duel_points', l:'决斗点数量'},
+];
+
+// ===== 全局条件渲染和绑定函数（任务和比赛共用） =====
+function renderConditions(conditions, prefix, conditionTypes) {
+  const types = conditionTypes || TASK_CONDITION_TYPES;
+  const OPERATORS = [
+    {v:'>=', l:'大于等于 ≥'},
+    {v:'<=', l:'小于等于 ≤'},
+    {v:'>', l:'大于 >'},
+    {v:'<', l:'小于 <'},
+    {v:'==', l:'等于 ='},
+    {v:'!=', l:'不等于 ≠'}
+  ];
+  return conditions.map((cond, i) => `
+    <div class="condition-row" style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;padding:10px;background:var(--bg-card);border-radius:6px;border:1px solid var(--border);flex-wrap:wrap;">
+      <div class="form-group" style="flex:2;min-width:140px;">
+        <label>条件${i+1}类型</label>
+        <select class="${prefix}-cond-type" data-index="${i}">
+          ${types.map(c=>`<option value="${c.v}" ${cond.type===c.v?'selected':''}>${c.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1;min-width:80px;">
+        <label>比较方式</label>
+        <select class="${prefix}-cond-operator" data-index="${i}">
+          ${OPERATORS.map(o=>`<option value="${o.v}" ${(cond.operator||'>=')===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group" style="flex:1.5;min-width:120px;">
+        <label>目标ID/阈值</label>
+        <input type="text" class="${prefix}-cond-target" data-index="${i}" value="${cond.target||cond.threshold||''}" placeholder="如 kame/yugi/m001/UR/50">
+      </div>
+      <div class="form-group" style="flex:1;min-width:70px;">
+        <label>目标值</label>
+        <input type="number" class="${prefix}-cond-value" data-index="${i}" value="${cond.value||1}" min="0">
+      </div>
+      <button class="btn btn-danger btn-sm ${prefix}-cond-remove" data-index="${i}" style="padding:6px 10px;white-space:nowrap;">删除</button>
+    </div>
+  `).join('');
+}
+
+function bindConditionEvents(prefix, conditionsArray, allowEmpty) {
+  document.querySelectorAll(`.${prefix}-cond-type`).forEach(el => {
+    el.onchange = e => {
+      const idx = parseInt(e.target.dataset.index);
+      conditionsArray[idx].type = e.target.value;
+    };
+  });
+  document.querySelectorAll(`.${prefix}-cond-operator`).forEach(el => {
+    el.onchange = e => {
+      const idx = parseInt(e.target.dataset.index);
+      conditionsArray[idx].operator = e.target.value;
+    };
+  });
+  document.querySelectorAll(`.${prefix}-cond-target`).forEach(el => {
+    el.oninput = e => {
+      const idx = parseInt(e.target.dataset.index);
+      conditionsArray[idx].target = e.target.value;
+    };
+  });
+  document.querySelectorAll(`.${prefix}-cond-value`).forEach(el => {
+    el.oninput = e => {
+      const idx = parseInt(e.target.dataset.index);
+      conditionsArray[idx].value = parseInt(e.target.value) || 0;
+    };
+  });
+  document.querySelectorAll(`.${prefix}-cond-remove`).forEach(el => {
+    el.onclick = e => {
+      const idx = parseInt(e.target.dataset.index);
+      if (!allowEmpty && conditionsArray.length <= 1) {
+        showToast('至少保留一个条件');
+        return;
+      }
+      conditionsArray.splice(idx, 1);
+      renderEditor();
+    };
+  });
+}
+
+function renderTaskEditor(t) {
+  // 兼容旧格式：单个condition转为conditions数组
+  if (!t.conditions && t.condition) {
+    t.conditions = [t.condition];
+    delete t.condition;
+  }
+  if (!t.conditions) t.conditions = [{ type: 'collect_cards', value: 10 }];
+
+  // 隐藏任务解锁条件也兼容旧格式
+  if (t.type === 'hidden') {
+    if (!t.unlockConditions && t.unlockCondition) {
+      t.unlockConditions = [t.unlockCondition];
+      delete t.unlockCondition;
+    }
+    if (!t.unlockConditions) t.unlockConditions = [{ type: 'complete_task', value: 1 }];
+  }
+
+  const reward = t.reward || {};
+  const ALL_STATS = [...STAT_KEYS,'power','soul','luck','proficiency','intelligence'];
+  const STAT_NAMES = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制', power:'强度', soul:'魂度', luck:'掏度', proficiency:'熟练度', intelligence:'情报力' };
+
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>任务名称</label><input type="text" id="f-name" value="${t.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${t.id}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>任务类型</label><select id="f-type">
+          <option value="guide" ${t.type==='guide'?'selected':''}>引导任务</option>
+          <option value="main" ${t.type==='main'?'selected':''}>主线任务</option>
+          <option value="side" ${t.type==='side'?'selected':''}>支线任务</option>
+          <option value="hidden" ${t.type==='hidden'?'selected':''}>隐藏任务</option>
+        </select></div>
+        <div class="form-group"><label>显示顺序</label><input type="number" id="f-order" value="${t.order||1}" min="1"></div>
+      </div>
+      <div class="form-group"><label>任务描述</label><textarea id="f-desc" rows="2">${t.desc||''}</textarea></div>
+      <div class="form-group"><label>剧情描述（可选）</label><textarea id="f-story" rows="3">${t.story||''}</textarea></div>
+    </div>
+
+    <div class="edit-section">
+      <div class="edit-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>完成条件</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="f-condition-logic" style="padding:4px 8px;font-size:12px;">
+            <option value="and" ${(t.conditionLogic||'and')==='and'?'selected':''}>AND（全部满足）</option>
+            <option value="or" ${t.conditionLogic==='or'?'selected':''}>OR（任一满足）</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="add-condition-btn" style="padding:4px 12px;">+ 添加条件</button>
+        </div>
+      </div>
+      <div id="conditions-container">
+        ${renderConditions(t.conditions, 'main')}
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:4px;">提示：全部删除条件后视为无条件，无法自动解锁（可通过事件/天赋/任务奖励等其他方式手动解锁）</div>
+    </div>
+
+    ${t.type==='hidden' ? `
+    <div class="edit-section">
+      <div class="edit-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>隐藏任务解锁条件（全部满足才显示）</span>
+        <button class="btn btn-primary btn-sm" id="add-unlock-condition-btn" style="padding:4px 12px;">+ 添加条件</button>
+      </div>
+      <div id="unlock-conditions-container">
+        ${renderConditions(t.unlockConditions, 'unlock')}
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="edit-section">
+      <div class="edit-section-title">任务奖励</div>
+      <div class="form-row">
+        <div class="form-group"><label>决斗点</label><input type="number" id="f-reward-dp" value="${reward.duelPoints||0}" min="0"></div>
+        <div class="form-group"><label>卡点</label><input type="number" id="f-reward-cp" value="${reward.cardPoints||0}" min="0"></div>
+      </div>
+      <div class="form-group"><label>奖励卡片ID（逗号分隔）</label><input type="text" id="f-reward-cards" value="${(reward.cards||[]).join(',')}" placeholder="如 m001,m002"></div>
+      <div class="form-group"><label>奖励称号</label><input type="text" id="f-reward-title" value="${reward.title||''}" placeholder="如 时空旅人"></div>
+      <div class="form-group"><label>奖励天赋ID</label><input type="text" id="f-reward-talent" value="${reward.talent||''}"></div>
+      <div class="form-group"><label>解锁成就</label><select id="f-reward-achievement">
+        <option value="">不解锁成就</option>
+        ${(gameData.achievements || []).map(a => `<option value="${a.id}" ${reward.achievement===a.id?'selected':''}>${a.name}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>解锁决斗模式</label><select id="f-reward-duelmode">
+        <option value="">不解锁决斗模式</option>
+        ${Object.entries(gameData.duelConfig?.modes || {}).map(([id, config]) => `<option value="${id}" ${reward.duelMode===id?'selected':''}>${config.name || id}</option>`).join('')}
+      </select></div>
+      <div class="form-row">
+        <div class="form-group"><label>精灵力奖励</label><input type="number" id="f-reward-spirit" value="${reward.spiritPower||0}" min="0" placeholder="解锁黑暗决斗后生效"></div>
+        <div class="form-group"><label>觉醒碎片奖励</label><input type="number" id="f-reward-shards" value="${reward.awakeningShards||0}" min="0"></div>
+      </div>
+      <div class="form-group"><label>属性奖励</label>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px;">
+          ${ALL_STATS.map(k=>`
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:10px;color:var(--text2);">${STAT_NAMES[k]||k}</span>
+              <input type="number" id="r-${k}" value="${reward.stats?.[k]||0}" min="0" style="width:100%;" class="reward-stat-input" data-stat="${k}">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindTaskEvents(t) {
+  document.getElementById('f-name').oninput = e => { t.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { t.id=e.target.value; renderListItems(); };
+  document.getElementById('f-type').onchange = e => { t.type=e.target.value; renderEditor(); };
+  document.getElementById('f-order').oninput = e => { t.order=parseInt(e.target.value)||1; };
+  document.getElementById('f-desc').oninput = e => { t.desc=e.target.value; };
+  document.getElementById('f-story').oninput = e => { t.story=e.target.value; };
+
+  // 完成条件 - 动态绑定（使用全局函数）
+  bindConditionEvents('main', t.conditions);
+
+  // 条件逻辑类型
+  const logicEl = document.getElementById('f-condition-logic');
+  if (logicEl) {
+    logicEl.onchange = e => { t.conditionLogic = e.target.value; };
+  }
+
+  // 添加条件按钮
+  const addBtn = document.getElementById('add-condition-btn');
+  if (addBtn) {
+    addBtn.onclick = () => {
+      t.conditions.push({ type: 'collect_cards', value: 10 });
+      renderEditor();
+    };
+  }
+
+  // 隐藏任务解锁条件
+  if (t.type === 'hidden' && t.unlockConditions) {
+    bindConditionEvents('unlock', t.unlockConditions);
+    const addUnlockBtn = document.getElementById('add-unlock-condition-btn');
+    if (addUnlockBtn) {
+      addUnlockBtn.onclick = () => {
+        t.unlockConditions.push({ type: 'complete_task', value: 1 });
+        renderEditor();
+      };
+    }
+  }
+
+  // 奖励
+  if (!t.reward) t.reward = {};
+  document.getElementById('f-reward-dp').oninput = e => { t.reward.duelPoints=parseInt(e.target.value)||0; };
+  document.getElementById('f-reward-cp').oninput = e => { t.reward.cardPoints=parseInt(e.target.value)||0; };
+  document.getElementById('f-reward-cards').oninput = e => { t.reward.cards=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); };
+  document.getElementById('f-reward-title').oninput = e => { t.reward.title=e.target.value; };
+  document.getElementById('f-reward-talent').oninput = e => { t.reward.talent=e.target.value; };
+  document.getElementById('f-reward-achievement').onchange = e => {
+    if (e.target.value) {
+      t.reward.achievement = e.target.value;
+    } else {
+      delete t.reward.achievement;
+    }
+  };
+  document.getElementById('f-reward-duelmode').onchange = e => {
+    if (e.target.value) {
+      t.reward.duelMode = e.target.value;
+    } else {
+      delete t.reward.duelMode;
+    }
+  };
+
+  // 属性奖励
+  document.querySelectorAll('.reward-stat-input').forEach(input => {
+    input.oninput = e => {
+      if (!t.reward.stats) t.reward.stats = {};
+      t.reward.stats[e.target.dataset.stat] = parseInt(e.target.value)||0;
+    };
+  });
+
+  // 精灵力和觉醒碎片奖励
+  const spiritEl = document.getElementById('f-reward-spirit');
+  if (spiritEl) spiritEl.oninput = e => {
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) t.reward.spiritPower = val; else delete t.reward.spiritPower;
+  };
+  const shardsEl = document.getElementById('f-reward-shards');
+  if (shardsEl) shardsEl.oninput = e => {
+    const val = parseInt(e.target.value) || 0;
+    if (val > 0) t.reward.awakeningShards = val; else delete t.reward.awakeningShards;
+  };
+}
+
+// ===== 地点编辑器 =====
+function renderLocationEditor(l) {
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${l.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${l.id}"></div>
+        <div class="form-group"><label>隐藏地点</label><select id="f-hidden">
+          <option value="false" ${!l.hidden?'selected':''}>否（默认显示）</option>
+          <option value="true" ${l.hidden?'selected':''}>是（需事件解锁）</option>
+        </select></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${l.desc||''}</textarea></div>
+      <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="f-tags" value="${(l.tags||[]).join(',')}"></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">隐藏地点：设置为"是"后，该地点默认不在游戏中显示，需要通过事件效果"解锁指定地点"或"解锁所有地点"来解锁。</div>
+    </div>
+  `;
+}
+function bindLocationEvents(l) {
+  document.getElementById('f-name').oninput = e => { l.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { l.id=e.target.value; renderListItems(); };
+  document.getElementById('f-hidden').onchange = e => { l.hidden = e.target.value === 'true'; };
+  document.getElementById('f-desc').oninput = e => { l.desc=e.target.value; };
+  document.getElementById('f-tags').oninput = e => { l.tags=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); };
+}
+
+// ===== 角色编辑器 =====
+function renderCharacterEditor(c) {
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${c.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${c.id}"></div>
+        <div class="form-group"><label>头像字</label><input type="text" id="f-avatar" value="${c.avatar||'?'}" maxlength="1"></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${c.desc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">赠礼设置（好感30解锁·限一次·可添加多个）</div>
+      <div id="gift-list">
+        ${(c.gifts||[]).map((g,i) => renderGiftItem(g,i)).join('')}
+      </div>
+      <button class="add-btn" onclick="addGift()">+ 添加赠礼</button>
+      <div class="form-group" style="margin-top:10px;"><label>赠礼描述</label><textarea id="f-gift-desc">${c.giftDesc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">挑战设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>可挑战</label><select id="f-can-challenge">
+          <option value="true" ${c.canChallenge?'selected':''}>是</option>
+          <option value="false" ${!c.canChallenge?'selected':''}>否</option>
+        </select></div>
+        <div class="form-group"><label>牌力</label><input type="number" id="f-power" value="${c.power||0}" min="0"></div>
+        <div class="form-group"><label>挑战奖励卡ID</label><input type="text" id="f-challenge-reward" value="${c.challengeReward||''}"></div>
+      </div>
+      <div class="form-group"><label>挑战描述</label><textarea id="f-challenge-desc">${c.challengeDesc||''}</textarea></div>
+    </div>
+  `;
+}
+function bindCharacterEvents(c) {
+  document.getElementById('f-name').oninput = e => { c.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { c.id=e.target.value; renderListItems(); };
+  document.getElementById('f-avatar').oninput = e => { c.avatar=e.target.value; };
+  document.getElementById('f-desc').oninput = e => { c.desc=e.target.value; };
+  document.getElementById('f-gift-desc').oninput = e => { c.giftDesc=e.target.value; };
+  document.getElementById('f-can-challenge').onchange = e => { c.canChallenge=e.target.value==='true'; };
+  document.getElementById('f-power').oninput = e => { c.power=parseInt(e.target.value); };
+  document.getElementById('f-challenge-reward').oninput = e => { c.challengeReward=e.target.value; };
+  document.getElementById('f-challenge-desc').oninput = e => { c.challengeDesc=e.target.value; };
+}
+
+// 赠礼列表渲染
+function renderGiftItem(g, i) {
+  const ALL_STATS = [
+    {v:'search', l:'检索'}, {v:'expand', l:'展开'}, {v:'disrupt', l:'干扰'},
+    {v:'resist', l:'抗性'}, {v:'suppress', l:'压制'}, {v:'power', l:'强度'},
+    {v:'soul', l:'魂度'}, {v:'luck', l:'掏度'}, {v:'proficiency', l:'熟练度'},
+    {v:'intelligence', l:'情报力'}
+  ];
+  let paramsHtml = '';
+  switch(g.type) {
+    case 'card':
+      paramsHtml = `<input type="text" placeholder="卡片ID" value="${g.cardId||''}" style="flex:1" oninput="updateGift(${i},'cardId',this.value)">`;
+      break;
+    case 'talent':
+      paramsHtml = `<input type="text" placeholder="天赋ID" value="${g.talentId||''}" style="flex:1" oninput="updateGift(${i},'talentId',this.value)">`;
+      break;
+    case 'stats':
+      paramsHtml = `<select oninput="updateGift(${i},'stat',this.value)">
+        ${ALL_STATS.map(s=>`<option value="${s.v}" ${g.stat===s.v?'selected':''}>${s.l}</option>`).join('')}
+      </select><input type="number" placeholder="数值" value="${g.amount||1}" style="width:60px" oninput="updateGift(${i},'amount',parseInt(this.value)||0)">`;
+      break;
+    case 'cardPoints':
+    case 'duelPoints':
+      paramsHtml = `<input type="number" placeholder="数量" value="${g.amount||0}" style="width:80px" oninput="updateGift(${i},'amount',parseInt(this.value)||0)">`;
+      break;
+  }
+  return `<div class="dyn-item" style="flex-wrap:wrap;gap:6px;">
+    <div style="display:flex;gap:6px;align-items:center;width:100%;">
+      <span style="font-size:11px;color:var(--text2);">好感</span>
+      <input type="number" placeholder="30" value="${g.unlockAffinity||30}" style="width:50px" oninput="updateGift(${i},'unlockAffinity',parseInt(this.value)||30)">
+      <select onchange="updateGift(${i},'type',this.value)" style="width:90px">
+        <option value="card" ${g.type==='card'?'selected':''}>卡片</option>
+        <option value="talent" ${g.type==='talent'?'selected':''}>天赋</option>
+        <option value="stats" ${g.type==='stats'?'selected':''}>属性</option>
+        <option value="cardPoints" ${g.type==='cardPoints'?'selected':''}>卡点</option>
+        <option value="duelPoints" ${g.type==='duelPoints'?'selected':''}>决斗点</option>
+      </select>${paramsHtml}
+      <div class="dyn-del" onclick="removeGift(${i})">×</div>
+    </div>
+    <input type="text" placeholder="赠礼描述（可选）" value="${g.desc||''}" style="width:100%;font-size:11px;" oninput="updateGift(${i},'desc',this.value)">
+  </div>`;
+}
+
+function addGift() {
+  const c = getItem();
+  if (!c) return;
+  if (!c.gifts) c.gifts = [];
+  c.gifts.push({ unlockAffinity: 30, type: 'card' });
+  renderEditor();
+}
+
+function removeGift(i) {
+  const c = getItem();
+  if (!c || !c.gifts) return;
+  c.gifts.splice(i, 1);
+  renderEditor();
+}
+
+function updateGift(i, field, value) {
+  const c = getItem();
+  if (!c || !c.gifts || !c.gifts[i]) return;
+  const g = c.gifts[i];
+  if (field === 'type') {
+    g.type = value;
+    if (value === 'stats') { g.stat = g.stat || 'power'; g.amount = g.amount || 1; }
+    renderEditor();
+  } else if (field === 'stat') {
+    g.stat = value;
+    if (!g.stats) g.stats = {};
+    g.stats = { [value]: g.amount || 1 };
+  } else {
+    g[field] = value;
+    if (g.type === 'stats' && g.stat) {
+      g.stats = { [g.stat]: g.amount || 1 };
+    }
+  }
+}
+
+// ===== 比赛编辑器 =====
+// ===== 决斗模式选项辅助函数 =====
+function getDuelModeOptions(selected, showRequirement) {
+  const modes = gameData.duelConfig?.modes || { quick: {name:'快速决斗'}, master: {name:'大师决斗'} };
+  return Object.entries(modes).map(([id, config]) => {
+    const name = config.name || id;
+    const req = showRequirement ? `（主卡组${config.mainDeckMin || (id==='quick'?20:40)}+）` : '';
+    return `<option value="${id}" ${selected===id?'selected':''}>${name}${req}</option>`;
+  }).join('');
+}
+
+function renderTournamentEditor(t) {
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input type="text" id="f-name" value="${t.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${t.id}"></div>
+        <div class="form-group"><label>决斗模式</label><select id="f-duel-mode">
+          ${getDuelModeOptions(t.duelMode, true)}
+        </select></div>
+        <div class="form-group"><label>级别</label><select id="f-tier">
+          <option value="入门" ${t.tier==='入门'?'selected':''}>入门</option>
+          <option value="中级" ${t.tier==='中级'?'selected':''}>中级</option>
+          <option value="高级" ${t.tier==='高级'?'selected':''}>高级</option>
+          <option value="顶级" ${t.tier==='顶级'?'selected':''}>顶级</option>
+          <option value="传说" ${t.tier==='传说'?'selected':''}>传说</option>
+        </select></div>
+        <div class="form-group"><label>难度</label><input type="number" id="f-difficulty" value="${t.difficulty||1}" min="1" max="20"></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="f-desc">${t.desc||''}</textarea></div>
+      <div class="form-group"><label>奖励描述（显示用）</label><input type="text" id="f-rewards" value="${t.rewards||''}"></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">参赛要求</div>
+      <div class="form-row">
+        <div class="form-group"><label>主卡组最少</label><input type="number" id="f-req-main" value="${t.requirement?.mainDeck||0}"></div>
+        <div class="form-group"><label>额外卡组最少</label><input type="number" id="f-req-extra" value="${t.requirement?.extraDeck||0}"></div>
+        <div class="form-group"><label>胜场数要求</label><input type="number" id="f-req-wins" value="${t.requirement?.winCount||0}"></div>
+        <div class="form-group"><label>参赛消耗（决斗点）</label><input type="number" id="f-entry-cost" value="${t.entryCost||0}" min="0"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">参赛消耗：参加比赛时扣除的决斗点，0为免费参与（店赛免费、市大赛500、地区预选赛1000）</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:bold;">附加参赛条件（全部满足才能参加）</span>
+        <button class="btn btn-primary btn-sm" onclick="addTournamentCondition()">+ 添加条件</button>
+      </div>
+      <div id="tournament-conditions-container">
+        ${renderConditions(t.conditions || [], 'tour')}
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">决斗设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>比赛轮数</label><input type="number" id="f-rounds" value="${t.rounds||3}" min="1" max="10"></div>
+        <div class="form-group"><label>对手基础牌力</label><input type="number" id="f-opp-power" value="${t.opponentBasePower||(t.difficulty*40)}" min="0" max="500"></div>
+        <div class="form-group"><label>每轮牌力增长</label><input type="number" id="f-opp-growth" value="${t.opponentPowerGrowth||0.25}" min="0" max="1" step="0.05"></div>
+      </div>
+      <div class="form-group"><label>对手名称（逗号分隔，按轮次顺序）</label><input type="text" id="f-opp-names" value="${(t.opponentNames||[]).join(',')}"></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">奖励设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>冠军奖励卡数</label><input type="number" id="f-reward-count" value="${t.rewardCardCount||1}" min="1" max="10"></div>
+        <div class="form-group"><label>冠军决斗点</label><input type="number" id="f-dp-win" value="${t.duelPointsWin||(t.difficulty*500)}" min="0"></div>
+        <div class="form-group"><label>落败决斗点</label><input type="number" id="f-dp-lose" value="${t.duelPointsLose||Math.round(t.difficulty*50)}" min="0"></div>
+      </div>
+      <div class="form-group"><label>奖励稀有度池（逗号分隔，如 N,R,SR,UR）</label><input type="text" id="f-reward-rarities" value="${(t.rewardRarities||['N','R']).join(',')}"></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">冠军奖励属性（0-20）</div>
+      ${[...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].map(k=>`
+        <div class="stat-group">
+          <div class="stat-label"><span>${STAT_NAMES[k]}</span><span id="val-${k}">${t.bonusStats?.[k]||0}</span></div>
+          <input type="range" class="stat-slider ${k}" min="0" max="20" value="${t.bonusStats?.[k]||0}" id="s-${k}">
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+function bindTournamentEvents(t) {
+  document.getElementById('f-name').oninput = e => { t.name=e.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = e => { t.id=e.target.value; renderListItems(); };
+  document.getElementById('f-duel-mode').onchange = e => { t.duelMode=e.target.value; };
+  document.getElementById('f-tier').onchange = e => { t.tier=e.target.value; };
+  document.getElementById('f-difficulty').oninput = e => { t.difficulty=parseInt(e.target.value); };
+  document.getElementById('f-desc').oninput = e => { t.desc=e.target.value; };
+  document.getElementById('f-rewards').oninput = e => { t.rewards=e.target.value; };
+  document.getElementById('f-req-main').oninput = e => { if(!t.requirement)t.requirement={}; t.requirement.mainDeck=parseInt(e.target.value); };
+  document.getElementById('f-req-extra').oninput = e => { if(!t.requirement)t.requirement={}; t.requirement.extraDeck=parseInt(e.target.value); };
+  document.getElementById('f-req-wins').oninput = e => { if(!t.requirement)t.requirement={}; t.requirement.winCount=parseInt(e.target.value); };
+  document.getElementById('f-entry-cost').oninput = e => { t.entryCost=parseInt(e.target.value)||0; };
+  // 绑定参赛条件事件
+  if (!t.conditions) t.conditions = [{ type: 'collect_cards', value: 10 }];
+  bindConditionEvents('tour', t.conditions);
+  document.getElementById('f-rounds').oninput = e => { t.rounds=parseInt(e.target.value); };
+  document.getElementById('f-opp-power').oninput = e => { t.opponentBasePower=parseInt(e.target.value); };
+  document.getElementById('f-opp-growth').oninput = e => { t.opponentPowerGrowth=parseFloat(e.target.value); };
+  document.getElementById('f-opp-names').oninput = e => { t.opponentNames=e.target.value.split(',').map(s=>s.trim()).filter(Boolean); };
+  document.getElementById('f-reward-count').oninput = e => { t.rewardCardCount=parseInt(e.target.value); };
+  document.getElementById('f-dp-win').oninput = e => { t.duelPointsWin=parseInt(e.target.value); };
+  document.getElementById('f-dp-lose').oninput = e => { t.duelPointsLose=parseInt(e.target.value); };
+  document.getElementById('f-reward-rarities').oninput = e => { t.rewardRarities=e.target.value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); };
+  [...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].forEach(k => {
+    document.getElementById('s-'+k).oninput = e => {
+      if (!t.bonusStats) t.bonusStats = {};
+      t.bonusStats[k] = parseInt(e.target.value);
+      document.getElementById('val-'+k).textContent = e.target.value;
+    };
+  });
+}
+
+// 添加比赛参赛条件
+function addTournamentCondition() {
+  const t = gameData.tournaments.find(x => x.id === currentId);
+  if (!t) return;
+  if (!t.conditions) t.conditions = [];
+  t.conditions.push({ type: 'collect_cards', operator: '>=', value: 10 });
+  renderEditor();
+}
+
+// ===== 事件编辑器 =====
+const EFFECT_TYPES = [
+  {v:'text', l:'纯文本（无效果）'},
+  {v:'randomCard', l:'从卡池随机获得卡'},
+  {v:'randomCardByRarity', l:'按稀有度随机获得卡'},
+  {v:'tenPackDraw', l:'十连抽（保底SR）'},
+  {v:'addCard', l:'获得指定卡'},
+  {v:'addMultipleCards', l:'获得多张指定卡'},
+  {v:'affinity', l:'增加好感度'},
+  {v:'bonusStat', l:'永久属性加成'},
+  {v:'bonusAll', l:'全主属性永久加成'},
+  {v:'addDuelPoints', l:'获得决斗点'},
+  {v:'loseDuelPoints', l:'失去决斗点'},
+  {v:'cardPoints', l:'获得卡点'},
+  {v:'addDays', l:'增加寿命（天）'},
+  {v:'unlockTalent', l:'解锁天赋'},
+  {v:'unlockAchievement', l:'解锁成就'},
+  {v:'spiritPower', l:'获得精灵力'},
+  {v:'awakeningShards', l:'获得觉醒碎片'},
+  {v:'randomStat', l:'随机属性加成'},
+  {v:'duel', l:'触发决斗'},
+  {v:'characterDuel', l:'与指定角色决斗'},
+  {v:'skipWeek', l:'不消耗回合（特殊事件）'},
+  {v:'unlockCard', l:'解锁特殊卡片入收藏'},
+  {v:'changeAge', l:'改变年龄'},
+  {v:'unlockLocation', l:'解锁指定地点'},
+  {v:'unlockAllLocations', l:'解锁所有地点'},
+  {v:'addTitle', l:'获得称号'},
+  {v:'setActiveTitle', l:'设置当前显示称号'},
+  {v:'unlockTournament', l:'解锁指定比赛'},
+];
+
+function renderEventEditor(e) {
+  const effectsHtml = (e.effects||[]).map((ef,i) => renderEffectItem(ef,i)).join('');
+  const optionsHtml = (e.options||[]).map((op,i) => `
+    <div class="dyn-item">
+      <input type="text" placeholder="选项名称" value="${op.name||''}" style="flex:1;min-width:100px" oninput="updateOption(${i},'name',this.value)">
+      <button class="btn btn-secondary btn-sm" onclick="toggleOptionEffects(${i})">效果(${op.effects?.length||0})</button>
+      <div class="dyn-del" onclick="removeOption(${i})">×</div>
+    </div>
+    <div id="option-effects-${i}" style="display:none;margin-left:20px;margin-bottom:8px;">
+      <div id="option-effects-list-${i}">${(op.effects||[]).map((ef,j)=>renderEffectItem(ef,j,'opt-'+i+'-')).join('')}</div>
+      <button class="add-btn" onclick="addOptionEffect(${i})">+ 添加效果</button>
+    </div>
+  `).join('');
+
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>事件名称</label><input type="text" id="f-name" value="${e.name}"></div>
+        <div class="form-group"><label>ID</label><input type="text" id="f-id" value="${e.id}"></div>
+        <div class="form-group"><label>触发概率（0-1）</label><input type="number" id="f-prob" value="${e.probability||0}" step="0.05" min="0" max="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>弹窗标题</label><input type="text" id="f-title" value="${e.title||''}"></div>
+        <div class="form-group"><label>消耗决斗点</label><input type="number" id="f-cost" value="${e.cost?.duelPoints||0}"></div>
+      </div>
+      <div class="form-group"><label>事件文本</label><textarea id="f-text" rows="3">${e.text||''}</textarea></div>
+      <div class="form-group"><label>消耗不足时文本</label><input type="text" id="f-failtext" value="${e.failText||''}"></div>
+      <div class="form-group"><label>事件日志</label><input type="text" id="f-log" value="${e.log||''}"></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">触发条件与限制</div>
+      <div class="form-row">
+        <div class="form-group"><label>最早出现周数</label><input type="number" id="f-minweek" value="${e.minWeek||0}" oninput="updateEventField('minWeek',parseInt(this.value)||0)"></div>
+        <div class="form-group"><label>最晚出现周数</label><input type="number" id="f-maxweek" value="${e.maxWeek||0}" oninput="updateEventField('maxWeek',parseInt(this.value)||0)"></div>
+        <div class="form-group"><label>最早出现年龄</label><input type="number" id="f-minage" value="${e.minAge||0}" oninput="updateEventField('minAge',parseInt(this.value)||0)"></div>
+        <div class="form-group"><label>冷却时间(周)</label><input type="number" id="f-cooldown" value="${e.cooldown||0}" oninput="updateEventField('cooldown',parseInt(this.value)||0)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>需要拥有卡片ID</label><input type="text" id="f-reqcard" value="${e.requiredCard||''}" oninput="updateEventField('requiredCard',this.value)"></div>
+        <div class="form-group"><label>需要天赋ID</label><input type="text" id="f-reqtalent" value="${e.requiredTalent||''}" oninput="updateEventField('requiredTalent',this.value)"></div>
+        <div class="form-group"><label>需要决斗点</label><input type="number" id="f-reqdp" value="${e.requiredDuelPoints||0}" oninput="updateEventField('requiredDuelPoints',parseInt(this.value)||0)"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>一次性事件</label><select id="f-onetime" onchange="updateEventField('oneTime',this.value==='1')">
+          <option value="0" ${!e.oneTime?'selected':''}>否</option>
+          <option value="1" ${e.oneTime?'selected':''}>是（触发后不再出现）</option>
+        </select></div>
+        <div class="form-group"><label>角色专属事件</label><input type="text" id="f-charonly" value="${e.characterOnly||''}" oninput="updateEventField('characterOnly',this.value)"></div>
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">效果列表（无选项时生效）</div>
+      <div class="dyn-list" id="effects-list">${effectsHtml}</div>
+      <button class="add-btn" onclick="addEffect()">+ 添加效果</button>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">选项列表（有选项时忽略上面的效果）</div>
+      <div class="dyn-list" id="options-list">${optionsHtml}</div>
+      <button class="add-btn" onclick="addOption()">+ 添加选项</button>
+    </div>
+  `;
+}
+
+function renderEffectItem(ef, i, prefix='') {
+  let paramsHtml = '';
+  switch(ef.type) {
+    case 'randomCard':
+      paramsHtml = `<input type="text" placeholder="卡池ID逗号分隔" value="${(ef.pool||[]).join(',')}" style="flex:2" oninput="updateEffect(${i},'pool',this.value.split(',').map(s=>s.trim()).filter(Boolean),'${prefix}')">`;
+      break;
+    case 'randomCardByRarity':
+      paramsHtml = `<select oninput="updateEffect(${i},'rarity',this.value,'${prefix}')">
+        <option value="random" ${ef.rarity==='random'?'selected':''}>随机</option>
+        ${RARITIES.map(r=>`<option value="${r}" ${ef.rarity===r?'selected':''}>${r}</option>`).join('')}
+      </select>`;
+      break;
+    case 'addCard':
+      paramsHtml = `<input type="text" placeholder="卡片ID" value="${ef.cardId||''}" style="flex:1" oninput="updateEffect(${i},'cardId',this.value,'${prefix}')">`;
+      break;
+    case 'affinity':
+      paramsHtml = `<input type="text" placeholder="角色ID" value="${ef.charId||''}" style="flex:1" oninput="updateEffect(${i},'charId',this.value,'${prefix}')">
+        <input type="number" placeholder="数值" value="${ef.amount||5}" style="width:60px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'bonusStat':
+      paramsHtml = `<select oninput="updateEffect(${i},'stat',this.value,'${prefix}')">
+        ${[...STAT_KEYS,'power','soul','luck','proficiency','intelligence'].map(k=>`<option value="${k}" ${ef.stat===k?'selected':''}>${STAT_NAMES[k]}</option>`).join('')}
+      </select><input type="number" placeholder="数值" value="${ef.amount||1}" style="width:60px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'bonusAll':
+      paramsHtml = `<input type="number" placeholder="数值" value="${ef.amount||1}" style="width:60px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'duel':
+      paramsHtml = `<select oninput="updateEffect(${i},'mode',this.value,'${prefix}')">
+        ${getDuelModeOptions(ef.mode, false)}
+      </select><label style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px">
+        <input type="checkbox" ${ef.gamble?'checked':''} onchange="updateEffect(${i},'gamble',this.checked,'${prefix}')">赌卡</label>`;
+      break;
+    case 'addMultipleCards':
+      paramsHtml = `<input type="text" placeholder="卡片ID逗号分隔" value="${(ef.cardIds||[]).join(',')}" style="flex:2" oninput="updateEffect(${i},'cardIds',this.value.split(',').map(s=>s.trim()).filter(Boolean),'${prefix}')">`;
+      break;
+    case 'addDuelPoints':
+      paramsHtml = `<input type="number" placeholder="数量" value="${ef.amount||100}" style="width:80px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'loseDuelPoints':
+      paramsHtml = `<input type="number" placeholder="数量" value="${ef.amount||100}" style="width:80px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'cardPoints':
+      paramsHtml = `<input type="number" placeholder="卡点数量" value="${ef.amount||10}" style="width:80px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'addDays':
+      paramsHtml = `<input type="number" placeholder="天数" value="${ef.amount||30}" style="width:80px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')"> 天寿命`;
+      break;
+    case 'unlockTalent':
+      paramsHtml = `<input type="text" placeholder="天赋ID" value="${ef.talentId||''}" style="flex:1" oninput="updateEffect(${i},'talentId',this.value,'${prefix}')">`;
+      break;
+    case 'unlockAchievement':
+      paramsHtml = `<select style="flex:1" oninput="updateEffect(${i},'achievementId',this.value,'${prefix}')">
+        <option value="">选择成就</option>
+        ${(gameData.achievements || []).map(a => `<option value="${a.id}" ${ef.achievementId===a.id?'selected':''}>${a.name}</option>`).join('')}
+      </select>`;
+      break;
+    case 'spiritPower':
+      paramsHtml = `<input type="number" placeholder="精灵力数量" value="${ef.amount||50}" style="width:100px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'awakeningShards':
+      paramsHtml = `<input type="number" placeholder="觉醒碎片数量" value="${ef.amount||5}" style="width:100px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'randomStat':
+      paramsHtml = `<input type="number" placeholder="最小值" value="${ef.min||1}" style="width:60px" oninput="updateEffect(${i},'min',parseInt(this.value),'${prefix}')">
+        <input type="number" placeholder="最大值" value="${ef.max||3}" style="width:60px" oninput="updateEffect(${i},'max',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'characterDuel':
+      paramsHtml = `<input type="text" placeholder="角色ID" value="${ef.charId||''}" style="flex:1" oninput="updateEffect(${i},'charId',this.value,'${prefix}')">
+        <select oninput="updateEffect(${i},'mode',this.value,'${prefix}')">
+          ${getDuelModeOptions(ef.mode, false)}
+        </select>`;
+      break;
+    case 'unlockCard':
+      paramsHtml = `<input type="text" placeholder="卡片ID" value="${ef.cardId||''}" style="flex:1" oninput="updateEffect(${i},'cardId',this.value,'${prefix}')">`;
+      break;
+    case 'changeAge':
+      paramsHtml = `<input type="number" placeholder="年龄变化" value="${ef.amount||1}" style="width:80px" oninput="updateEffect(${i},'amount',parseInt(this.value),'${prefix}')">`;
+      break;
+    case 'skipWeek':
+      paramsHtml = `<span style="font-size:11px;color:var(--text2);">此事件不消耗回合</span>`;
+      break;
+    case 'unlockLocation':
+      paramsHtml = `<input type="text" placeholder="地点ID" value="${ef.locationId||''}" style="flex:1" oninput="updateEffect(${i},'locationId',this.value,'${prefix}')">`;
+      break;
+    case 'unlockAllLocations':
+      paramsHtml = `<span style="font-size:11px;color:var(--text2);">解锁所有隐藏地点</span>`;
+      break;
+    case 'addTitle':
+      paramsHtml = `<input type="text" placeholder="称号名称" value="${ef.title||''}" style="flex:1" oninput="updateEffect(${i},'title',this.value,'${prefix}')">`;
+      break;
+    case 'setActiveTitle':
+      paramsHtml = `<input type="text" placeholder="称号名称" value="${ef.title||''}" style="flex:1" oninput="updateEffect(${i},'title',this.value,'${prefix}')">`;
+      break;
+    case 'unlockTournament':
+      paramsHtml = `<input type="text" placeholder="比赛ID" value="${ef.tournamentId||''}" style="flex:1" oninput="updateEffect(${i},'tournamentId',this.value,'${prefix}')">`;
+      break;
+    case 'tenPackDraw':
+      paramsHtml = `<span style="font-size:11px;color:var(--text2);">十连抽保底SR或以上</span>`;
+      break;
+  }
+  return `<div class="dyn-item">
+    <select onchange="updateEffect(${i},'type',this.value,'${prefix}')" style="width:140px">
+      ${EFFECT_TYPES.map(t=>`<option value="${t.v}" ${ef.type===t.v?'selected':''}>${t.l}</option>`).join('')}
+    </select>${paramsHtml}
+    <div class="dyn-del" onclick="removeEffect(${i},'${prefix}')">×</div>
+  </div>`;
+}
+
+function bindEventEvents(e) {
+  document.getElementById('f-name').oninput = ev => { e.name=ev.target.value; renderListItems(); };
+  document.getElementById('f-id').oninput = ev => { e.id=ev.target.value; renderListItems(); };
+  document.getElementById('f-prob').oninput = ev => { e.probability=parseFloat(ev.target.value); };
+  document.getElementById('f-title').oninput = ev => { e.title=ev.target.value; };
+  document.getElementById('f-text').oninput = ev => { e.text=ev.target.value; };
+  document.getElementById('f-failtext').oninput = ev => { e.failText=ev.target.value; };
+  document.getElementById('f-log').oninput = ev => { e.log=ev.target.value; };
+  document.getElementById('f-cost').oninput = ev => {
+    const v = parseInt(ev.target.value);
+    if (v > 0) { if(!e.cost)e.cost={}; e.cost.duelPoints=v; } else { delete e.cost; }
+  };
+}
+
+function updateEventField(field, value) {
+  const e = getItem();
+  if (!e) return;
+  if (value === 0 || value === '') delete e[field];
+  else e[field] = value;
+}
+
+// 效果操作
+function addEffect() {
+  const e = getItem();
+  if (!e.effects) e.effects = [];
+  e.effects.push({type:'text'});
+  renderEditor();
+}
+function removeEffect(i, prefix) {
+  const e = getItem();
+  if (prefix) {
+    const optIdx = parseInt(prefix.split('-')[1]);
+    e.options[optIdx].effects.splice(i,1);
+  } else {
+    e.effects.splice(i,1);
+  }
+  renderEditor();
+}
+function updateEffect(i, field, value, prefix) {
+  const e = getItem();
+  if (prefix) {
+    const optIdx = parseInt(prefix.split('-')[1]);
+    e.options[optIdx].effects[i][field] = value;
+  } else {
+    e.effects[i][field] = value;
+  }
+  if (field === 'type') renderEditor();
+}
+
+// 选项操作
+function addOption() {
+  const e = getItem();
+  if (!e.options) e.options = [];
+  e.options.push({name:'新选项', effects:[{type:'text'}]});
+  renderEditor();
+}
+function removeOption(i) {
+  const e = getItem();
+  e.options.splice(i,1);
+  renderEditor();
+}
+function updateOption(i, field, value) {
+  const e = getItem();
+  e.options[i][field] = value;
+}
+function toggleOptionEffects(i) {
+  const el = document.getElementById('option-effects-'+i);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function addOptionEffect(i) {
+  const e = getItem();
+  if (!e.options[i].effects) e.options[i].effects = [];
+  e.options[i].effects.push({type:'text'});
+  renderEditor();
+  document.getElementById('option-effects-'+i).style.display = 'block';
+}
+
+// ===== Toast =====
+let toastTimer;
+function showToast(msg) {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.remove(), 2500);
+}
+
+// ===== 初始化 =====
+renderSidebar();
+// 尝试自动加载（http协议下）
+if (window.location.protocol !== 'file:') {
+  Promise.all([
+    fetch('card-data.js').then(r=>r.text()).then(t=>{
+      const m = t.match(/window\.CARD_DB\s*=\s*(\{[\s\S]*?\});/);
+      if (m) cardDB = new Function('return '+m[1])();
+    }).catch(()=>{}),
+    fetch('game-data.js').then(r=>r.text()).then(t=>{
+      try {
+        const tm = t.match(/window\.TALENTS\s*=\s*(\[[\s\S]*?\]);/); if(tm)gameData.talents=new Function('return '+tm[1])();
+        const lm = t.match(/window\.LOCATIONS\s*=\s*(\[[\s\S]*?\]);/); if(lm)gameData.locations=new Function('return '+lm[1])();
+        const cm = t.match(/window\.CHARACTERS\s*=\s*(\[[\s\S]*?\]);/); if(cm)gameData.characters=new Function('return '+cm[1])();
+        const tm2 = t.match(/window\.TOURNAMENTS\s*=\s*(\[[\s\S]*?\]);/); if(tm2)gameData.tournaments=new Function('return '+tm2[1])();
+        const am = t.match(/window\.ACHIEVEMENTS\s*=\s*(\[[\s\S]*?\]);/); if(am)gameData.achievements=new Function('return '+am[1])();
+        const em = t.match(/window\.EVENTS\s*=\s*(\{[\s\S]*?\});/); if(em)gameData.events=new Function('return '+em[1])();
+        const rcm = t.match(/window\.REDEEM_CODES\s*=\s*(\[[\s\S]*?\]);/); if(rcm)gameData.redeemCodes=new Function('return '+rcm[1])();
+      } catch(e){}
+    }).catch(()=>{})
+  ]).then(()=>{
+    if (Object.keys(cardDB).length || gameData.talents.length) showToast('已自动加载数据文件');
+  });
+}
+
+// ===== 兑换码编辑器 =====
+function renderRedeemCodeEditor(r) {
+  const reward = r.reward || {};
+  const statOptions = Object.entries(STAT_NAMES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  const achievementOptions = (gameData.achievements||[]).map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+  const talentOptions = (gameData.talents||[]).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  const locationOptions = (gameData.locations||[]).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  const cardOptions = Object.values(cardDB).map(c=>`<option value="${c.id}">${c.name} [${c.rarity}]</option>`).join('');
+  
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>兑换码ID</label><input type="text" id="rc-id" value="${r.id}"></div>
+        <div class="form-group"><label>名称</label><input type="text" id="rc-name" value="${r.name||''}"></div>
+      </div>
+      <div class="form-group"><label>描述</label><textarea id="rc-desc" rows="2">${r.desc||''}</textarea></div>
+    </div>
+    
+    <div class="edit-section">
+      <div class="edit-section-title">奖励设置</div>
+      <div class="form-row">
+        <div class="form-group"><label>决斗点</label><input type="number" id="rc-duelPoints" value="${reward.duelPoints||0}" min="0"></div>
+        <div class="form-group"><label>卡点</label><input type="number" id="rc-cardPoints" value="${reward.cardPoints||0}" min="0"></div>
+        <div class="form-group"><label>寿命（天）</label><input type="number" id="rc-days" value="${reward.days||0}" min="0" placeholder="增加寿命天数"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>精灵力</label><input type="number" id="rc-spiritPower" value="${reward.spiritPower||0}" min="0"></div>
+        <div class="form-group"><label>觉醒碎片</label><input type="number" id="rc-awakeningShards" value="${reward.awakeningShards||0}" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>称号</label><input type="text" id="rc-title" value="${reward.title||''}" placeholder="输入称号名称"></div>
+        <div class="form-group"><label>解锁地点</label><select id="rc-unlockLocation"><option value="">无</option>${locationOptions}</select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>解锁成就</label><select id="rc-achievement"><option value="">无</option>${achievementOptions}</select></div>
+        <div class="form-group"><label>解锁天赋</label><select id="rc-talent"><option value="">无</option>${talentOptions}</select></div>
+      </div>
+      <div class="form-group">
+        <label>奖励卡片（勾选）</label>
+        <div id="rc-cards-container" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg-input);">
+          ${Object.values(cardDB).map(c=>`
+            <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;">
+              <input type="checkbox" class="rc-card-check" value="${c.id}" ${(reward.cards||[]).includes(c.id)?'checked':''}>
+              <span style="color:${c.rarity==='UR'?'#fbbf24':c.rarity==='SR'?'#a78bfa':c.rarity==='R'?'#60a5fa':'#9ca3af'};">[${c.rarity}]</span>
+              <span style="color:#fff;">${c.name}</span>
+              <span style="color:var(--text2);font-size:11px;">(${c.id})</span>
+            </label>
+          `).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px;">已选 <span id="rc-cards-count">${(reward.cards||[]).length}</span> 张</div>
+      </div>
+      <div class="form-group">
+        <label>属性加成</label>
+        <div id="rc-stats-container">
+          ${(reward.stats ? Object.entries(reward.stats) : []).map(([stat,val],idx)=>`
+            <div class="form-row" data-stat-idx="${idx}">
+              <div class="form-group"><select class="rc-stat-key">${statOptions}</select></div>
+              <div class="form-group"><input type="number" class="rc-stat-val" value="${val}" min="0"></div>
+              <div class="form-group" style="width:60px;"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">删除</button></div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="addRedeemStatRow()">➕ 添加属性</button>
+      </div>
+    </div>
+    
+    <div style="text-align:center;margin-top:16px;">
+      <button class="btn btn-gold" onclick="saveRedeemCode()">💾 保存兑换码</button>
+      <button class="btn btn-danger" onclick="deleteCurrentItem()">🗑️ 删除</button>
+    </div>
+  `;
+}
+
+function addRedeemStatRow() {
+  const container = document.getElementById('rc-stats-container');
+  const statOptions = Object.entries(STAT_NAMES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'form-row';
+  div.dataset.statIdx = idx;
+  div.innerHTML = `
+    <div class="form-group"><select class="rc-stat-key">${statOptions}</select></div>
+    <div class="form-group"><input type="number" class="rc-stat-val" value="0" min="0"></div>
+    <div class="form-group" style="width:60px;"><button class="btn btn-danger btn-sm" onclick="this.parentElement.parentElement.remove()">删除</button></div>
+  `;
+  container.appendChild(div);
+}
+
+function bindRedeemCodeEvents(r) {
+  // 卡片复选框计数更新
+  const cardChecks = document.querySelectorAll('.rc-card-check');
+  cardChecks.forEach(check => {
+    check.addEventListener('change', () => {
+      const count = document.querySelectorAll('.rc-card-check:checked').length;
+      document.getElementById('rc-cards-count').textContent = count;
+    });
+  });
+  // 选中已有的解锁地点
+  const locSelect = document.getElementById('rc-unlockLocation');
+  if (locSelect && r.reward && r.reward.unlockLocation) {
+    locSelect.value = r.reward.unlockLocation;
+  }
+  // 选中已有的成就
+  const achSelect = document.getElementById('rc-achievement');
+  if (achSelect && r.reward && r.reward.achievement) {
+    achSelect.value = r.reward.achievement;
+  }
+  // 选中已有的天赋
+  const talentSelect = document.getElementById('rc-talent');
+  if (talentSelect && r.reward && r.reward.talent) {
+    talentSelect.value = r.reward.talent;
+  }
+}
+
+function saveRedeemCode() {
+  const r = getItem();
+  if (!r) return;
+  
+  r.id = document.getElementById('rc-id').value.trim();
+  r.name = document.getElementById('rc-name').value.trim();
+  r.desc = document.getElementById('rc-desc').value.trim();
+  
+  const reward = {};
+  const duelPoints = parseInt(document.getElementById('rc-duelPoints').value) || 0;
+  if (duelPoints > 0) reward.duelPoints = duelPoints;
+  const cardPoints = parseInt(document.getElementById('rc-cardPoints').value) || 0;
+  if (cardPoints > 0) reward.cardPoints = cardPoints;
+  const days = parseInt(document.getElementById('rc-days').value) || 0;
+  if (days > 0) reward.days = days;
+  const spiritPower = parseInt(document.getElementById('rc-spiritPower').value) || 0;
+  if (spiritPower > 0) reward.spiritPower = spiritPower;
+  const awakeningShards = parseInt(document.getElementById('rc-awakeningShards').value) || 0;
+  if (awakeningShards > 0) reward.awakeningShards = awakeningShards;
+  const title = document.getElementById('rc-title').value.trim();
+  if (title) reward.title = title;
+  const unlockLocation = document.getElementById('rc-unlockLocation').value;
+  if (unlockLocation) reward.unlockLocation = unlockLocation;
+  const achievement = document.getElementById('rc-achievement').value;
+  if (achievement) reward.achievement = achievement;
+  const talent = document.getElementById('rc-talent').value;
+  if (talent) reward.talent = talent;
+  
+  // 卡片（复选框方式）
+  const selectedCards = Array.from(document.querySelectorAll('.rc-card-check:checked')).map(c=>c.value);
+  if (selectedCards.length > 0) reward.cards = selectedCards;
+  
+  // 属性
+  const statRows = document.querySelectorAll('#rc-stats-container .form-row');
+  const stats = {};
+  statRows.forEach(row => {
+    const key = row.querySelector('.rc-stat-key').value;
+    const val = parseInt(row.querySelector('.rc-stat-val').value) || 0;
+    if (val > 0) stats[key] = val;
+  });
+  if (Object.keys(stats).length > 0) reward.stats = stats;
+  
+  r.reward = reward;
+  currentId = r.id;
+  renderList();
+  showToast('兑换码已保存');
+}
+</script>
+</body>
+</html>

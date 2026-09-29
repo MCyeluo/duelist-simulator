@@ -390,6 +390,17 @@ body::before {
 }
 .deck-tab.active { background: rgba(139, 92, 246, 0.15); border-color: var(--accent-purple); color: var(--accent-purple-light); }
 
+/* 个人主页标签页 */
+.profile-tab {
+  padding: 5px 10px; font-size: 11px;
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 5px; color: var(--text-secondary); cursor: pointer;
+  transition: all 0.15s; flex: 1; min-width: 60px;
+}
+.profile-tab.active { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(59,130,246,0.15)); border-color: var(--accent-purple); color: var(--accent-purple-light); font-weight: bold; }
+.profile-tab-content { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
 /* ===== 决斗界面 ===== */
 .duel-arena {
   background: linear-gradient(135deg, rgba(20,20,42,0.9), rgba(30,30,58,0.9));
@@ -1651,26 +1662,17 @@ body::before {
             <div class="stat-box suppress" style="cursor:pointer;" onclick="showStatDetail('suppress')"><div class="stat-box-label">压制</div><div class="stat-box-value" id="deck-stat-suppress">0</div></div>
           </div>
           <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
-            主属性 = 天赋 + 成就 + 卡组 + 共鸣 · 卡组变化时实时更新 · 点击属性查看详情
-          </div>
-        </div>
-
-        <!-- 卡组共鸣区域（完成大师决斗后解锁） -->
-        <div class="panel" id="resonance-panel" style="display:none; margin-bottom:16px;">
-          <div class="panel-title">卡组共鸣 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">消耗卡点强化主属性</span></div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
-            当前卡点：<strong id="resonance-card-points" style="color:var(--accent-gold);">0</strong>
-          </div>
-          <div class="stats-grid" id="resonance-stats-grid">
-            <!-- 由JS动态生成 -->
-          </div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:8px;">
-            每级消耗固定卡点（可在开发工具中调整），每级+1主属性，主属性 = 天赋 + 成就 + 卡组 + 共鸣
+            主属性 = 天赋 + 成就 + 卡组 + 共鸣 · 卡组变化时实时更新 · 点击属性查看详情和共鸣升级
           </div>
         </div>
 
         <div class="panel">
-          <div class="panel-title">卡组管理</div>
+          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>卡组管理</span>
+            <button class="btn btn-primary btn-sm" style="padding:4px 12px; font-size:11px; background:linear-gradient(135deg,#f59e0b,#ef4444);" onclick="optimizeDeck()">
+              ⚡ 一键优化
+            </button>
+          </div>
           <div class="deck-summary">
             <div class="deck-summary-item">
               <div class="deck-summary-label">主卡组</div>
@@ -1724,13 +1726,51 @@ body::before {
             <div class="duel-player">
               <div class="duel-player-name" id="duel-player-name">你</div>
               <div class="duel-player-power" id="duel-player-power">牌力 0</div>
+              <div id="duel-player-tactic" style="font-size:10px; color:var(--accent-gold); margin-top:2px;"></div>
             </div>
             <div class="duel-vs">VS</div>
             <div class="duel-player">
               <div class="duel-player-name" id="duel-opponent-name">???</div>
               <div class="duel-player-power" id="duel-opponent-power">牌力 ???</div>
+              <div id="duel-opponent-style" style="font-size:10px; color:var(--text-muted); margin-top:2px;"></div>
             </div>
           </div>
+
+          <!-- 场面可视化 -->
+          <div id="duel-field-visual" style="display:none; margin:12px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:11px; color:var(--accent-green-light);">你的场面</span>
+              <span id="duel-field-status" style="font-size:11px; color:var(--text-muted);">势均力敌</span>
+              <span style="font-size:11px; color:var(--accent-red-light);">对方场面</span>
+            </div>
+            <div style="display:flex; height:20px; background:var(--bg-card); border-radius:10px; overflow:hidden; border:1px solid var(--border);">
+              <div id="duel-player-field-bar" style="width:50%; background:linear-gradient(90deg, var(--accent-green), var(--accent-green-light)); transition:width 0.5s ease;"></div>
+              <div id="duel-opponent-field-bar" style="width:50%; background:linear-gradient(90deg, var(--accent-red-light), var(--accent-red)); transition:width 0.5s ease;"></div>
+            </div>
+          </div>
+
+          <!-- 战术选择界面 -->
+          <div id="duel-tactic-select" style="display:none; margin:12px 0;">
+            <div style="text-align:center; font-size:13px; font-weight:600; color:var(--accent-gold); margin-bottom:10px;">选择本回合战术</div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <button class="btn btn-secondary tactic-btn" data-tactic="aggressive" style="flex:1; max-width:120px; padding:10px 8px;">
+                <div style="font-size:18px;">⚔️</div>
+                <div style="font-size:12px; font-weight:600;">进攻</div>
+                <div style="font-size:10px; color:var(--text-muted);">输出+30% 抗性-20%</div>
+              </button>
+              <button class="btn btn-secondary tactic-btn" data-tactic="balanced" style="flex:1; max-width:120px; padding:10px 8px;">
+                <div style="font-size:18px;">⚖️</div>
+                <div style="font-size:12px; font-weight:600;">均衡</div>
+                <div style="font-size:10px; color:var(--text-muted);">无加成</div>
+              </button>
+              <button class="btn btn-secondary tactic-btn" data-tactic="defensive" style="flex:1; max-width:120px; padding:10px 8px;">
+                <div style="font-size:18px;">🛡️</div>
+                <div style="font-size:12px; font-weight:600;">防守</div>
+                <div style="font-size:10px; color:var(--text-muted);">输出-20% 抗性+30%</div>
+              </button>
+            </div>
+          </div>
+
           <div class="duel-log" id="duel-log"></div>
           <div id="duel-result-area" style="display:none;"></div>
           <div class="btn-group" id="duel-actions">
@@ -1799,6 +1839,18 @@ body::before {
 
 <!-- 事件弹窗容器 -->
 <div id="modal-container"></div>
+
+<!-- 战斗数据分析弹窗 -->
+<div id="battle-analysis-modal" class="modal-overlay" style="display:none; z-index:2000;">
+  <div class="card-detail-box" style="max-width:500px; max-height:80vh; overflow-y:auto;">
+    <div class="card-detail-header">
+      <div class="card-detail-rarity" style="background:linear-gradient(135deg, #ffd700, #ff6b6b);">📊</div>
+      <div class="card-detail-name">战斗数据分析</div>
+      <button class="card-detail-close" onclick="closeBattleAnalysis()">×</button>
+    </div>
+    <div id="battle-analysis-content" style="padding:12px 0;"></div>
+  </div>
+</div>
 
 <!-- 卡片详情弹窗 -->
 <div id="card-detail-modal" class="modal-overlay" style="display:none;">
@@ -1892,23 +1944,36 @@ body::before {
 <div id="profile-modal" class="modal-overlay" style="display:none;z-index:10002;">
   <div class="card-detail-box" style="max-width:480px;max-height:85vh;overflow-y:auto;">
     <!-- 头部：头像+名字+称号+签名 -->
-    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border-subtle);position:relative;">
-      <div id="profile-avatar" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;cursor:pointer;" title="点击更换头像（暂未开放）">🎮</div>
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-subtle);position:relative;">
+      <div id="profile-avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;cursor:pointer;" title="点击更换头像（暂未开放）">🎮</div>
       <div style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span id="profile-name" style="font-size:16px;font-weight:bold;color:#fff;cursor:pointer;" title="点击修改名字">无名决斗者</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+          <span id="profile-name" style="font-size:15px;font-weight:bold;color:#fff;cursor:pointer;" title="点击修改名字">无名决斗者</span>
           <button class="btn btn-secondary btn-sm" onclick="openNameEdit()" style="padding:1px 6px;font-size:9px;line-height:1.4;">改名</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span id="profile-title" style="font-size:10px;padding:1px 6px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:8px;color:#fff;cursor:pointer;" title="点击选择称号">新手决斗者</span>
+          <span id="profile-power-mini" style="font-size:11px;font-weight:bold;background:linear-gradient(90deg,#ffd700,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">牌力 0</span>
         </div>
       </div>
       <!-- 兑换码按钮 -->
       <button class="btn btn-gold btn-sm" onclick="openRedeemModal()" style="padding:2px 8px;font-size:9px;line-height:1.4;" title="输入兑换码领取奖励">兑换码</button>
     </div>
 
-    <!-- 基本信息 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">基本信息</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;">
+    <!-- 标签页导航 -->
+    <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="profile-tab active" data-profile-tab="overview" onclick="switchProfileTab('overview')">📊 概览</button>
+      <button class="profile-tab" data-profile-tab="stats" onclick="switchProfileTab('stats')">⚔️ 属性</button>
+      <button class="profile-tab" data-profile-tab="deck" onclick="switchProfileTab('deck')">🃏 卡组</button>
+      <button class="profile-tab" data-profile-tab="collection" onclick="switchProfileTab('collection')">🏆 收藏</button>
+      <button class="profile-tab" data-profile-tab="data" onclick="switchProfileTab('data')">📈 统计</button>
+    </div>
+
+    <!-- 标签页内容 -->
+    <!-- 概览 -->
+    <div id="profile-tab-overview" class="profile-tab-content">
+      <!-- 基本信息 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;margin-bottom:12px;">
         <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
           <div style="color:var(--text-muted);">年龄</div>
           <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-age">18岁</div>
@@ -1922,182 +1987,222 @@ body::before {
           <div style="font-weight:bold;background:linear-gradient(90deg,#ffd700,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:14px;" id="profile-power">0</div>
         </div>
       </div>
-    </div>
 
-    <!-- 精灵力系统 -->
-    <div id="profile-spirit-section" style="margin-bottom:16px;display:none;">
-      <div class="panel-title" style="margin-bottom:8px;">精灵力</div>
-      <div style="padding:12px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1));border-radius:8px;border:1px solid rgba(139,92,246,0.3);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:20px;">✨</span>
-            <span id="profile-spirit-level" style="font-size:16px;font-weight:bold;color:#a78bfa;">0星</span>
+      <!-- 精灵力系统 -->
+      <div id="profile-spirit-section" style="margin-bottom:12px;display:none;">
+        <div style="padding:10px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(59,130,246,0.1));border-radius:8px;border:1px solid rgba(139,92,246,0.3);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:16px;">✨</span>
+              <span id="profile-spirit-level" style="font-size:14px;font-weight:bold;color:#a78bfa;">0星</span>
+            </div>
+            <span id="profile-spirit-bonus" style="font-size:10px;color:#10b981;">战斗牌力 +0%</span>
           </div>
-          <span id="profile-spirit-bonus" style="font-size:11px;color:#10b981;">战斗牌力 +0%</span>
-        </div>
-        <div style="margin-bottom:6px;">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:2px;">
-            <span>精灵力经验</span>
-            <span id="profile-spirit-exp-text">0 / 100</span>
+          <div style="margin-bottom:4px;">
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-bottom:2px;">
+              <span>精灵力经验</span>
+              <span id="profile-spirit-exp-text">0 / 100</span>
+            </div>
+            <div style="height:5px;background:var(--bg-input);border-radius:3px;overflow:hidden;">
+              <div id="profile-spirit-exp-bar" style="height:100%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);width:0%;transition:width 0.3s;"></div>
+            </div>
           </div>
-          <div style="height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;">
-            <div id="profile-spirit-exp-bar" style="height:100%;background:linear-gradient(90deg,#8b5cf6,#3b82f6);width:0%;transition:width 0.3s;"></div>
+          <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);">
+            <span>觉醒碎片：<span id="profile-awakening-shards" style="color:#fbbf24;font-weight:bold;">0</span></span>
+            <span id="profile-spirit-next-hint">提升等级可增强牌力</span>
           </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);">
-          <span>觉醒碎片：<span id="profile-awakening-shards" style="color:#fbbf24;font-weight:bold;">0</span></span>
-          <span id="profile-spirit-next-hint">提升等级可增强牌力</span>
         </div>
       </div>
-    </div>
 
-    <!-- 决斗战绩 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">决斗战绩</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px;">
-        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+      <!-- 决斗战绩 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:10px;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">总决斗</div>
-          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-duels">0</div>
+          <div style="font-weight:bold;color:#fff;font-size:13px;" id="profile-duels">0</div>
         </div>
-        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">胜利</div>
-          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-wins">0</div>
+          <div style="font-weight:bold;color:#10b981;font-size:13px;" id="profile-wins">0</div>
         </div>
-        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">失败</div>
-          <div style="font-weight:bold;color:#ef4444;font-size:14px;" id="profile-losses">0</div>
+          <div style="font-weight:bold;color:#ef4444;font-size:13px;" id="profile-losses">0</div>
         </div>
-        <div style="padding:8px;background:var(--bg-card);border-radius:6px;text-align:center;">
+        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">胜率</div>
-          <div style="font-weight:bold;color:#fbbf24;font-size:14px;" id="profile-winrate">0%</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:13px;" id="profile-winrate">0%</div>
         </div>
       </div>
     </div>
 
-    <!-- 主属性 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">主属性</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px;">
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">检索</div>
-          <div style="font-weight:bold;color:#3b82f6;font-size:14px;" id="profile-search">0</div>
+    <!-- 属性 -->
+    <div id="profile-tab-stats" class="profile-tab-content" style="display:none;">
+      <!-- 主属性 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">主属性</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:10px;">
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">检索</div>
+            <div style="font-weight:bold;color:#3b82f6;font-size:13px;" id="profile-search">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">展开</div>
+            <div style="font-weight:bold;color:#8b5cf6;font-size:13px;" id="profile-expand">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">干扰</div>
+            <div style="font-weight:bold;color:#ef4444;font-size:13px;" id="profile-disrupt">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">抗性</div>
+            <div style="font-weight:bold;color:#10b981;font-size:13px;" id="profile-resist">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">压制</div>
+            <div style="font-weight:bold;color:#f59e0b;font-size:13px;" id="profile-suppress">0</div>
+          </div>
         </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">展开</div>
-          <div style="font-weight:bold;color:#8b5cf6;font-size:14px;" id="profile-expand">0</div>
+      </div>
+
+      <!-- 副属性 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">副属性</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;font-size:10px;">
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">强度</div>
+            <div style="font-weight:bold;color:#f59e0b;font-size:13px;" id="profile-power-stat">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">魂度</div>
+            <div style="font-weight:bold;color:#ec4899;font-size:13px;" id="profile-soul">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">掏度</div>
+            <div style="font-weight:bold;color:#10b981;font-size:13px;" id="profile-luck">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">熟练度</div>
+            <div style="font-weight:bold;color:#06b6d4;font-size:13px;" id="profile-proficiency">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">情报力</div>
+            <div style="font-weight:bold;color:#a855f7;font-size:13px;" id="profile-intelligence">0</div>
+          </div>
         </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">干扰</div>
-          <div style="font-weight:bold;color:#ef4444;font-size:14px;" id="profile-disrupt">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">抗性</div>
-          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-resist">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">压制</div>
-          <div style="font-weight:bold;color:#f59e0b;font-size:14px;" id="profile-suppress">0</div>
+      </div>
+
+      <!-- 特殊属性 -->
+      <div>
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">特殊属性</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:10px;">
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">决斗点</div>
+            <div style="font-weight:bold;color:#fbbf24;font-size:13px;" id="profile-duel-points">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">卡点</div>
+            <div style="font-weight:bold;color:#10b981;font-size:13px;" id="profile-card-points">0</div>
+          </div>
+          <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+            <div style="color:var(--text-muted);">收藏卡片</div>
+            <div style="font-weight:bold;color:#3b82f6;font-size:13px;" id="profile-collection">0</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 副属性 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">副属性</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:10px;">
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">强度</div>
-          <div style="font-weight:bold;color:#f59e0b;font-size:14px;" id="profile-power-stat">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">魂度</div>
-          <div style="font-weight:bold;color:#ec4899;font-size:14px;" id="profile-soul">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">掏度</div>
-          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-luck">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">熟练度</div>
-          <div style="font-weight:bold;color:#06b6d4;font-size:14px;" id="profile-proficiency">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">情报力</div>
-          <div style="font-weight:bold;color:#a855f7;font-size:14px;" id="profile-intelligence">0</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 特殊属性 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">特殊属性</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;">
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">决斗点</div>
-          <div style="font-weight:bold;color:#fbbf24;font-size:14px;" id="profile-duel-points">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">卡点</div>
-          <div style="font-weight:bold;color:#10b981;font-size:14px;" id="profile-card-points">0</div>
-        </div>
-        <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
-          <div style="color:var(--text-muted);">收藏卡片</div>
-          <div style="font-weight:bold;color:#3b82f6;font-size:14px;" id="profile-collection">0</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 卡组概况 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">卡组概况</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;">
+    <!-- 卡组 -->
+    <div id="profile-tab-deck" class="profile-tab-content" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:10px;margin-bottom:10px;">
         <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">主卡组</div>
-          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-main-deck">0/60</div>
+          <div style="font-weight:bold;color:#fff;font-size:13px;" id="profile-main-deck">0/60</div>
         </div>
         <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">额外卡组</div>
-          <div style="font-weight:bold;color:#fff;font-size:14px;" id="profile-extra-deck">0/15</div>
+          <div style="font-weight:bold;color:#fff;font-size:13px;" id="profile-extra-deck">0/15</div>
         </div>
         <div style="padding:6px;background:var(--bg-card);border-radius:4px;text-align:center;">
           <div style="color:var(--text-muted);">系列标签</div>
-          <div style="font-weight:bold;color:#fbbf24;font-size:12px;" id="profile-archetype">无</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:11px;" id="profile-archetype">无</div>
         </div>
       </div>
-      <div style="margin-top:8px;padding:8px;background:var(--bg-card);border-radius:4px;">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div style="padding:8px;background:var(--bg-card);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
           <span style="color:var(--text-muted);font-size:10px;">决斗类型：</span>
           <span id="profile-play-style" style="font-weight:bold;color:var(--accent-blue-light);font-size:11px;">均衡型</span>
-          <span style="color:var(--text-muted);font-size:10px;margin-left:8px;">副属性标签：</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="color:var(--text-muted);font-size:10px;">副属性标签：</span>
           <span id="profile-sub-tags" style="font-size:10px;color:var(--text-muted);">无</span>
         </div>
       </div>
     </div>
 
-    <!-- 成就和称号 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">已获称号</div>
-      <div id="profile-titles" style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
-        <span style="padding:4px 10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:10px;color:#fff;">新手决斗者</span>
+    <!-- 收藏 -->
+    <div id="profile-tab-collection" class="profile-tab-content" style="display:none;">
+      <!-- 已获称号 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">已获称号</div>
+        <div id="profile-titles" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;">
+          <span style="padding:3px 8px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);border-radius:8px;color:#fff;">新手决斗者</span>
+        </div>
+      </div>
+
+      <!-- 已解锁成就 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">已解锁成就</div>
+        <div id="profile-achievements" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;">
+          <span style="color:var(--text-muted);">暂无成就</span>
+        </div>
+      </div>
+
+      <!-- 特殊卡片 -->
+      <div>
+        <div style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;">✨ 特殊卡片 <span style="font-size:9px;color:var(--text-muted);font-weight:normal;">（仅事件获取）</span></div>
+        <div id="profile-special-cards" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;">
+          <span style="color:var(--text-muted);">暂无特殊卡片</span>
+        </div>
       </div>
     </div>
 
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">已解锁成就</div>
-      <div id="profile-achievements" style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
-        <span style="color:var(--text-muted);">暂无成就</span>
+    <!-- 统计 -->
+    <div id="profile-tab-data" class="profile-tab-content" style="display:none;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:10px;margin-bottom:8px;">
+        <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">比赛胜利</div>
+          <div style="font-weight:bold;color:#fbbf24;font-size:12px;" id="profile-tournament-wins">0</div>
+        </div>
+        <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">大师决斗</div>
+          <div style="font-weight:bold;color:#8b5cf6;font-size:12px;" id="profile-master-duels">0</div>
+        </div>
+        <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">成就完成</div>
+          <div style="font-weight:bold;color:#10b981;font-size:12px;" id="profile-achievement-count">0/0</div>
+        </div>
+        <div style="padding:5px;background:var(--bg-card);border-radius:4px;text-align:center;">
+          <div style="color:var(--text-muted);">已获天赋</div>
+          <div style="font-weight:bold;color:#3b82f6;font-size:12px;" id="profile-talent-count">0</div>
+        </div>
+      </div>
+      <div style="padding:8px;background:var(--bg-card);border-radius:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:4px;">
+          <span style="color:var(--text-muted);">卡牌收藏构成</span>
+          <span style="color:var(--text-muted);" id="profile-card-total">共0张</span>
+        </div>
+        <div style="display:flex;gap:3px;height:6px;background:var(--bg-input);border-radius:3px;overflow:hidden;" id="profile-card-rarity-bar"></div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:3px;">
+          <span style="color:#9ca3af;">N <span id="profile-card-n">0</span></span>
+          <span style="color:#3b82f6;">R <span id="profile-card-r">0</span></span>
+          <span style="color:#8b5cf6;">SR <span id="profile-card-sr">0</span></span>
+          <span style="color:#f59e0b;">UR <span id="profile-card-ur">0</span></span>
+          <span style="color:#ef4444;">SP <span id="profile-card-sp">0</span></span>
+        </div>
       </div>
     </div>
 
-    <!-- 特殊卡片 -->
-    <div style="margin-bottom:16px;">
-      <div class="panel-title" style="margin-bottom:8px;">✨ 特殊卡片 <span style="font-size:10px;color:var(--text-muted);font-weight:normal;">（仅事件获取，提供属性加成）</span></div>
-      <div id="profile-special-cards" style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
-        <span style="color:var(--text-muted);">暂无特殊卡片</span>
-      </div>
-    </div>
-
-    <div style="text-align:center;margin-top:16px;">
+    <div style="text-align:center;margin-top:12px;">
       <button class="btn btn-secondary" style="width:100%;" onclick="closeProfileModal()">关闭</button>
     </div>
   </div>
@@ -6921,6 +7026,370 @@ const EVENTS = {
   ]
 };
 
+// ===== 各地点一次性随机事件（动态添加）=====
+(function addOneTimeEvents() {
+  const oneTimeEvents = {
+    // 龟游戏屋
+    "kame": [
+      {
+        "id": "kame_ot_01",
+        "name": "千年积木的低语",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "龟游戏屋",
+        "text": "你在店里偶然触碰到了武藤游戏的千年积木，一瞬间，你仿佛听到了来自远古的低语，一股神秘的力量涌入你的身体...",
+        "effects": [
+          { "type": "bonusStat", "stat": "soul", "amount": 3 },
+          { "type": "bonusStat", "stat": "luck", "amount": 2 }
+        ],
+        "log": "触碰千年积木，魂度+3，掏度+2"
+      },
+      {
+        "id": "kame_ot_02",
+        "name": "双六的珍藏",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "龟游戏屋",
+        "text": "双六爷爷神秘兮兮地把你拉到后院，从一个老旧的保险箱里取出一张卡片：\"这是我年轻时收藏的宝贝，看你是个可造之材，就送给你了。\"",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "SR" }
+        ],
+        "log": "从双六爷爷处获得了珍藏的SR卡【{cardName}】"
+      },
+      {
+        "id": "kame_ot_03",
+        "name": "暗游戏的指点",
+        "probability": 0.08,
+        "oneTime": true,
+        "title": "龟游戏屋",
+        "text": "当你独自在店里思考卡组构筑时，一个低沉的声音在你脑海中响起：\"你的卡组还缺少关键的一环...\" 是暗游戏！他在冥冥之中给了你一些决斗上的指点。",
+        "effects": [
+          { "type": "bonusStat", "stat": "intelligence", "amount": 4 },
+          { "type": "bonusStat", "stat": "proficiency", "amount": 3 }
+        ],
+        "log": "获得暗游戏的指点，情报力+4，熟练度+3"
+      }
+    ],
+    // 童实野卡牌店
+    "cardshop": [
+      {
+        "id": "cardshop_ot_01",
+        "name": "幸运的卡包",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "童实野卡牌店",
+        "text": "你在卡店的角落里发现了一个被遗忘的旧卡包，拆开一看，竟然是一张稀有卡！店员说这是最后一包了，算你运气好。",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "UR" }
+        ],
+        "log": "在卡店发现幸运卡包，获得了UR卡【{cardName}】"
+      },
+      {
+        "id": "cardshop_ot_02",
+        "name": "卡组构筑讲座",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "童实野卡牌店",
+        "text": "卡店今天举办了一场免费的卡组构筑讲座，你认真听完了全部内容，对卡组的理解有了质的飞跃。",
+        "effects": [
+          { "type": "bonusStat", "stat": "proficiency", "amount": 5 },
+          { "type": "addDuelPoints", "amount": 100 }
+        ],
+        "log": "参加卡组构筑讲座，熟练度+5，决斗点+100"
+      },
+      {
+        "id": "cardshop_ot_03",
+        "name": "以卡会友",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "童实野卡牌店",
+        "text": "你在卡店的自由决斗区遇到了一位志同道合的决斗者，你们进行了一场深入的卡组交流，还交换了联系方式。",
+        "effects": [
+          { "type": "bonusStat", "stat": "expand", "amount": 2 },
+          { "type": "bonusStat", "stat": "disrupt", "amount": 2 },
+          { "type": "addCardPoints", "amount": 5 }
+        ],
+        "log": "在卡店以卡会友，展开+2，干扰+2，卡点+5"
+      }
+    ],
+    // 海边码头
+    "beach": [
+      {
+        "id": "beach_ot_01",
+        "name": "漂流瓶中的卡",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "海边码头",
+        "text": "你在海边散步时，发现了一个漂流瓶，里面竟然装着一张卡片！卡片虽然有些旧了，但保存完好，似乎是某位决斗者留下的纪念。",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "R" },
+          { "type": "randomCardByRarity", "rarity": "SR" }
+        ],
+        "log": "在海边发现漂流瓶，获得了【{cardName}】等卡片"
+      },
+      {
+        "id": "beach_ot_02",
+        "name": "海边的冥想",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "海边码头",
+        "text": "你坐在海边的礁石上，听着海浪声，闭上眼睛冥想。海风拂过你的脸庞，你感觉内心变得无比平静，对决斗的理解也更深了一层。",
+        "effects": [
+          { "type": "bonusStat", "stat": "resist", "amount": 3 },
+          { "type": "bonusStat", "stat": "soul", "amount": 2 }
+        ],
+        "log": "在海边冥想，抗性+3，魂度+2"
+      },
+      {
+        "id": "beach_ot_03",
+        "name": "神秘的渔夫",
+        "probability": 0.08,
+        "oneTime": true,
+        "title": "海边码头",
+        "text": "一位老渔夫叫住了你，他说他年轻时也是个决斗者，并从怀里掏出一张卡片：\"这张卡跟了我很多年，现在我把它传给你，希望你能在决斗之路上走得更远。\"",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "UR" },
+          { "type": "bonusStat", "stat": "luck", "amount": 3 }
+        ],
+        "log": "从神秘渔夫处获得了UR卡【{cardName}】，掏度+3"
+      }
+    ],
+    // 童实野高中
+    "school": [
+      {
+        "id": "school_ot_01",
+        "name": "校园决斗大赛",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "童实野高中",
+        "text": "学校举办了校园决斗大赛，你一路过关斩将，最终获得了冠军！校长亲自为你颁奖，同学们都为你欢呼。",
+        "effects": [
+          { "type": "addDuelPoints", "amount": 300 },
+          { "type": "bonusStat", "stat": "power", "amount": 3 },
+          { "type": "randomCardByRarity", "rarity": "SR" }
+        ],
+        "log": "获得校园决斗大赛冠军，决斗点+300，强度+3，获得SR卡【{cardName}】"
+      },
+      {
+        "id": "school_ot_02",
+        "name": "图书馆的发现",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "童实野高中",
+        "text": "你在学校图书馆的角落里发现了一本古旧的决斗战术书籍，里面记载了很多失传的决斗技巧。你认真研读了一下午，收获颇丰。",
+        "effects": [
+          { "type": "bonusStat", "stat": "intelligence", "amount": 5 },
+          { "type": "bonusStat", "stat": "suppress", "amount": 2 }
+        ],
+        "log": "在图书馆发现古旧战术书，情报力+5，压制+2"
+      },
+      {
+        "id": "school_ot_03",
+        "name": "放学后的约定",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "童实野高中",
+        "text": "放学后，一位同学主动找你讨论卡组，你们在教室聊了很久，从卡组构筑到决斗战术，无所不谈。你们约定以后经常一起切磋。",
+        "effects": [
+          { "type": "bonusStat", "stat": "search", "amount": 2 },
+          { "type": "bonusStat", "stat": "expand", "amount": 2 },
+          { "type": "addCardPoints", "amount": 3 }
+        ],
+        "log": "与同学讨论卡组，检索+2，展开+2，卡点+3"
+      }
+    ],
+    // 童实野广场
+    "plaza": [
+      {
+        "id": "plaza_ot_01",
+        "name": "街头决斗王",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "童实野广场",
+        "text": "广场上正在举办街头决斗大赛，你报名参加并一路获胜，最终击败了所有对手，成为了今天的街头决斗王！围观的群众为你热烈鼓掌。",
+        "effects": [
+          { "type": "addDuelPoints", "amount": 400 },
+          { "type": "bonusStat", "stat": "power", "amount": 4 },
+          { "type": "randomCardByRarity", "rarity": "UR" }
+        ],
+        "log": "成为街头决斗王，决斗点+400，强度+4，获得UR卡【{cardName}】"
+      },
+      {
+        "id": "plaza_ot_02",
+        "name": "神秘的占卜师",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "童实野广场",
+        "text": "广场角落有一位神秘的占卜师，她叫住了你并为你占卜了一卦。她说你有着非凡的决斗天赋，但前路充满挑战。她送给你一张幸运符。",
+        "effects": [
+          { "type": "bonusStat", "stat": "luck", "amount": 5 },
+          { "type": "bonusStat", "stat": "soul", "amount": 3 }
+        ],
+        "log": "神秘占卜师为你占卜，掏度+5，魂度+3"
+      },
+      {
+        "id": "plaza_ot_03",
+        "name": "卡牌展览会",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "童实野广场",
+        "text": "广场上正在举办一场卡牌展览会，展出了各种稀有卡片和决斗历史文物。你仔细参观了每一个展位，对卡片的历史和价值有了更深的理解。",
+        "effects": [
+          { "type": "bonusStat", "stat": "intelligence", "amount": 3 },
+          { "type": "addCardPoints", "amount": 8 },
+          { "type": "addDuelPoints", "amount": 150 }
+        ],
+        "log": "参观卡牌展览会，情报力+3，卡点+8，决斗点+150"
+      }
+    ],
+    // 海马乐园
+    "kaiba": [
+      {
+        "id": "kaiba_ot_01",
+        "name": "海马的挑战",
+        "probability": 0.08,
+        "oneTime": true,
+        "title": "海马乐园",
+        "text": "你在海马乐园遇到了海马濑人本人！他看了一眼你的卡组，轻蔑地说：\"就凭这样的卡组也想挑战我？\" 但他还是给了你一些建议，并留下了一张卡片作为\"鼓励\"。",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "UR" },
+          { "type": "bonusStat", "stat": "suppress", "amount": 3 },
+          { "type": "bonusStat", "stat": "power", "amount": 2 }
+        ],
+        "log": "获得海马濑人的指点和UR卡【{cardName}】，压制+3，强度+2"
+      },
+      {
+        "id": "kaiba_ot_02",
+        "name": "高科技决斗模拟器",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "海马乐园",
+        "text": "海马乐园最新引进了一台高科技决斗模拟器，可以模拟各种决斗场景。你体验了一下，在虚拟决斗中与各种AI对手对战，技术提升飞快。",
+        "effects": [
+          { "type": "bonusStat", "stat": "proficiency", "amount": 6 },
+          { "type": "bonusStat", "stat": "disrupt", "amount": 2 }
+        ],
+        "log": "使用高科技决斗模拟器训练，熟练度+6，干扰+2"
+      },
+      {
+        "id": "kaiba_ot_03",
+        "name": "青眼的传承",
+        "probability": 0.06,
+        "oneTime": true,
+        "title": "海马乐园",
+        "text": "你在海马乐园的青眼白龙展区驻足良久，仿佛感受到了青眼白龙的灵魂。一位工作人员告诉你，只有真正被青眼认可的决斗者才能感受到这种力量。你获得了青眼的祝福。",
+        "effects": [
+          { "type": "bonusStat", "stat": "expand", "amount": 4 },
+          { "type": "bonusStat", "stat": "soul", "amount": 4 },
+          { "type": "randomCardByRarity", "rarity": "SR", "pool": ["m001", "m002", "m003"] }
+        ],
+        "log": "获得青眼的传承，展开+4，魂度+4，获得青眼系列卡【{cardName}】"
+      }
+    ],
+    // 地下决斗场
+    "underground": [
+      {
+        "id": "underground_ot_01",
+        "name": "黑暗中的王者",
+        "probability": 0.08,
+        "oneTime": true,
+        "title": "地下决斗场",
+        "text": "你在地下决斗场连战连胜，最终击败了这里的王者！全场沸腾，所有人都为你欢呼。地下决斗场的老板亲自接见了你，并给了你丰厚的奖励。",
+        "effects": [
+          { "type": "addDuelPoints", "amount": 500 },
+          { "type": "addCardPoints", "amount": 10 },
+          { "type": "randomCardByRarity", "rarity": "UR" }
+        ],
+        "log": "成为地下决斗场王者，决斗点+500，卡点+10，获得UR卡【{cardName}】"
+      },
+      {
+        "id": "underground_ot_02",
+        "name": "赌徒的直觉",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "地下决斗场",
+        "text": "在地下决斗场的氛围熏陶下，你对赌卡决斗有了更深的理解。你学会了如何在高压下保持冷静，如何在关键时刻做出正确的判断。你的赌徒直觉觉醒了。",
+        "effects": [
+          { "type": "bonusStat", "stat": "luck", "amount": 6 },
+          { "type": "bonusStat", "stat": "resist", "amount": 3 }
+        ],
+        "log": "赌徒的直觉觉醒，掏度+6，抗性+3"
+      },
+      {
+        "id": "underground_ot_03",
+        "name": "黑市商人",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "地下决斗场",
+        "text": "一位神秘的黑市商人找到了你，他说他有一些\"来路不明\"的稀有卡片，价格公道。你犹豫了一下，还是买了下来。虽然来源可疑，但卡片确实是真的。",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "SR" },
+          { "type": "randomCardByRarity", "rarity": "SR" },
+          { "type": "addDuelPoints", "amount": -100 }
+        ],
+        "log": "从黑市商人处购买了两张SR卡【{cardName}】等，花费100决斗点"
+      }
+    ],
+    // 中央公园
+    "park": [
+      {
+        "id": "park_ot_01",
+        "name": "公园的奇遇",
+        "probability": 0.12,
+        "oneTime": true,
+        "title": "中央公园",
+        "text": "你在公园的长椅上整理卡组时，一只可爱的小狗跑了过来，嘴里叼着一张卡片。它的主人追了过来，连连道歉，并把那张卡片送给了你作为赔礼。",
+        "effects": [
+          { "type": "randomCardByRarity", "rarity": "R" },
+          { "type": "randomCardByRarity", "rarity": "SR" },
+          { "type": "bonusStat", "stat": "luck", "amount": 2 }
+        ],
+        "log": "在公园遇到可爱小狗，获得了【{cardName}】等卡片，掏度+2"
+      },
+      {
+        "id": "park_ot_02",
+        "name": "大自然的启示",
+        "probability": 0.15,
+        "oneTime": true,
+        "title": "中央公园",
+        "text": "你在公园的树林中漫步，感受着大自然的气息。看着树叶随风飘落，你突然对决斗中的\"节奏\"有了新的理解。决斗就像自然一样，有起有落，有张有弛。",
+        "effects": [
+          { "type": "bonusStat", "stat": "search", "amount": 3 },
+          { "type": "bonusStat", "stat": "resist", "amount": 3 },
+          { "type": "bonusStat", "stat": "soul", "amount": 2 }
+        ],
+        "log": "从大自然中获得启示，检索+3，抗性+3，魂度+2"
+      },
+      {
+        "id": "park_ot_03",
+        "name": "退休决斗者的教诲",
+        "probability": 0.1,
+        "oneTime": true,
+        "title": "中央公园",
+        "text": "一位老人在公园的角落里看着你整理卡组，主动走过来和你聊天。他说他年轻时也是个决斗者，虽然现在不打了，但对决斗的热爱从未减退。他给你讲了很多当年的故事，并传授了一些宝贵的经验。",
+        "effects": [
+          { "type": "bonusStat", "stat": "proficiency", "amount": 4 },
+          { "type": "bonusStat", "stat": "intelligence", "amount": 3 },
+          { "type": "addCardPoints", "amount": 5 }
+        ],
+        "log": "聆听退休决斗者的教诲，熟练度+4，情报力+3，卡点+5"
+      }
+    ]
+  };
+
+  // 将一次性事件添加到对应地点
+  Object.keys(oneTimeEvents).forEach(locationId => {
+    if (EVENTS[locationId] && Array.isArray(EVENTS[locationId])) {
+      oneTimeEvents[locationId].forEach(event => {
+        // 避免重复添加
+        if (!EVENTS[locationId].find(e => e.id === event.id)) {
+          EVENTS[locationId].push(event);
+        }
+      });
+    }
+  });
+})();
+
 // ===== 兑换码数据 =====
 const REDEEM_CODES = [
   {
@@ -8050,6 +8519,152 @@ function calcCardPower(card) {
   );
 }
 
+// 判断是否为额外卡组卡
+function isExtraCard(card) {
+  if (!card) return false;
+  return card.type === 'extra' || (card.id && card.id.startsWith('e'));
+}
+
+// 判断是否为特殊卡（不可加入卡组）
+function isSpecialCard(card) {
+  if (!card) return false;
+  return card.type === 'special' || card.special === true || (card.id && card.id.startsWith('sp'));
+}
+
+// 统计卡组中同名卡数量
+function countCardInDeck(deck, cardId) {
+  return deck.filter(id => id === cardId).length;
+}
+
+// ===== 卡组一键优化（优先添加牌力高的卡）=====
+function optimizeDeck() {
+  if (!gameState.collection || gameState.collection.length === 0) {
+    showToast('牌库为空，无法优化');
+    return;
+  }
+
+  let addedCount = 0;
+  let replacedCount = 0;
+
+  // 获取牌库中所有可加入卡组的卡，按牌力加成排序
+  const availableCards = gameState.collection
+    .map(id => CARD_DB[id])
+    .filter(card => card && !isSpecialCard(card))
+    .map(card => ({ card, power: calcCardPower(card) }))
+    .sort((a, b) => b.power - a.power);
+
+  // 分离主卡组卡和额外卡组卡
+  const mainCards = availableCards.filter(item => !isExtraCard(item.card));
+  const extraCards = availableCards.filter(item => isExtraCard(item.card));
+
+  // ===== 优化主卡组 =====
+  const maxMain = 60 + getTalentBonus('maxMainDeck', 0);
+  const maxExtra = 15 + getTalentBonus('maxExtraDeck', 0);
+
+  // 如果主卡组未满，先添加高牌力卡
+  while (gameState.mainDeck.length < maxMain && mainCards.length > 0) {
+    let added = false;
+    for (let i = 0; i < mainCards.length; i++) {
+      const item = mainCards[i];
+      const count = countCardInDeck(gameState.mainDeck, item.card.id);
+      if (count < 3) {
+        gameState.mainDeck.push(item.card.id);
+        addedCount++;
+        added = true;
+        break;
+      }
+    }
+    if (!added) break; // 所有卡都已满3张
+  }
+
+  // 如果主卡组已满，尝试用高牌力卡替换低牌力卡
+  if (gameState.mainDeck.length >= maxMain) {
+    // 计算当前卡组中每张卡的牌力，找到最低的
+    const deckWithPower = gameState.mainDeck.map((id, index) => ({
+      id,
+      index,
+      power: calcCardPower(CARD_DB[id])
+    })).sort((a, b) => a.power - b.power);
+
+    // 尝试替换
+    for (const lowItem of deckWithPower) {
+      let replaced = false;
+      for (const highItem of mainCards) {
+        // 高牌力卡必须比低牌力卡高，且同名卡数量<3
+        if (highItem.power > lowItem.power) {
+          const count = countCardInDeck(gameState.mainDeck, highItem.card.id);
+          // 如果要替换的卡就是这张卡本身，跳过
+          if (highItem.card.id === lowItem.id) continue;
+          if (count < 3) {
+            gameState.mainDeck[lowItem.index] = highItem.card.id;
+            replacedCount++;
+            replaced = true;
+            break;
+          }
+        } else {
+          break; // 已经按牌力排序，后面的更低，不用看了
+        }
+      }
+      if (replaced) break; // 一次只替换一张，避免过度调整
+    }
+  }
+
+  // ===== 优化额外卡组 =====
+  while (gameState.extraDeck.length < maxExtra && extraCards.length > 0) {
+    let added = false;
+    for (let i = 0; i < extraCards.length; i++) {
+      const item = extraCards[i];
+      const count = countCardInDeck(gameState.extraDeck, item.card.id);
+      if (count < 3) {
+        gameState.extraDeck.push(item.card.id);
+        addedCount++;
+        added = true;
+        break;
+      }
+    }
+    if (!added) break;
+  }
+
+  // 额外卡组替换
+  if (gameState.extraDeck.length >= maxExtra) {
+    const deckWithPower = gameState.extraDeck.map((id, index) => ({
+      id,
+      index,
+      power: calcCardPower(CARD_DB[id])
+    })).sort((a, b) => a.power - b.power);
+
+    for (const lowItem of deckWithPower) {
+      let replaced = false;
+      for (const highItem of extraCards) {
+        if (highItem.power > lowItem.power) {
+          const count = countCardInDeck(gameState.extraDeck, highItem.card.id);
+          if (highItem.card.id === lowItem.id) continue;
+          if (count < 3) {
+            gameState.extraDeck[lowItem.index] = highItem.card.id;
+            replacedCount++;
+            replaced = true;
+            break;
+          }
+        } else {
+          break;
+        }
+      }
+      if (replaced) break;
+    }
+  }
+
+  saveGame();
+  updateAllDisplays();
+  renderDeckView();
+
+  const totalChanges = addedCount + replacedCount;
+  if (totalChanges > 0) {
+    showToast(`卡组优化完成！添加${addedCount}张，替换${replacedCount}张`);
+  } else {
+    showToast('卡组已是最优配置，无需调整');
+  }
+}
+
 // ===== 卡组计数 =====
 function getMainDeckCount() { return gameState.mainDeck.length; }
 function getExtraDeckCount() { return gameState.extraDeck.length; }
@@ -8810,11 +9425,27 @@ function confirmNameInput() {
 function openProfileModal() {
   if (!gameState) return;
   updateProfileModal();
+  // 默认显示概览标签页
+  switchProfileTab('overview');
   document.getElementById('profile-modal').style.display = 'flex';
 }
 
 function closeProfileModal() {
   document.getElementById('profile-modal').style.display = 'none';
+}
+
+// 切换个人主页标签页
+function switchProfileTab(tabName) {
+  // 切换标签按钮状态
+  document.querySelectorAll('.profile-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.profileTab === tabName);
+  });
+  // 切换内容显示
+  document.querySelectorAll('.profile-tab-content').forEach(content => {
+    content.style.display = 'none';
+  });
+  const targetContent = document.getElementById('profile-tab-' + tabName);
+  if (targetContent) targetContent.style.display = 'block';
 }
 
 function updateProfileModal() {
@@ -8831,6 +9462,8 @@ function updateProfileModal() {
   // 牌力
   const power = getDuelPower();
   document.getElementById('profile-power').textContent = Math.floor(power);
+  const powerMini = document.getElementById('profile-power-mini');
+  if (powerMini) powerMini.textContent = '牌力 ' + Math.floor(power);
 
   // 决斗战绩
   const total = gameState.wins + gameState.losses;
@@ -8838,6 +9471,44 @@ function updateProfileModal() {
   document.getElementById('profile-wins').textContent = gameState.wins;
   document.getElementById('profile-losses').textContent = gameState.losses;
   document.getElementById('profile-winrate').textContent = total > 0 ? Math.floor(gameState.wins / total * 100) + '%' : '0%';
+
+  // 数据统计
+  document.getElementById('profile-tournament-wins').textContent = (gameState.tournamentWins || []).length;
+  document.getElementById('profile-master-duels').textContent = gameState.masterDuelCount || 0;
+  document.getElementById('profile-achievement-count').textContent = (gameState.achievements || []).length + '/' + (typeof ACHIEVEMENTS !== 'undefined' ? ACHIEVEMENTS.length : 0);
+  const talentCount = (gameState.talents || []).length + (gameState.unlockedTalents || []).length;
+  document.getElementById('profile-talent-count').textContent = talentCount;
+
+  // 卡牌收藏构成统计
+  const rarityCount = { N: 0, R: 0, SR: 0, UR: 0, SP: 0 };
+  (gameState.collection || []).forEach(id => {
+    const card = CARD_DB[id];
+    if (card) {
+      const rarity = card.rarity || 'N';
+      if (rarityCount[rarity] !== undefined) rarityCount[rarity]++;
+      else rarityCount.N++;
+    }
+  });
+  const totalCards = gameState.collection.length;
+  document.getElementById('profile-card-total').textContent = '共' + totalCards + '张';
+  document.getElementById('profile-card-n').textContent = rarityCount.N;
+  document.getElementById('profile-card-r').textContent = rarityCount.R;
+  document.getElementById('profile-card-sr').textContent = rarityCount.SR;
+  document.getElementById('profile-card-ur').textContent = rarityCount.UR;
+  document.getElementById('profile-card-sp').textContent = rarityCount.SP;
+
+  // 稀有度进度条
+  const rarityBar = document.getElementById('profile-card-rarity-bar');
+  if (rarityBar && totalCards > 0) {
+    const colors = { N: '#9ca3af', R: '#3b82f6', SR: '#8b5cf6', UR: '#f59e0b', SP: '#ef4444' };
+    rarityBar.innerHTML = Object.entries(rarityCount).map(([rarity, count]) => {
+      if (count === 0) return '';
+      const percent = (count / totalCards * 100).toFixed(1);
+      return `<div style="width:${percent}%;background:${colors[rarity]};" title="${rarity}: ${count}张 (${percent}%)"></div>`;
+    }).join('');
+  } else if (rarityBar) {
+    rarityBar.innerHTML = '';
+  }
 
   // 主属性
   const stats = getTotalStats();
@@ -9245,6 +9916,7 @@ function showStatDetail(statKey) {
         ${info.duelEffect.map(e => `<li>${e}</li>`).join('')}
       </ul>
     </div>
+    ${generateResonanceHTML(statKey)}
   `;
   
   document.getElementById('stat-detail-modal').style.display = 'flex';
@@ -9252,6 +9924,82 @@ function showStatDetail(statKey) {
 
 function closeStatDetail() {
   document.getElementById('stat-detail-modal').style.display = 'none';
+}
+
+// 生成卡组共鸣HTML（嵌入属性弹窗）
+function generateResonanceHTML(statKey) {
+  const unlocked = (gameState.masterDuelCount || 0) > 0;
+  if (!unlocked) return '';
+
+  const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制' };
+  const statColors = { search:'var(--accent-blue-light)', expand:'var(--accent-green-light)', disrupt:'var(--accent-red-light)', resist:'var(--accent-purple-light)', suppress:'var(--accent-gold-light)' };
+  const level = (gameState.resonanceBonus && gameState.resonanceBonus[statKey]) || 0;
+  const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
+  const cardPoints = gameState.cardPoints || 0;
+  const statName = statNames[statKey] || statKey;
+  const statColor = statColors[statKey] || 'var(--text)';
+
+  // 计算各档位可升级次数
+  const maxAfford = Math.floor(cardPoints / cost);
+  const can10 = maxAfford >= 10;
+  const can50 = maxAfford >= 50;
+  const can100 = maxAfford >= 100;
+  const can1 = maxAfford >= 1;
+
+  return `
+    <div style="margin-top:16px; padding:12px; background:linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,107,107,0.05)); border-radius:8px; border:1px solid rgba(255,215,0,0.2);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:13px; font-weight:bold; color:var(--accent-gold);">🔮 卡组共鸣</span>
+        <span style="font-size:11px; color:var(--text-muted);">卡点：<strong style="color:var(--accent-gold);">${cardPoints}</strong></span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:12px; color:var(--text-secondary);">${statName} 共鸣等级</span>
+        <span style="font-size:18px; font-weight:bold; color:${statColor};">Lv.${level} (+${level})</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+        <button class="btn btn-primary" style="font-size:11px; padding:6px; ${can1 ? '' : 'opacity:0.4; cursor:not-allowed;'}" onclick="upgradeResonance('${statKey}', 1)">
+          单次 (${cost}卡点)
+        </button>
+        <button class="btn btn-primary" style="font-size:11px; padding:6px; background:linear-gradient(135deg,#3b82f6,#8b5cf6); ${can10 ? '' : 'opacity:0.4; cursor:not-allowed;'}" onclick="upgradeResonance('${statKey}', 10)">
+          10连 (${cost * 10}卡点)
+        </button>
+        <button class="btn btn-primary" style="font-size:11px; padding:6px; background:linear-gradient(135deg,#8b5cf6,#f59e0b); ${can50 ? '' : 'opacity:0.4; cursor:not-allowed;'}" onclick="upgradeResonance('${statKey}', 50)">
+          50连 (${cost * 50}卡点)
+        </button>
+        <button class="btn btn-primary" style="font-size:11px; padding:6px; background:linear-gradient(135deg,#f59e0b,#ef4444); ${can100 ? '' : 'opacity:0.4; cursor:not-allowed;'}" onclick="upgradeResonance('${statKey}', 100)">
+          100连 (${cost * 100}卡点)
+        </button>
+      </div>
+      <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;">
+        每级消耗${cost}卡点，+1 ${statName} 属性 · 当前可升级 ${maxAfford} 级 · 主属性 = 天赋 + 成就 + 卡组 + 共鸣
+      </div>
+    </div>
+  `;
+}
+
+// 升级卡组共鸣（支持批量升级）
+function upgradeResonance(statKey, count) {
+  count = count || 1;
+  const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制' };
+  const level = (gameState.resonanceBonus && gameState.resonanceBonus[statKey]) || 0;
+  const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
+  const totalCost = cost * count;
+  const cardPoints = gameState.cardPoints || 0;
+
+  if (cardPoints < totalCost) {
+    showToast(`卡点不足，需要 ${totalCost} 卡点`);
+    return;
+  }
+
+  gameState.cardPoints = cardPoints - totalCost;
+  if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
+  gameState.resonanceBonus[statKey] = level + count;
+  saveGame();
+  updateAllDisplays();
+  renderDeckView();
+  // 刷新当前弹窗
+  showStatDetail(statKey);
+  showToast(`${statNames[statKey] || statKey} 共鸣 ${count}连升级！Lv.${level} → Lv.${level + count}`);
 }
 
 function togglePowerFormula() {
@@ -10471,6 +11219,28 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
     onFinish: onFinish || null,
     noReward: noReward || false,
     winRate: initialWinRate, // 局内隐藏胜率属性
+    tactic: 'balanced', // 当前战术：aggressive/balanced/defensive
+    waitingForTactic: false, // 是否等待玩家选择战术
+    battleStats: { // 战斗统计数据
+      totalPlayerDamage: 0,
+      totalOpponentDamage: 0,
+      playerOutputByTurn: [],
+      opponentOutputByTurn: [],
+      eventsTriggered: 0,
+      eventNames: [],
+      disruptSuccess: 0,
+      disruptAttempt: 0,
+      suppressSuccess: 0,
+      suppressAttempt: 0,
+      perfectExpand: 0,
+      normalExpand: 0,
+      failedExpand: 0,
+      opponentPerfectExpand: 0,
+      opponentNormalExpand: 0,
+      opponentFailedExpand: 0,
+      maxPlayerField: 0,
+      maxOpponentField: 0,
+    }
   };
 
   // 自动切换到决斗页面
@@ -10491,8 +11261,18 @@ function startDuel(mode, gamble, customOpponent, onFinish, noReward) {
   document.getElementById('duel-result-area').style.display = 'none';
   document.getElementById('duel-actions').innerHTML = '<button class="btn btn-secondary" onclick="exitDuel()">投降</button>';
 
-  addDuelLog(`决斗开始！对手是【${opponent.name}】`, 'turn');
-  runDuelTurn();
+  // 显示对手行为模式
+  const styleNames = { expand: '展开型', disrupt: '干扰型', beat: '防御型', balance: '均衡型' };
+  document.getElementById('duel-opponent-style').textContent = styleNames[opponent.playStyle || 'balance'] || '均衡型';
+
+  // 显示场面可视化
+  document.getElementById('duel-field-visual').style.display = 'block';
+  updateFieldVisual(50, 50, '势均力敌');
+
+  addDuelLog(`决斗开始！对手是【${opponent.name}】（${styleNames[opponent.playStyle || 'balance'] || '均衡型'}）`, 'turn');
+
+  // 第一回合先让玩家选择战术
+  showTacticSelect();
 }
 
 function addDuelLog(text, cls) {
@@ -10505,10 +11285,80 @@ function addDuelLog(text, cls) {
   currentDuel.log.push(text);
 }
 
+// ===== 战术选择系统 =====
+function showTacticSelect() {
+  if (!currentDuel || currentDuel.finished) return;
+  currentDuel.waitingForTactic = true;
+  const tacticSelect = document.getElementById('duel-tactic-select');
+  tacticSelect.style.display = 'block';
+  // 高亮当前战术
+  document.querySelectorAll('.tactic-btn').forEach(btn => {
+    if (btn.dataset.tactic === currentDuel.tactic) {
+      btn.style.background = 'var(--accent-gold)';
+      btn.style.color = '#000';
+    } else {
+      btn.style.background = '';
+      btn.style.color = '';
+    }
+  });
+}
+
+function selectTactic(tactic) {
+  if (!currentDuel || !currentDuel.waitingForTactic) return;
+  currentDuel.tactic = tactic;
+  currentDuel.waitingForTactic = false;
+  document.getElementById('duel-tactic-select').style.display = 'none';
+
+  const tacticNames = { aggressive: '⚔️ 进攻', balanced: '⚖️ 均衡', defensive: '🛡️ 防守' };
+  document.getElementById('duel-player-tactic').textContent = tacticNames[tactic] || '';
+  addDuelLog(`你选择了【${tacticNames[tactic]}】战术`, 'turn');
+
+  // 延迟一帧后开始战斗回合
+  setTimeout(() => runDuelTurn(), 300);
+}
+
+// 绑定战术按钮点击事件
+document.addEventListener('click', (e) => {
+  const tacticBtn = e.target.closest('.tactic-btn');
+  if (tacticBtn && tacticBtn.dataset.tactic) {
+    selectTactic(tacticBtn.dataset.tactic);
+  }
+});
+
+// ===== 场面可视化 =====
+function updateFieldVisual(playerPercent, opponentPercent, statusText) {
+  const playerBar = document.getElementById('duel-player-field-bar');
+  const opponentBar = document.getElementById('duel-opponent-field-bar');
+  const statusEl = document.getElementById('duel-field-status');
+  if (playerBar) playerBar.style.width = playerPercent + '%';
+  if (opponentBar) opponentBar.style.width = opponentPercent + '%';
+  if (statusEl) {
+    statusEl.textContent = statusText;
+    if (playerPercent > 60) statusEl.style.color = 'var(--accent-green-light)';
+    else if (opponentPercent > 60) statusEl.style.color = 'var(--accent-red-light)';
+    else statusEl.style.color = 'var(--text-muted)';
+  }
+}
+
+// 获取战术加成
+function getTacticBonus(tactic) {
+  switch(tactic) {
+    case 'aggressive':
+      return { outputMult: 1.3, resistMult: 0.8, name: '进攻' };
+    case 'defensive':
+      return { outputMult: 0.8, resistMult: 1.3, name: '防守' };
+    default:
+      return { outputMult: 1.0, resistMult: 1.0, name: '均衡' };
+  }
+}
+
 function runDuelTurn() {
   if (currentDuel.finished) return;
+  // 如果正在等待玩家选择战术，不执行战斗
+  if (currentDuel.waitingForTactic) return;
 
   const stats = getTotalStats();
+  const tacticBonus = getTacticBonus(currentDuel.tactic);
   
   // 副属性标签加成（提前声明，避免暂时性死区）
   const subTagBonus = getSubTagBonus();
@@ -10554,8 +11404,8 @@ function runDuelTurn() {
     const oppDisruptSuccess = Math.random() < Math.min(0.8, 0.25 + oppDisrupt * 0.01 + oppSoul * 0.005);
     let playerSearchMult = 1.0, playerExpandMult = 1.0;
     if (oppDisruptSuccess) {
-      // 玩家抗性降低对手干扰效果（副属性标签抗性加成）
-      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      // 玩家抗性降低对手干扰效果（副属性标签抗性加成 + 战术加成）
+      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult * tacticBonus.resistMult;
       const resistDenom = 1 + playerResist * 0.025 + (stats.power || 0) * 0.015;
       const disruptFactor = Math.min(0.35, oppDisruptPower * 0.012 / resistDenom);
       playerSearchMult = 1 - disruptFactor * 0.5;
@@ -10567,7 +11417,7 @@ function runDuelTurn() {
     const oppSuppressPower = (oppSuppress + oppSoul * 0.3) * styleSuppressMult * opponentPowerFactor;
     const oppSuppressSuccess = Math.random() < Math.min(0.7, 0.18 + oppSuppress * 0.01 + oppSoul * 0.005);
     if (oppSuppressSuccess) {
-      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      const playerResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult * tacticBonus.resistMult;
       const suppressDenom = 1 + playerResist * 0.025 + (stats.power || 0) * 0.015;
       const suppressFactor = Math.min(0.5, oppSuppressPower * 0.015 / suppressDenom);
       playerExpandMult *= (1 - suppressFactor);
@@ -10589,8 +11439,8 @@ function runDuelTurn() {
     const proficiencyFactor = 1 + (stats.proficiency || 0) * 0.003;
     // 魂度小幅影响输出和干扰压制
     const luckSoulFactor = 1 + (stats.soul || 0) * 0.0015;
-    // 计算玩家本回合输出（牌力差距系数影响）
-    let playerGen = baseOutput * powerFactor * searchExpandFactor * proficiencyFactor * luckSoulFactor * subTagBonus.powerGrowthMult * playerPowerFactor;
+    // 计算玩家本回合输出（牌力差距系数影响 + 战术加成）
+    let playerGen = baseOutput * powerFactor * searchExpandFactor * proficiencyFactor * luckSoulFactor * subTagBonus.powerGrowthMult * playerPowerFactor * tacticBonus.outputMult;
 
     // 展开成功率判定（掏度和魂度提高完美展开/幸运事件概率，打牌高手标签加成）
     const expandRoll = Math.random();
@@ -10599,12 +11449,15 @@ function runDuelTurn() {
 
     if (expandGreat) {
       playerGen *= 2.0;
+      currentDuel.battleStats.perfectExpand++;
       addDuelLog('✨ 完美展开！核心Combo全部达成，场面优势巨大！');
     } else if (expandSuccess) {
       playerGen *= 1.0;
+      currentDuel.battleStats.normalExpand++;
       addDuelLog('你完成了常规展开，场面稳步建立。');
     } else {
       playerGen *= 0.3;
+      currentDuel.battleStats.failedExpand++;
       addDuelLog('你的展开受到一些干扰，但还是做出了场面。');
     }
 
@@ -10650,13 +11503,15 @@ function runDuelTurn() {
       const disruptPower = ((stats.disrupt || 0) * 1.0 + (stats.intelligence || 0) * 0.4 + (stats.soul || 0) * 0.3) * pBonus.disruptMult * pSubBonus.disruptEffectMult * playerPowerFactor;
       const disruptSuccessRate = Math.min(0.95, 0.35 + (stats.disrupt || 0) * 0.015 + (stats.intelligence || 0) * 0.008 + (stats.soul || 0) * 0.005);
       const disruptSuccess = Math.random() < disruptSuccessRate;
+      currentDuel.battleStats.disruptAttempt++;
 
       let effectiveOppSearch = oppSearch;
       let effectiveOppExpand = oppExpand;
 
       if (disruptSuccess) {
+        currentDuel.battleStats.disruptSuccess++;
         // 抗性降低干扰效果（倒数形式，不会完全免疫），玩家抗性+标签加成
-        const playerResistEffective = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * pBonus.resistMult * pSubBonus.resistMult;
+        const playerResistEffective = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * pBonus.resistMult * pSubBonus.resistMult * tacticBonus.resistMult;
         const resistDenominator = 1 + oppResist * 0.025 + oppPower * 0.015;
         const disruptFactor = Math.min(0.4, disruptPower * 0.012 / resistDenominator);
         effectiveOppSearch *= (1 - disruptFactor * 0.5); // 小幅影响检索
@@ -10668,8 +11523,10 @@ function runDuelTurn() {
       const suppressPower = ((stats.suppress || 0) * 0.9 + (stats.intelligence || 0) * 0.4 + (stats.soul || 0) * 0.3) * pBonus.suppressMult * pSubBonus.suppressEffectMult * playerPowerFactor;
       const suppressSuccessRate = Math.min(0.95, 0.25 + (stats.suppress || 0) * 0.015 + (stats.intelligence || 0) * 0.008 + (stats.soul || 0) * 0.005);
       const suppressSuccess = Math.random() < suppressSuccessRate;
+      currentDuel.battleStats.suppressAttempt++;
 
       if (suppressSuccess) {
+        currentDuel.battleStats.suppressSuccess++;
         const suppressDenominator = 1 + oppResist * 0.025 + oppPower * 0.015;
         const suppressFactor = Math.min(0.6, suppressPower * 0.015 / suppressDenominator);
         effectiveOppExpand *= (1 - suppressFactor);
@@ -10703,12 +11560,15 @@ function runDuelTurn() {
 
       if (oppExpandGreat) {
         opponentGen *= 2.0;
+        currentDuel.battleStats.opponentPerfectExpand++;
         addDuelLog(`✨ ${currentDuel.opponent.name}完美展开！核心Combo全部达成，场面优势巨大！`);
       } else if (oppExpandSuccess) {
         opponentGen *= 1.0;
+        currentDuel.battleStats.opponentNormalExpand++;
         addDuelLog(`${currentDuel.opponent.name}完成了常规展开，场面稳步建立。`);
       } else {
         opponentGen *= 0.3;
+        currentDuel.battleStats.opponentFailedExpand++;
         addDuelLog(`${currentDuel.opponent.name}的展开受到一些干扰，但还是做出了场面。`);
       }
 
@@ -10725,8 +11585,8 @@ function runDuelTurn() {
       playerGen = Math.min(playerGen, maxOutput);
       opponentGen = Math.min(opponentGen, maxOutput);
 
-      // 计算双方有效抗性（作为防御属性，减免受到的伤害）
-      const playerEffectiveResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult;
+      // 计算双方有效抗性（作为防御属性，减免受到的伤害 + 战术加成）
+      const playerEffectiveResist = ((stats.resist || 0) + (stats.intelligence || 0) * 0.5) * subTagBonus.resistMult * tacticBonus.resistMult;
       const opponentEffectiveResist = oppResist;
 
       // 压制穿透：压制属性降低对方有效抗性（相当于护甲穿透）
@@ -10756,6 +11616,8 @@ function runDuelTurn() {
       }
       playerDamage = Math.round(playerDamage);
       currentDuel.opponentPower -= playerDamage;
+      currentDuel.battleStats.totalPlayerDamage += playerDamage;
+      currentDuel.battleStats.playerOutputByTurn.push(Math.round(playerGen));
 
       // 对手对玩家造成伤害（抗性减免前的原始伤害）
       const opponentRawDamage = Math.max(minDamage, opponentGen);
@@ -10767,6 +11629,23 @@ function runDuelTurn() {
       }
       opponentDamage = Math.round(opponentDamage);
       currentDuel.playerPower -= opponentDamage;
+      currentDuel.battleStats.totalOpponentDamage += opponentDamage;
+      currentDuel.battleStats.opponentOutputByTurn.push(Math.round(opponentGen));
+
+      // 更新场面可视化（基于双方本回合输出比例）
+      const totalGen = playerGen + opponentGen;
+      const playerFieldPercent = totalGen > 0 ? Math.round((playerGen / totalGen) * 100) : 50;
+      const opponentFieldPercent = 100 - playerFieldPercent;
+      let fieldStatus = '势均力敌';
+      if (playerFieldPercent >= 70) fieldStatus = '场面大优';
+      else if (playerFieldPercent >= 55) fieldStatus = '场面占优';
+      else if (opponentFieldPercent >= 70) fieldStatus = '场面大劣';
+      else if (opponentFieldPercent >= 55) fieldStatus = '场面劣势';
+      updateFieldVisual(playerFieldPercent, opponentFieldPercent, fieldStatus);
+
+      // 记录最大场面优势
+      currentDuel.battleStats.maxPlayerField = Math.max(currentDuel.battleStats.maxPlayerField, playerFieldPercent);
+      currentDuel.battleStats.maxOpponentField = Math.max(currentDuel.battleStats.maxOpponentField, opponentFieldPercent);
 
       // 战斗日志
       const playerPenInfo = playerPenetration > 0 ? `，穿透减免${Math.round(playerPenetration)}点抗性` : '';
@@ -10787,8 +11666,9 @@ function runDuelTurn() {
       const currentAchievementWinRate = getAchievementWinRateBonus();
       currentDuel.winRate = currentBaseWinRate + currentTalentWinRate + currentAchievementWinRate;
 
-      // 胜率达到100%直接赢得对局
-      if (currentDuel.winRate >= 100 && currentDuel.playerPower > 0) {
+      // 胜率达到100%时有概率直接赢得对局（默认触发率5%，避免过早结束战斗）
+      const winRateOtkRate = GAME_CONFIG.winRateOtkRate || 0.05;
+      if (currentDuel.winRate >= 100 && currentDuel.playerPower > 0 && Math.random() < winRateOtkRate) {
         addDuelLog(`🏆 胜率达到100%！对手已无翻盘可能，你赢得了这场决斗！（当前胜率：${currentDuel.winRate.toFixed(1)}%）`, 'win');
         finishDuel();
         return;
@@ -10820,7 +11700,8 @@ function runDuelTurn() {
           }
           finishDuel();
         } else {
-          setTimeout(() => runDuelTurn(), 600);
+          // 战斗未结束，显示战术选择界面让玩家选择下一回合战术
+          setTimeout(() => showTacticSelect(), 800);
         }
       }
     }, 700);
@@ -10944,7 +11825,120 @@ function triggerBattleEvent(stats, callback) {
     addDuelLog(`${selectedEvent.icon || '✨'} ${selectedEvent.log}`, 'event');
   }
 
+  // 记录战斗统计
+  if (currentDuel && currentDuel.battleStats) {
+    currentDuel.battleStats.eventsTriggered++;
+    currentDuel.battleStats.eventNames.push(selectedEvent.name);
+  }
+
   if (callback) callback(bonus, damage);
+}
+
+// ===== 战斗数据分析 =====
+function generateBattleAnalysisHTML() {
+  if (!currentDuel || !currentDuel.battleStats) return '';
+  const bs = currentDuel.battleStats;
+  const totalTurns = currentDuel.turn - 1;
+
+  // 展开成功率
+  const playerTotalExpand = bs.perfectExpand + bs.normalExpand + bs.failedExpand;
+  const playerPerfectRate = playerTotalExpand > 0 ? Math.round(bs.perfectExpand / playerTotalExpand * 100) : 0;
+  const playerSuccessRate = playerTotalExpand > 0 ? Math.round((bs.perfectExpand + bs.normalExpand) / playerTotalExpand * 100) : 0;
+  const oppTotalExpand = bs.opponentPerfectExpand + bs.opponentNormalExpand + bs.opponentFailedExpand;
+  const oppPerfectRate = oppTotalExpand > 0 ? Math.round(bs.opponentPerfectExpand / oppTotalExpand * 100) : 0;
+  const oppSuccessRate = oppTotalExpand > 0 ? Math.round((bs.opponentPerfectExpand + bs.opponentNormalExpand) / oppTotalExpand * 100) : 0;
+
+  // 干扰压制成功率
+  const disruptRate = bs.disruptAttempt > 0 ? Math.round(bs.disruptSuccess / bs.disruptAttempt * 100) : 0;
+  const suppressRate = bs.suppressAttempt > 0 ? Math.round(bs.suppressSuccess / bs.suppressAttempt * 100) : 0;
+
+  // 平均每回合输出
+  const avgPlayerOutput = bs.playerOutputByTurn.length > 0 ? Math.round(bs.playerOutputByTurn.reduce((a,b) => a+b, 0) / bs.playerOutputByTurn.length) : 0;
+  const avgOpponentOutput = bs.opponentOutputByTurn.length > 0 ? Math.round(bs.opponentOutputByTurn.reduce((a,b) => a+b, 0) / bs.opponentOutputByTurn.length) : 0;
+
+  // 事件列表（去重并统计次数）
+  const eventCounts = {};
+  bs.eventNames.forEach(name => { eventCounts[name] = (eventCounts[name] || 0) + 1; });
+  const eventListHTML = Object.entries(eventCounts).map(([name, count]) =>
+    `<span style="display:inline-block; background:var(--bg-card); padding:2px 8px; border-radius:4px; margin:2px; font-size:11px;">${name} ×${count}</span>`
+  ).join('') || '<span style="color:var(--text-muted); font-size:11px;">无</span>';
+
+  return `
+    <div style="padding:0 4px;">
+      <!-- 战斗概览 -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+        <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
+          <div style="font-size:10px; color:var(--text-muted);">回合数</div>
+          <div style="font-size:18px; font-weight:bold; color:var(--text);">${totalTurns}</div>
+        </div>
+        <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
+          <div style="font-size:10px; color:var(--text-muted);">最终胜率</div>
+          <div style="font-size:18px; font-weight:bold; color:var(--accent-gold);">${currentDuel.winRate.toFixed(1)}%</div>
+        </div>
+        <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
+          <div style="font-size:10px; color:var(--accent-green-light);">你的总伤害</div>
+          <div style="font-size:16px; font-weight:bold; color:var(--accent-green-light);">${bs.totalPlayerDamage}</div>
+        </div>
+        <div style="background:var(--bg); padding:10px; border-radius:8px; text-align:center;">
+          <div style="font-size:10px; color:var(--accent-red-light);">对方总伤害</div>
+          <div style="font-size:16px; font-weight:bold; color:var(--accent-red-light);">${bs.totalOpponentDamage}</div>
+        </div>
+      </div>
+
+      <!-- 展开统计 -->
+      <div style="margin-bottom:14px; padding:10px; background:var(--bg); border-radius:8px;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:6px;">🎴 展开统计</div>
+        <div style="font-size:11px; color:var(--text-secondary); line-height:1.9;">
+          <div style="display:flex; justify-content:space-between;"><span>你：完美展开</span><span style="color:var(--accent-gold);">${bs.perfectExpand}次 (${playerPerfectRate}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>你：展开成功率</span><span style="color:var(--accent-green-light);">${playerSuccessRate}%</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>你：展开失败</span><span style="color:var(--accent-red-light);">${bs.failedExpand}次</span></div>
+          <div style="border-top:1px solid var(--border); margin:6px 0;"></div>
+          <div style="display:flex; justify-content:space-between;"><span>对方：完美展开</span><span style="color:var(--accent-gold);">${bs.opponentPerfectExpand}次 (${oppPerfectRate}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>对方：展开成功率</span><span style="color:var(--accent-green-light);">${oppSuccessRate}%</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>对方：展开失败</span><span style="color:var(--accent-red-light);">${bs.opponentFailedExpand}次</span></div>
+        </div>
+      </div>
+
+      <!-- 干扰压制统计 -->
+      <div style="margin-bottom:14px; padding:10px; background:var(--bg); border-radius:8px;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:6px;">⚡ 干扰压制</div>
+        <div style="font-size:11px; color:var(--text-secondary); line-height:1.9;">
+          <div style="display:flex; justify-content:space-between;"><span>干扰成功率</span><span style="color:var(--accent-gold);">${bs.disruptSuccess}/${bs.disruptAttempt}次 (${disruptRate}%)</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>压制成功率</span><span style="color:var(--accent-gold);">${bs.suppressSuccess}/${bs.suppressAttempt}次 (${suppressRate}%)</span></div>
+        </div>
+      </div>
+
+      <!-- 输出统计 -->
+      <div style="margin-bottom:14px; padding:10px; background:var(--bg); border-radius:8px;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:6px;">💥 平均输出</div>
+        <div style="font-size:11px; color:var(--text-secondary); line-height:1.9;">
+          <div style="display:flex; justify-content:space-between;"><span>你的平均输出</span><span style="color:var(--accent-green-light);">${avgPlayerOutput}/回合</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>对方平均输出</span><span style="color:var(--accent-red-light);">${avgOpponentOutput}/回合</span></div>
+          <div style="display:flex; justify-content:space-between;"><span>你的最大场面优势</span><span style="color:var(--accent-gold);">${bs.maxPlayerField}%</span></div>
+        </div>
+      </div>
+
+      <!-- 事件统计 -->
+      <div style="padding:10px; background:var(--bg); border-radius:8px;">
+        <div style="font-size:12px; font-weight:600; color:var(--text); margin-bottom:6px;">✨ 战斗事件 (${bs.eventsTriggered}次)</div>
+        <div style="font-size:11px; color:var(--text-secondary);">${eventListHTML}</div>
+      </div>
+    </div>
+  `;
+}
+
+function showBattleAnalysis() {
+  const modal = document.getElementById('battle-analysis-modal');
+  const content = document.getElementById('battle-analysis-content');
+  if (modal && content) {
+    content.innerHTML = generateBattleAnalysisHTML();
+    modal.style.display = 'flex';
+  }
+}
+
+function closeBattleAnalysis() {
+  const modal = document.getElementById('battle-analysis-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 function finishDuel() {
@@ -11037,6 +12031,7 @@ function finishDuel() {
         <div class="duel-result-title">胜 利</div>
         <div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">${rewardText}</div>
         ${!currentDuel.noReward ? `<div style="font-size:12px; color:var(--accent-gold);">决斗点 +${winDP}</div>` : ''}
+        <button class="btn btn-secondary btn-sm" style="margin-top:12px; width:100%;" onclick="showBattleAnalysis()">📊 查看战斗数据分析</button>
       </div>
     `;
   } else {
@@ -11107,6 +12102,7 @@ function finishDuel() {
       <div class="duel-result lose">
         <div class="duel-result-title">失 败</div>
         <div style="font-size:13px; color:var(--text-secondary);">${loseText}</div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:12px; width:100%;" onclick="showBattleAnalysis()">📊 查看战斗数据分析</button>
       </div>
     `;
   }
@@ -11161,6 +12157,11 @@ function exitDuel() {
   currentDuel = null;
   document.getElementById('duel-lobby').style.display = 'block';
   document.getElementById('duel-arena').style.display = 'none';
+  // 隐藏战术选择界面和场面可视化
+  const tacticSelect = document.getElementById('duel-tactic-select');
+  if (tacticSelect) tacticSelect.style.display = 'none';
+  const fieldVisual = document.getElementById('duel-field-visual');
+  if (fieldVisual) fieldVisual.style.display = 'none';
   // 恢复导航
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('locked'));
   checkAchievements();
@@ -11178,54 +12179,7 @@ function renderDeckView() {
   const extraCountEl = document.getElementById('deck-extra-count');
   if (extraCountEl) extraCountEl.textContent = getExtraDeckCount();
 
-  // 卡组共鸣区域渲染
-  const resonancePanel = document.getElementById('resonance-panel');
-  if (resonancePanel) {
-    const unlocked = (gameState.masterDuelCount || 0) > 0;
-    resonancePanel.style.display = unlocked ? 'block' : 'none';
-    if (unlocked) {
-      const cpEl = document.getElementById('resonance-card-points');
-      if (cpEl) cpEl.textContent = gameState.cardPoints || 0;
-      const grid = document.getElementById('resonance-stats-grid');
-      if (grid) {
-        const statNames = { search:'检索', expand:'展开', disrupt:'干扰', resist:'抗性', suppress:'压制' };
-        const statColors = { search:'var(--accent-blue-light)', expand:'var(--accent-green-light)', disrupt:'var(--accent-red-light)', resist:'var(--accent-purple-light)', suppress:'var(--accent-gold-light)' };
-        grid.innerHTML = '';
-        Object.keys(statNames).forEach(stat => {
-          const level = (gameState.resonanceBonus && gameState.resonanceBonus[stat]) || 0;
-          const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
-          const canAfford = (gameState.cardPoints || 0) >= cost;
-          const div = document.createElement('div');
-          div.className = 'stat-box ' + stat;
-          div.style.cssText = 'padding:8px; text-align:center;';
-          div.innerHTML = `
-            <div class="stat-box-label" style="font-size:10px;">${statNames[stat]} Lv.${level}</div>
-            <div class="stat-box-value" style="font-size:16px; color:${statColors[stat]};">+${level}</div>
-            <button class="btn btn-primary" style="width:100%; margin-top:4px; font-size:10px; padding:4px; ${canAfford ? '' : 'opacity:0.5; cursor:not-allowed;'}" data-resonance-stat="${stat}">
-              升级 (${cost}卡点)
-            </button>
-          `;
-          grid.appendChild(div);
-        });
-        // 绑定升级按钮
-        grid.querySelectorAll('button[data-resonance-stat]').forEach(btn => {
-          btn.onclick = () => {
-            const stat = btn.dataset.resonanceStat;
-            const level = (gameState.resonanceBonus && gameState.resonanceBonus[stat]) || 0;
-            const cost = GAME_CONFIG.resonanceCostPerLevel || 2;
-            if ((gameState.cardPoints || 0) < cost) { showToast('卡点不足'); return; }
-            gameState.cardPoints -= cost;
-            if (!gameState.resonanceBonus) gameState.resonanceBonus = { search:0, expand:0, disrupt:0, resist:0, suppress:0 };
-            gameState.resonanceBonus[stat] = level + 1;
-            saveGame();
-            updateAllDisplays();
-            renderDeckView();
-            showToast(`${statNames[stat] || stat} 共鸣升级到 Lv.${level + 1}！`);
-          };
-        });
-      }
-    }
-  }
+  // 卡组共鸣已嵌入属性详情弹窗，不再单独渲染
 
   document.querySelectorAll('.deck-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.deckTab === currentDeckTab);
@@ -12895,7 +13849,14 @@ function checkAchievements() {
 function renderAchievements() {
   const grid = document.getElementById('achievement-grid');
   grid.innerHTML = '';
-  ACHIEVEMENTS.forEach(a => {
+  // 已达成的优先显示，未达成的按原顺序排列
+  const sorted = [...ACHIEVEMENTS].sort((a, b) => {
+    const aUnlocked = gameState.achievements.includes(a.id);
+    const bUnlocked = gameState.achievements.includes(b.id);
+    if (aUnlocked !== bUnlocked) return aUnlocked ? -1 : 1;
+    return 0;
+  });
+  sorted.forEach(a => {
     const unlocked = gameState.achievements.includes(a.id);
     const bonusText = Object.entries(a.bonus).map(([k, v]) => {
       if (k === 'all') return `全属性+${v}`;
@@ -12973,9 +13934,14 @@ function renderTalentGrid() {
   const equipped = gameState.talents || [];
   const unlocked = gameState.unlockedTalents || [];
 
-  // 按品质排序
+  // 排序：已获得的优先显示，然后按品质排序（UR > SR > R > N）
   const order = { UR: 0, SR: 1, R: 2, N: 3 };
-  const sorted = [...TALENTS].sort((a, b) => (order[a.rarity] || 9) - (order[b.rarity] || 9));
+  const sorted = [...TALENTS].sort((a, b) => {
+    const aObtained = equipped.includes(a.id) || unlocked.includes(a.id) || (a.hidden && unlockedHidden.includes(a.id));
+    const bObtained = equipped.includes(b.id) || unlocked.includes(b.id) || (b.hidden && unlockedHidden.includes(b.id));
+    if (aObtained !== bObtained) return aObtained ? -1 : 1;
+    return (order[a.rarity] || 9) - (order[b.rarity] || 9);
+  });
 
   sorted.forEach(t => {
     if (!t || !t.id) return;
