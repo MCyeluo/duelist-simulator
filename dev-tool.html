@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>牌佬模拟器 - 开发工具 v4.1</title>
+<title>牌佬模拟器 - 开发工具 v4.3</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -126,7 +126,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei'
 <body>
 
 <div class="topbar">
-  <div class="topbar-title">⚔️ 牌佬模拟器 - 开发工具 <span style="font-size:11px;color:var(--text2);font-weight:normal;">v4.1 适配版</span></div>
+  <div class="topbar-title">⚔️ 牌佬模拟器 - 开发工具 <span style="font-size:11px;color:var(--text2);font-weight:normal;">v4.3 精灵战争适配版</span></div>
   <div class="topbar-actions">
     <input type="file" id="load-card" accept=".js" style="display:none" onchange="loadFile(event,'card')">
     <input type="file" id="load-game" accept=".js" style="display:none" onchange="loadFile(event,'game')">
@@ -155,7 +155,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei'
 <script>
 // ===== 数据存储 =====
 let cardDB = {};
-let gameData = { talents:[], opponents:[], duelConfig:{}, gameConfig:{}, locations:[], characters:[], tournaments:[], achievements:[], tasks:[], events:{}, redeemCodes:[] };
+let gameData = { talents:[], opponents:[], duelConfig:{}, gameConfig:{}, locations:[], characters:[], tournaments:[], achievements:[], tasks:[], events:{}, redeemCodes:[], cardBoxes:[] };
 let currentType = null;
 let currentId = null;
 let cardFilterType = 'all'; // 卡片类型筛选：all/monster/spell/trap/extra
@@ -171,6 +171,7 @@ const TYPES = [
   { id:'talent', name:'天赋', icon:'⭐', category:'核心数据' },
   { id:'achievement', name:'成就', icon:'🏆', category:'核心数据' },
   { id:'task', name:'任务', icon:'📋', category:'核心数据' },
+  { id:'cardBox', name:'卡盒', icon:'📦', category:'核心数据' },
   { id:'gameConfig', name:'核心配置', icon:'🔧', category:'核心数据' },
   { id:'redeemCode', name:'兑换码', icon:'🎁', category:'核心数据' },
   { id:'opponent', name:'对手', icon:'⚔️', category:'决斗系统' },
@@ -391,10 +392,14 @@ function loadGameFile(event) {
       const rcMatch = dataSection.match(/const REDEEM_CODES\s*=\s*(\[[\s\S]*?\]);/);
       if (rcMatch) gameData.redeemCodes = new Function('return ' + rcMatch[1])();
 
+      // 提取 CARD_BOXES
+      const cbMatch = dataSection.match(/const CARD_BOXES\s*=\s*(\[[\s\S]*?\]);/);
+      if (cbMatch) gameData.cardBoxes = new Function('return ' + cbMatch[1])();
+
       // 显示导出按钮
       document.getElementById('export-btn').style.display = 'inline-block';
 
-      showToast('游戏本体导入成功！卡片 ' + Object.keys(cardDB).length + ' 张，天赋 ' + gameData.talents.length + ' 个');
+      showToast('游戏本体导入成功！卡片 ' + Object.keys(cardDB).length + ' 张，天赋 ' + gameData.talents.length + ' 个，卡盒 ' + gameData.cardBoxes.length + ' 个');
       renderList();
     } catch(err) {
       showToast('解析失败：' + err.message);
@@ -446,6 +451,9 @@ function exportGameFile() {
 
   // GAME_CONFIG
   newDataSection += '// ===== 核心数据配置（全局设置 + 精灵力系统）=====\nconst GAME_CONFIG = ' + JSON.stringify(gameData.gameConfig, null, 2) + ';\n\n';
+
+  // CARD_BOXES
+  newDataSection += '// ===== 系列卡盒数据 =====\nconst CARD_BOXES = ' + JSON.stringify(gameData.cardBoxes || [], null, 2) + ';\n\n';
 
   // LOCATIONS
   newDataSection += '// ===== 地点定义 =====\nconst LOCATIONS = ' + JSON.stringify(gameData.locations, null, 2) + ';\n\n';
@@ -515,6 +523,7 @@ function getList() {
     case 'character': return gameData.characters;
     case 'tournament': return gameData.tournaments;
     case 'redeemCode': return gameData.redeemCodes || [];
+    case 'cardBox': return gameData.cardBoxes || [];
     case 'event':
       // 事件按地点分组，展平成列表
       const evs = [];
@@ -969,7 +978,7 @@ function deleteItem(id) {
   }
   else {
     const key = currentType + 's';
-    const arrKey = currentType === 'talent' ? 'talents' : currentType === 'achievement' ? 'achievements' : currentType + 's';
+    const arrKey = currentType === 'talent' ? 'talents' : currentType === 'achievement' ? 'achievements' : currentType === 'cardBox' ? 'cardBoxes' : currentType + 's';
     gameData[arrKey] = gameData[arrKey].filter(i => i.id !== id);
   }
   if (currentId === id) currentId = null;
@@ -1020,6 +1029,11 @@ function addNew() {
       if (gameData.redeemCodes.find(r=>r.id===id)) { showToast('ID已存在'); return; }
       newItem = { id, name:'新兑换码', desc:'', reward:{ duelPoints:100 } };
       gameData.redeemCodes.push(newItem); break;
+    case 'cardBox':
+      if (!gameData.cardBoxes) gameData.cardBoxes = [];
+      if (gameData.cardBoxes.find(b=>b.id===id)) { showToast('ID已存在'); return; }
+      newItem = { id, name:'新卡盒', desc:'', cardIds:[], cardsPerPack:5, packPrice:500, tenPackDiscount:0.8, defaultCopies:3 };
+      gameData.cardBoxes.push(newItem); break;
     case 'event':
       const loc = prompt('请输入地点ID（如 kame/cardshop/beach）：');
       if (!loc) return;
@@ -1047,6 +1061,7 @@ function getItem() {
     case 'character': return gameData.characters.find(c=>c.id===currentId);
     case 'tournament': return gameData.tournaments.find(t=>t.id===currentId);
     case 'redeemCode': return (gameData.redeemCodes||[]).find(r=>r.id===currentId);
+    case 'cardBox': return (gameData.cardBoxes||[]).find(b=>b.id===currentId);
     case 'event':
       for (const list of Object.values(gameData.events)) {
         const e = list.find(x=>x.id===currentId);
@@ -1076,6 +1091,7 @@ function renderEditor() {
     case 'character': panel.innerHTML = renderCharacterEditor(item); bindCharacterEvents(item); break;
     case 'tournament': panel.innerHTML = renderTournamentEditor(item); bindTournamentEvents(item); break;
     case 'redeemCode': panel.innerHTML = renderRedeemCodeEditor(item); bindRedeemCodeEvents(item); break;
+    case 'cardBox': panel.innerHTML = renderCardBoxEditor(item); bindCardBoxEvents(item); break;
     case 'event': panel.innerHTML = renderEventEditor(item); bindEventEvents(item); break;
   }
 }
@@ -2178,6 +2194,10 @@ function renderTaskEditor(t) {
         <option value="">不解锁决斗模式</option>
         ${Object.entries(gameData.duelConfig?.modes || {}).map(([id, config]) => `<option value="${id}" ${reward.duelMode===id?'selected':''}>${config.name || id}</option>`).join('')}
       </select></div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:18px;">
+        <input type="checkbox" id="f-reward-cardbox" ${reward.unlockCardBox?'checked':''} style="width:16px;height:16px;">
+        <label for="f-reward-cardbox" style="margin:0;cursor:pointer;">解锁系列卡盒系统</label>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>精灵力奖励</label><input type="number" id="f-reward-spirit" value="${reward.spiritPower||0}" min="0" placeholder="解锁黑暗决斗后生效"></div>
         <div class="form-group"><label>觉醒碎片奖励</label><input type="number" id="f-reward-shards" value="${reward.awakeningShards||0}" min="0"></div>
@@ -2253,6 +2273,15 @@ function bindTaskEvents(t) {
       t.reward.duelMode = e.target.value;
     } else {
       delete t.reward.duelMode;
+    }
+  };
+  // 解锁卡盒系统
+  const cardboxEl = document.getElementById('f-reward-cardbox');
+  if (cardboxEl) cardboxEl.onchange = e => {
+    if (e.target.checked) {
+      t.reward.unlockCardBox = true;
+    } else {
+      delete t.reward.unlockCardBox;
     }
   };
 
@@ -2873,7 +2902,6 @@ function renderRedeemCodeEditor(r) {
   const achievementOptions = (gameData.achievements||[]).map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
   const talentOptions = (gameData.talents||[]).map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
   const locationOptions = (gameData.locations||[]).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
-  const cardOptions = Object.values(cardDB).map(c=>`<option value="${c.id}">${c.name} [${c.rarity}]</option>`).join('');
   
   return `
     <div class="edit-section">
@@ -2905,16 +2933,22 @@ function renderRedeemCodeEditor(r) {
         <div class="form-group"><label>解锁天赋</label><select id="rc-talent"><option value="">无</option>${talentOptions}</select></div>
       </div>
       <div class="form-group">
-        <label>奖励卡片（勾选）</label>
+        <label>奖励卡片</label>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <input type="text" id="rc-card-search" placeholder="搜索卡片名称或ID..." style="flex:1;padding:6px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;" oninput="searchRedeemCards()">
+          <button class="btn btn-gold btn-sm" onclick="showRedeemCardPicker()">选择卡片</button>
+        </div>
         <div id="rc-cards-container" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px;background:var(--bg-input);">
-          ${Object.values(cardDB).map(c=>`
-            <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;">
-              <input type="checkbox" class="rc-card-check" value="${c.id}" ${(reward.cards||[]).includes(c.id)?'checked':''}>
+          ${(reward.cards||[]).length === 0 ? '<div style="color:var(--text2);font-size:12px;text-align:center;padding:12px;">暂无奖励卡片，点击上方按钮添加</div>' : (reward.cards||[]).map(cardId => {
+            const c = cardDB[cardId];
+            if (!c) return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;"><span style="color:#ef4444;">未知卡:${cardId}</span><button class="btn btn-danger btn-sm" onclick="removeRedeemCard('${cardId}')">删除</button></div>`;
+            return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;">
               <span style="color:${c.rarity==='UR'?'#fbbf24':c.rarity==='SR'?'#a78bfa':c.rarity==='R'?'#60a5fa':'#9ca3af'};">[${c.rarity}]</span>
-              <span style="color:#fff;">${c.name}</span>
+              <span style="color:#fff;flex:1;">${c.name}</span>
               <span style="color:var(--text2);font-size:11px;">(${c.id})</span>
-            </label>
-          `).join('')}
+              <button class="btn btn-danger btn-sm" onclick="removeRedeemCard('${cardId}')">删除</button>
+            </div>`;
+          }).join('')}
         </div>
         <div style="font-size:11px;color:var(--text2);margin-top:4px;">已选 <span id="rc-cards-count">${(reward.cards||[]).length}</span> 张</div>
       </div>
@@ -2956,14 +2990,6 @@ function addRedeemStatRow() {
 }
 
 function bindRedeemCodeEvents(r) {
-  // 卡片复选框计数更新
-  const cardChecks = document.querySelectorAll('.rc-card-check');
-  cardChecks.forEach(check => {
-    check.addEventListener('change', () => {
-      const count = document.querySelectorAll('.rc-card-check:checked').length;
-      document.getElementById('rc-cards-count').textContent = count;
-    });
-  });
   // 选中已有的解锁地点
   const locSelect = document.getElementById('rc-unlockLocation');
   if (locSelect && r.reward && r.reward.unlockLocation) {
@@ -2979,6 +3005,448 @@ function bindRedeemCodeEvents(r) {
   if (talentSelect && r.reward && r.reward.talent) {
     talentSelect.value = r.reward.talent;
   }
+}
+
+// ===== 卡盒编辑器 =====
+function renderCardBoxEditor(b) {
+  const cardList = (b.cardIds || []).map(id => {
+    const c = cardDB[id];
+    const count = (b.cardCounts && b.cardCounts[id]) ? b.cardCounts[id] : (b.defaultCopies || 3);
+    return c ? `<div class="tag-item" style="background:var(--bg3);padding:4px 8px;border-radius:3px;font-size:11px;display:inline-flex;align-items:center;gap:6px;margin:2px;">
+      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.name}">${c.name}</span>
+      <span style="color:var(--gold);">${c.rarity}</span>
+      <span style="color:var(--muted);">数量:</span>
+      <input type="number" value="${count}" min="1" max="99" style="width:45px;padding:2px 4px;background:var(--bg);border:1px solid var(--border);border-radius:2px;color:var(--text);font-size:11px;" onchange="setCardBoxCardCount('${id}', this.value)">
+      <span onclick="removeCardBoxCard('${id}')" style="color:#ef4444;cursor:pointer;font-weight:bold;">×</span>
+    </div>` : `<div class="tag-item" style="background:#ef4444;padding:4px 8px;border-radius:3px;font-size:11px;color:#fff;">未知卡:${id} <span onclick="removeCardBoxCard('${id}')" style="cursor:pointer;">×</span></div>`;
+  }).join('');
+
+  return `
+    <div class="edit-section">
+      <div class="edit-section-title">基本信息</div>
+      <div class="form-row">
+        <div class="form-group"><label>卡盒名称</label><input type="text" id="cb-name" value="${b.name||''}"></div>
+        <div class="form-group"><label>卡盒ID</label><input type="text" id="cb-id" value="${b.id||''}"></div>
+      </div>
+      <div class="form-group"><label>卡盒描述</label><textarea id="cb-desc" rows="2">${b.desc||''}</textarea></div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title">抽卡配置</div>
+      <div class="form-row">
+        <div class="form-group"><label>每包卡数</label><input type="number" id="cb-cardsPerPack" value="${b.cardsPerPack||5}" min="1"></div>
+        <div class="form-group"><label>单包价格(决斗点)</label><input type="number" id="cb-packPrice" value="${b.packPrice||500}" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>10连折扣</label><input type="number" id="cb-tenPackDiscount" value="${b.tenPackDiscount||0.8}" min="0" max="1" step="0.05"></div>
+        <div class="form-group"><label>每卡初始数量</label><input type="number" id="cb-defaultCopies" value="${b.defaultCopies||3}" min="1"></div>
+      </div>
+    </div>
+    <div class="edit-section">
+      <div class="edit-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>卡盒卡片 (${(b.cardIds||[]).length}种)</span>
+        <button class="btn btn-gold btn-sm" onclick="showCardBoxCardPicker()">➕ 添加卡片</button>
+      </div>
+      <div id="cb-cards-list" style="display:flex;flex-wrap:wrap;gap:4px;max-height:200px;overflow-y:auto;padding:8px;background:var(--bg2);border-radius:4px;">
+        ${cardList || '<div style="color:var(--muted);font-size:12px;padding:8px;">暂无卡片，点击上方按钮添加</div>'}
+      </div>
+    </div>
+    <div style="margin-top:16px;text-align:center;">
+      <button class="btn btn-gold" onclick="saveCardBox()">💾 保存卡盒</button>
+    </div>
+  `;
+}
+
+function bindCardBoxEvents(b) {
+  // 卡片选择器相关事件在showCardBoxCardPicker中处理
+}
+
+function showCardBoxCardPicker() {
+  const b = getItem();
+  if (!b) return;
+  const allCards = Object.values(cardDB).filter(c => !isSpecialCardDev(c));
+  // 初始只显示前100张，避免卡死
+  const displayCards = allCards.slice(0, 100);
+  const html = `
+    <div id="cb-card-picker-modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100000;display:flex;align-items:center;justify-content:center;">
+      <div id="cb-card-picker-window" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;width:90%;max-width:600px;max-height:80vh;overflow-y:auto;position:absolute;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div id="cb-card-picker-drag" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;cursor:move;user-select:none;padding:4px 0;" onmousedown="startCardBoxDrag(event)">
+          <div style="font-size:16px;font-weight:bold;color:var(--gold);">选择卡片添加到卡盒（可多选）</div>
+          <button onclick="document.getElementById('cb-card-picker-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <input type="text" id="cb-card-search" placeholder="搜索卡片名称或ID..." style="width:100%;padding:8px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);" oninput="filterCardBoxCards()">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--muted);">已选择 <span id="cb-selected-count" style="color:var(--gold);font-weight:bold;">0</span> 张 / 共 ${allCards.length} 张（搜索显示匹配结果）</div>
+        <div id="cb-card-picker-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:400px;overflow-y:auto;margin-bottom:12px;">
+          ${displayCards.map(c => `
+            <div class="cb-picker-card" data-name="${c.name.toLowerCase()}" data-id="${c.id.toLowerCase()}" data-cardid="${c.id}" onclick="toggleCardBoxSelect(this,'${c.id}')" style="padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;transition:all 0.15s;" onmouseover="if(!this.dataset.selected)this.style.borderColor='var(--gold)'" onmouseout="if(!this.dataset.selected)this.style.borderColor='var(--border)'">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" class="cb-card-checkbox" style="margin:0;pointer-events:none;" ${(b.cardIds||[]).includes(c.id)?'checked':''}>
+                <div style="flex:1;min-width:0;">
+                  <div style="color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+                  <div style="color:var(--muted);font-size:10px;">${c.id} · ${c.rarity} · ${c.type}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div id="cb-card-picker-more" style="text-align:center;margin-bottom:12px;display:${allCards.length > 100 ? 'block' : 'none'};">
+          <button onclick="loadMoreCardBoxCards()" style="padding:6px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:12px;">加载更多（当前显示 100/${allCards.length}）</button>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button onclick="document.getElementById('cb-card-picker-modal').remove()" style="padding:8px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:13px;">取消</button>
+          <button onclick="addSelectedCardsToCardBox()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:4px;color:#000;cursor:pointer;font-size:13px;font-weight:bold;">添加选中卡片</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  // 初始化已选中状态
+  document.querySelectorAll('.cb-picker-card').forEach(el => {
+    const checkbox = el.querySelector('.cb-card-checkbox');
+    if (checkbox.checked) {
+      el.dataset.selected = 'true';
+      el.style.borderColor = 'var(--gold)';
+      el.style.background = 'rgba(251,191,36,0.1)';
+    }
+  });
+  updateCardBoxSelectedCount();
+  // 保存全量卡片数据到全局，供搜索和加载更多使用
+  window._cardBoxAllCards = allCards;
+  window._cardBoxDisplayCount = 100;
+}
+
+function loadMoreCardBoxCards() {
+  if (!window._cardBoxAllCards) return;
+  window._cardBoxDisplayCount += 100;
+  const displayCards = window._cardBoxAllCards.slice(0, window._cardBoxDisplayCount);
+  const b = getItem();
+  const listEl = document.getElementById('cb-card-picker-list');
+  if (!listEl) return;
+  listEl.innerHTML = displayCards.map(c => `
+    <div class="cb-picker-card" data-name="${c.name.toLowerCase()}" data-id="${c.id.toLowerCase()}" data-cardid="${c.id}" onclick="toggleCardBoxSelect(this,'${c.id}')" style="padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;transition:all 0.15s;" onmouseover="if(!this.dataset.selected)this.style.borderColor='var(--gold)'" onmouseout="if(!this.dataset.selected)this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" class="cb-card-checkbox" style="margin:0;pointer-events:none;" ${(b.cardIds||[]).includes(c.id)?'checked':''}>
+        <div style="flex:1;min-width:0;">
+          <div style="color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+          <div style="color:var(--muted);font-size:10px;">${c.id} · ${c.rarity} · ${c.type}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  // 恢复已选中状态
+  document.querySelectorAll('.cb-picker-card').forEach(el => {
+    const checkbox = el.querySelector('.cb-card-checkbox');
+    if (checkbox.checked) {
+      el.dataset.selected = 'true';
+      el.style.borderColor = 'var(--gold)';
+      el.style.background = 'rgba(251,191,36,0.1)';
+    }
+  });
+  // 更新加载更多按钮
+  const moreBtn = document.querySelector('#cb-card-picker-more button');
+  if (moreBtn) {
+    const total = window._cardBoxAllCards.length;
+    const shown = Math.min(window._cardBoxDisplayCount, total);
+    moreBtn.textContent = `加载更多（当前显示 ${shown}/${total}）`;
+    if (shown >= total) {
+      document.getElementById('cb-card-picker-more').style.display = 'none';
+    }
+  }
+}
+
+// 弹窗拖动功能
+let cardBoxDragState = { isDragging: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
+
+function startCardBoxDrag(e) {
+  if (e.target.tagName === 'BUTTON') return;
+  const window = document.getElementById('cb-card-picker-window');
+  if (!window) return;
+  cardBoxDragState.isDragging = true;
+  cardBoxDragState.startX = e.clientX;
+  cardBoxDragState.startY = e.clientY;
+  const rect = window.getBoundingClientRect();
+  cardBoxDragState.startLeft = rect.left;
+  cardBoxDragState.startTop = rect.top;
+  window.style.transform = 'none';
+  window.style.margin = '0';
+  document.addEventListener('mousemove', onCardBoxDrag);
+  document.addEventListener('mouseup', stopCardBoxDrag);
+  e.preventDefault();
+}
+
+function onCardBoxDrag(e) {
+  if (!cardBoxDragState.isDragging) return;
+  const window = document.getElementById('cb-card-picker-window');
+  if (!window) return;
+  const dx = e.clientX - cardBoxDragState.startX;
+  const dy = e.clientY - cardBoxDragState.startY;
+  let newLeft = cardBoxDragState.startLeft + dx;
+  let newTop = cardBoxDragState.startTop + dy;
+  // 限制在视口范围内
+  const maxLeft = window.innerWidth - window.offsetWidth;
+  const maxTop = window.innerHeight - window.offsetHeight;
+  newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+  newTop = Math.max(0, Math.min(newTop, maxTop));
+  window.style.left = newLeft + 'px';
+  window.style.top = newTop + 'px';
+  window.style.right = 'auto';
+  window.style.bottom = 'auto';
+}
+
+function stopCardBoxDrag() {
+  cardBoxDragState.isDragging = false;
+  document.removeEventListener('mousemove', onCardBoxDrag);
+  document.removeEventListener('mouseup', stopCardBoxDrag);
+}
+
+// ===== 兑换码卡片选择器 =====
+function showRedeemCardPicker() {
+  const r = getItem();
+  if (!r || !r.reward) r.reward = {};
+  if (!r.reward.cards) r.reward.cards = [];
+  const allCards = Object.values(cardDB);
+  const displayCards = allCards.slice(0, 100);
+  const html = `
+    <div id="rc-card-picker-modal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:100001;display:flex;align-items:center;justify-content:center;">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;position:absolute;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:16px;font-weight:bold;color:var(--gold);">选择奖励卡片（可多选）</div>
+          <button onclick="document.getElementById('rc-card-picker-modal').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <input type="text" id="rc-picker-search" placeholder="搜索卡片名称或ID..." style="width:100%;padding:8px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);" oninput="filterRedeemPickerCards()">
+        <div style="margin-bottom:10px;font-size:12px;color:var(--muted);">已选择 <span id="rc-picker-count" style="color:var(--gold);font-weight:bold;">0</span> 张 / 共 ${allCards.length} 张</div>
+        <div id="rc-picker-list" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:400px;overflow-y:auto;margin-bottom:12px;">
+          ${displayCards.map(c => `
+            <div class="rc-picker-card" data-name="${c.name.toLowerCase()}" data-id="${c.id.toLowerCase()}" data-cardid="${c.id}" onclick="toggleRedeemPickerSelect(this,'${c.id}')" style="padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;transition:all 0.15s;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" class="rc-picker-checkbox" style="margin:0;pointer-events:none;" ${r.reward.cards.includes(c.id)?'checked':''}>
+                <div style="flex:1;min-width:0;">
+                  <div style="color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+                  <div style="color:var(--muted);font-size:10px;">${c.id} · ${c.rarity}</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div id="rc-picker-more" style="text-align:center;margin-bottom:12px;display:${allCards.length > 100 ? 'block' : 'none'};">
+          <button onclick="loadMoreRedeemPickerCards()" style="padding:6px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:12px;">加载更多（当前显示 100/${allCards.length}）</button>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button onclick="document.getElementById('rc-card-picker-modal').remove()" style="padding:8px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:13px;">取消</button>
+          <button onclick="confirmRedeemCards()" style="padding:8px 16px;background:var(--gold);border:none;border-radius:4px;color:#000;cursor:pointer;font-size:13px;font-weight:bold;">确认添加</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  // 初始化已选中状态
+  document.querySelectorAll('.rc-picker-card').forEach(el => {
+    const checkbox = el.querySelector('.rc-picker-checkbox');
+    if (checkbox.checked) {
+      el.dataset.selected = 'true';
+      el.style.borderColor = 'var(--gold)';
+      el.style.background = 'rgba(251,191,36,0.1)';
+    }
+  });
+  updateRedeemPickerCount();
+  window._redeemPickerAllCards = allCards;
+  window._redeemPickerDisplayCount = 100;
+  window._redeemPickerSelected = new Set(r.reward.cards);
+}
+
+function toggleRedeemPickerSelect(el, cardId) {
+  const checkbox = el.querySelector('.rc-picker-checkbox');
+  const isSelected = el.dataset.selected === 'true';
+  if (isSelected) {
+    el.dataset.selected = '';
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'var(--bg2)';
+    checkbox.checked = false;
+    window._redeemPickerSelected.delete(cardId);
+  } else {
+    el.dataset.selected = 'true';
+    el.style.borderColor = 'var(--gold)';
+    el.style.background = 'rgba(251,191,36,0.1)';
+    checkbox.checked = true;
+    window._redeemPickerSelected.add(cardId);
+  }
+  updateRedeemPickerCount();
+}
+
+function updateRedeemPickerCount() {
+  const countEl = document.getElementById('rc-picker-count');
+  if (countEl && window._redeemPickerSelected) countEl.textContent = window._redeemPickerSelected.size;
+}
+
+function loadMoreRedeemPickerCards() {
+  if (!window._redeemPickerAllCards) return;
+  window._redeemPickerDisplayCount += 100;
+  const displayCards = window._redeemPickerAllCards.slice(0, window._redeemPickerDisplayCount);
+  const listEl = document.getElementById('rc-picker-list');
+  if (!listEl) return;
+  listEl.innerHTML = displayCards.map(c => `
+    <div class="rc-picker-card" data-name="${c.name.toLowerCase()}" data-id="${c.id.toLowerCase()}" data-cardid="${c.id}" onclick="toggleRedeemPickerSelect(this,'${c.id}')" style="padding:8px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:12px;transition:all 0.15s;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" class="rc-picker-checkbox" style="margin:0;pointer-events:none;" ${window._redeemPickerSelected.has(c.id)?'checked':''}>
+        <div style="flex:1;min-width:0;">
+          <div style="color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+          <div style="color:var(--muted);font-size:10px;">${c.id} · ${c.rarity}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  // 恢复已选中状态
+  document.querySelectorAll('.rc-picker-card').forEach(el => {
+    const checkbox = el.querySelector('.rc-picker-checkbox');
+    if (checkbox.checked) {
+      el.dataset.selected = 'true';
+      el.style.borderColor = 'var(--gold)';
+      el.style.background = 'rgba(251,191,36,0.1)';
+    }
+  });
+  const moreBtn = document.querySelector('#rc-picker-more button');
+  if (moreBtn) {
+    const total = window._redeemPickerAllCards.length;
+    const shown = Math.min(window._redeemPickerDisplayCount, total);
+    moreBtn.textContent = `加载更多（当前显示 ${shown}/${total}）`;
+    if (shown >= total) document.getElementById('rc-picker-more').style.display = 'none';
+  }
+}
+
+function filterRedeemPickerCards() {
+  const query = document.getElementById('rc-picker-search').value.toLowerCase();
+  document.querySelectorAll('.rc-picker-card').forEach(el => {
+    const name = el.dataset.name;
+    const id = el.dataset.id;
+    el.style.display = (name.includes(query) || id.includes(query)) ? '' : 'none';
+  });
+}
+
+function confirmRedeemCards() {
+  const r = getItem();
+  if (!r || !r.reward) r.reward = {};
+  r.reward.cards = Array.from(window._redeemPickerSelected);
+  document.getElementById('rc-card-picker-modal').remove();
+  renderEditor();
+  showToast(`已添加 ${r.reward.cards.length} 张奖励卡片`);
+}
+
+function removeRedeemCard(cardId) {
+  const r = getItem();
+  if (!r || !r.reward || !r.reward.cards) return;
+  r.reward.cards = r.reward.cards.filter(id => id !== cardId);
+  renderEditor();
+}
+
+function toggleCardBoxSelect(el, cardId) {
+  const checkbox = el.querySelector('.cb-card-checkbox');
+  const isSelected = el.dataset.selected === 'true';
+  if (isSelected) {
+    el.dataset.selected = '';
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'var(--bg2)';
+    checkbox.checked = false;
+  } else {
+    el.dataset.selected = 'true';
+    el.style.borderColor = 'var(--gold)';
+    el.style.background = 'rgba(251,191,36,0.1)';
+    checkbox.checked = true;
+  }
+  updateCardBoxSelectedCount();
+}
+
+function updateCardBoxSelectedCount() {
+  const count = document.querySelectorAll('.cb-picker-card[data-selected="true"]').length;
+  const countEl = document.getElementById('cb-selected-count');
+  if (countEl) countEl.textContent = count;
+}
+
+function addSelectedCardsToCardBox() {
+  const b = getItem();
+  if (!b) return;
+  if (!b.cardIds) b.cardIds = [];
+  if (!b.cardCounts) b.cardCounts = {};
+  const selectedCards = document.querySelectorAll('.cb-picker-card[data-selected="true"]');
+  let added = 0;
+  let skipped = 0;
+  selectedCards.forEach(el => {
+    const cardId = el.dataset.cardid;
+    if (!b.cardIds.includes(cardId)) {
+      b.cardIds.push(cardId);
+      // 初始化新卡片数量为默认数量
+      if (!b.cardCounts[cardId]) b.cardCounts[cardId] = b.defaultCopies || 3;
+      added++;
+    } else {
+      skipped++;
+    }
+  });
+  document.getElementById('cb-card-picker-modal').remove();
+  renderEditor();
+  if (added > 0) {
+    showToast(`已添加 ${added} 张卡片${skipped > 0 ? `，跳过 ${skipped} 张已存在` : ''}`);
+  } else {
+    showToast('没有新卡片被添加');
+  }
+}
+
+function filterCardBoxCards() {
+  const query = document.getElementById('cb-card-search').value.toLowerCase();
+  document.querySelectorAll('.cb-picker-card').forEach(el => {
+    const name = el.dataset.name;
+    const id = el.dataset.id;
+    el.style.display = (name.includes(query) || id.includes(query)) ? '' : 'none';
+  });
+}
+
+function addCardToCardBox(cardId) {
+  const b = getItem();
+  if (!b) return;
+  if (!b.cardIds) b.cardIds = [];
+  if (b.cardIds.includes(cardId)) {
+    showToast('该卡片已在卡盒中');
+    return;
+  }
+  b.cardIds.push(cardId);
+  // 初始化新卡片数量为默认数量
+  if (!b.cardCounts) b.cardCounts = {};
+  if (!b.cardCounts[cardId]) b.cardCounts[cardId] = b.defaultCopies || 3;
+  renderEditor();
+  showToast('卡片已添加');
+}
+
+function setCardBoxCardCount(cardId, count) {
+  const b = getItem();
+  if (!b) return;
+  if (!b.cardCounts) b.cardCounts = {};
+  const num = parseInt(count) || 1;
+  b.cardCounts[cardId] = Math.max(1, Math.min(99, num));
+  showToast(`已设置 ${cardDB[cardId]?.name || cardId} 数量为 ${b.cardCounts[cardId]}`);
+}
+
+function removeCardBoxCard(cardId) {
+  const b = getItem();
+  if (!b || !b.cardIds) return;
+  b.cardIds = b.cardIds.filter(id => id !== cardId);
+  // 同时删除数量设置
+  if (b.cardCounts) delete b.cardCounts[cardId];
+  renderEditor();
+}
+
+function saveCardBox() {
+  const b = getItem();
+  if (!b) return;
+  b.name = document.getElementById('cb-name').value.trim();
+  b.id = document.getElementById('cb-id').value.trim();
+  b.desc = document.getElementById('cb-desc').value.trim();
+  b.cardsPerPack = parseInt(document.getElementById('cb-cardsPerPack').value) || 5;
+  b.packPrice = parseInt(document.getElementById('cb-packPrice').value) || 500;
+  b.tenPackDiscount = parseFloat(document.getElementById('cb-tenPackDiscount').value) || 0.8;
+  b.defaultCopies = parseInt(document.getElementById('cb-defaultCopies').value) || 3;
+  showToast('卡盒已保存');
+  renderList();
+}
+
+function isSpecialCardDev(c) {
+  return c.rarity === 'SP' || c.type === 'special';
 }
 
 function saveRedeemCode() {
@@ -3009,9 +3477,8 @@ function saveRedeemCode() {
   const talent = document.getElementById('rc-talent').value;
   if (talent) reward.talent = talent;
   
-  // 卡片（复选框方式）
-  const selectedCards = Array.from(document.querySelectorAll('.rc-card-check:checked')).map(c=>c.value);
-  if (selectedCards.length > 0) reward.cards = selectedCards;
+  // 卡片（直接使用reward.cards数组，通过添加/删除管理）
+  // reward.cards 已经在添加/删除时直接更新
   
   // 属性
   const statRows = document.querySelectorAll('#rc-stats-container .form-row');
